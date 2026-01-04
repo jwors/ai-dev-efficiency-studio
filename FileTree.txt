@@ -1,0 +1,39 @@
+ai-dev-efficiency-studio/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── tasks/
+│   │   ├── page.tsx              # 任务列表
+│   │   └── [id]/page.tsx         # 任务执行视图
+│   ├── actions/
+│   │   ├── createTask.ts         # Server Action
+│   │   ├── runTask.ts
+│   │   └── runStep.ts
+│   └── api/                      # 仅用于 AI（可选）
+│
+├── core/
+│   ├── planner/
+│   │   ├── prompt.ts
+│   │   ├── schema.ts             # AI 输出约束
+│   │   └── planner.ts
+│   │
+│   ├── executor/
+│   │   ├── index.ts
+│   │   ├── generateCrud.ts
+│   │   ├── generateUI.ts
+│   │   └── analyzeData.ts
+│   │
+│   ├── task/
+│   │   ├── taskMachine.ts        # 状态机
+│   │   └── stepRunner.ts
+│
+├── prisma/
+│   └── schema.prisma
+│
+├── lib/
+│   ├── db.ts
+│   ├── ai.ts
+│   └── logger.ts
+│
+└── types/
+    └── task.ts
