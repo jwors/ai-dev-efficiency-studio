@@ -1,3 +1,5 @@
+import 'server-only';
+
 // core/llm/providers/mock.ts
 import { LLMProvider } from '../types';
 

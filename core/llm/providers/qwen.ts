@@ -1,3 +1,5 @@
+import 'server-only';
+import { isJson } from '@/utils';
 import { LLMProvider } from '../types';
 
 export class QwenProvide implements LLMProvider { 
@@ -17,22 +19,30 @@ export class QwenProvide implements LLMProvider {
 				},
 				body: JSON.stringify({
 					model: this.model,
-					input: {
-						prompt
-					},
-					parameters: {
+					messages: [
+						{
+							role: 'user',
+							content:prompt
+						}
+					],
 						temperature: 0
-					}
 				})
 			}
 		);
 		if (!res.ok) { 
-			console.log(res.status)
-			throw new Error(`Qwen API error: ${res.status}`);
+			const errorData = await res.json();
+			throw new Error(`API Error: ${errorData.message}`);
 		}
-		const data = await res.json();
 
-    // 只返回文本
-    return data.output.text;
+		const data = await res.json();
+		const content = data.choices[0].message.content;
+		
+		// 判断是不是json
+		if (isJson(content)) {
+			return content;
+		}
+		
+		// 如果不是 JSON，返回原始内容
+		return content;
 	}
 }

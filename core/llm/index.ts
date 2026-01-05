@@ -1,5 +1,4 @@
-import { MockProvider } from './providers/mock';
-import { QwenProvide } from './providers/qwen';
+import 'server-only';
 import { LLMProvider } from './types';
 
 let provider: LLMProvider;

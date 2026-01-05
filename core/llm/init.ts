@@ -1,3 +1,4 @@
+import 'server-only';
 import { initLLM } from '.';
 import { QwenProvide } from './providers/qwen';
 import { MockProvider } from './providers/mock';
@@ -8,7 +9,7 @@ let initialized = false;
 export function initLLMOnce() {
   if (initialized) return;
 
-  if (config.llmProvider === 'qwen') {
+	if (config.llmProvider === 'qwen') {
     initLLM(new QwenProvide(config.qwenApiKey));
   } else {
     initLLM(new MockProvider());
