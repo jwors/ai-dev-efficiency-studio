@@ -1,23 +1,17 @@
 import { PlanSchema } from './schema';
+import { plannerPrompt } from './prompt';
+import { callLLM } from '../llm';
 
 export async function planner(input: string) { 
-	const raw = {
-		goal: input,
-		steps: [
-			{
-				action: 'log',
-				params: {
-					message: 'step 1',
-				},
-			},
-			{
-				action: 'log',
-				params: {
-					message: 'step 2',
-				},
-			},
-		],
-	}
-	const plan = PlanSchema.parse(raw);
-	return plan;
+	const prompt = plannerPrompt(input);
+	const rawText = await callLLM(prompt);
+	let rawJson: unknown;
+	try {
+    rawJson = JSON.parse(rawText);
+  } catch {
+    throw new Error('AI output is not valid JSON');
+  }
+
+  const plan = PlanSchema.parse(rawJson);
+  return plan;
 }
