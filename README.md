@@ -46,7 +46,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 what is the definition of this project ?
 
-## 把“人脑里的操作步骤”交给 AI 拆解并自动执行的工程工具
+## 这是一个以 AI 为 Planner、以程序为 Executor 的开发效率工具，用于把自然语言需求转化为可重复、可审计的工程执行流程。
 
 
 ```mathematica
