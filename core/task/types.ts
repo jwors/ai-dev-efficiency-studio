@@ -1,13 +1,21 @@
-export type Status = 'pending' | 'running' | 'done';
+import 'server-only';
+import {z} from 'zod'
 
-export interface Step { 
-	id: string;
-	action: 'log';
-	status: Status;
-}
+export const Action = z.enum([
+	'log',
+	'shell',
+  'http',
+  'read_file',
+  'write_file',
+  'call_function',
+  'wait',
+])
 
-export interface Task {
-	id: string;
-	steps: Step[];
-	status: Status;
-}
+export type LogTask = {
+  type: z.infer<typeof Action>;
+  params: {
+    message: string;
+  };
+};
+
+export type Task = LogTask;

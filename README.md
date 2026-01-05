@@ -61,3 +61,19 @@ Executor（程序）
 Result / Log / State
 
 ```
+
+
+core/
+  config/       ← 系统配置
+  llm/          ← 模型适配
+  planner/      ← AI 决策
+  task/         ← 动作定义（类型）
+  executor/     ← 执行动作
+
+
+
+app/
+  page.tsx      ← UI
+  api/
+    plan/       ← Planner API
+    run/        ← Executor API（未来）

@@ -19,7 +19,7 @@ export default function Page() {
     setResult(null)
 
     try {
-      const response = await fetch('/api/plan', {
+      const response = await fetch('/api/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

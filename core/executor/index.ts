@@ -1,20 +1,12 @@
 import 'server-only';
-import { Plan } from '@/core/planner/schema'
-import { Step } from "../task/types";
+import type { Task } from '@/core/task/types';
 
-async function runStep(step: Plan['steps'][number]) {
-  switch (step.action) {
+export async function executeTask(task: Task) {
+  switch (task.type) {
     case 'log':
-      console.log(step.params?.message);
-      break;
+      return { ok: true };
 
     default:
-      throw new Error(`Unknown action: ${step.action}`);
-  }
-}
-
-export async function runPlan(plan: Plan) {
-  for (const step of plan.steps) {
-    await runStep(step);
+      throw new Error('Unhandled task');
   }
 }

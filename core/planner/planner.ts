@@ -11,19 +11,23 @@ import { callLLM } from '../llm';
 
 export async function planner(input: string) { 
   const prompt = plannerPrompt(input);
+  // 对 ai 返回的内容进行严格的约束
+
   const rawText = await callLLM(prompt);
+  // ai 返回的内容
   let json: unknown;
-  console.log(rawText)
   try {
     json = JSON.parse(rawText);
   } catch {
     throw new Error('Invalid JSON from LLM');
   }
-  console.log(json)
+
   const parsed = PlanSchema.safeParse(json)
+  // 进行规则的校验
   if (!parsed.success) { 
     throw new Error('Invalid AI output');
   }
 
   return parsed.data;
+  // 返回内容
 }
