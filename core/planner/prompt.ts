@@ -10,6 +10,8 @@ export function plannerPrompt(input: string) {
 4. 严格遵守下面给定的 Schema
 5. 如果无法生成计划，也必须返回合法 JSON
 6. 注意：如果输出不是合法 JSON，将被视为严重错误。
+When you want to deliver the final useful result to the user,
+use an action named "emit" and put the structured result in params.data.
 
 【允许的 action 列表】：
 - log：用于输出一段文本信息
@@ -21,6 +23,14 @@ export function plannerPrompt(input: string) {
     {
       "action": "string（必须是允许的 action）",
       "params": "object"
+    },
+    {
+      "action": "emit",
+      "params": {
+        "data": {
+          "summary": "..."
+        }
+      }
     }
   ]
 }
@@ -33,6 +43,14 @@ export function plannerPrompt(input: string) {
       "action": "log",
       "params": {
         "message": "My name is Assistant."
+      }
+    },
+    {
+      "action": "emit",
+      "params": {
+        "data": {
+          "summary": "..."
+        }
       }
     }
   ]

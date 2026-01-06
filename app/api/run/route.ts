@@ -13,10 +13,11 @@ export async function POST(req: Request) {
   
   // 拿到符合规则的 ai 返回的内容
   
-  const results = await runPlan(plan);
+  const execution = await runPlan(plan);
 
   return NextResponse.json({
     plan,
-    results,
+    results:execution.results,
+    outputs:execution.outputs
   });
 }

@@ -16,7 +16,13 @@ export function taskFromPlanStep(step: {
           message: String(params.message ?? ''),
         },
       };
-
+    case 'emit':
+      return {
+        type: 'emit',
+        params: {
+          data: String(params.data ?? ''),
+        },
+      };
     default:
       throw new Error(`Unknown action: ${step.action}`);
   }

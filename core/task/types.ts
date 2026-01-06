@@ -2,7 +2,8 @@ import 'server-only';
 import {z} from 'zod'
 
 export const Action = z.enum([
-	'log',
+  'log',
+  'emit',
 	'shell',
   'http',
   'read_file',
@@ -12,10 +13,17 @@ export const Action = z.enum([
 ])
 
 export type LogTask = {
-  type: z.infer<typeof Action>;
+  type: 'log';
   params: {
     message: string;
   };
 };
 
-export type Task = LogTask;
+export type EmitTask = {
+  type: 'emit';
+  params: {
+    data: string;
+  };
+};
+
+export type Task = LogTask | EmitTask;

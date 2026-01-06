@@ -5,16 +5,20 @@ import { executeTask } from './index';
 
 export async function runPlan(plan: Plan) {
   const results = [];
-  console.log('l;ength',plan.steps.length)
+  // 执行过程
+  const outputs = [];
+  // 交付结果
   for (const step of plan.steps) {
-    console.log(step)
     const task = taskFromPlanStep(step);
     const result = await executeTask(task);
-    results.push({
-      action: step.action,
-      result,
-    });
+    results.push(result)
+
+    if (result.type === 'emit') {
+      outputs.push(result.data)
+    }
   }
-  console.log(results)
-  return results;
+  return {
+    results,
+    outputs
+  }
 }

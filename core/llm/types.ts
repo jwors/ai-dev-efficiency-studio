@@ -7,7 +7,8 @@ export interface LLMProvider {
 
 
 export const Action = z.enum([
-	'log',
+  'log',
+  'emit',
 	'shell',
   'http',
   'read_file',

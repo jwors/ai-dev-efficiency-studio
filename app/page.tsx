@@ -51,7 +51,7 @@ export default function Page() {
         disabled={loading}
       />
       <button 
-        className="bg-blue-500 text-white p-2 rounded-md mt-4 disabled:bg-gray-400 disabled:cursor-not-allowed" 
+        className="bg-blue-500 mt-6 text-white p-2 rounded-md  disabled:bg-gray-400 disabled:cursor-not-allowed" 
         onClick={handleRun}
         disabled={loading}
       >
