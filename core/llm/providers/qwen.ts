@@ -33,15 +33,26 @@ export class QwenProvide implements LLMProvider {
 			const errorData = await res.json();
 			throw new Error(`API Error: ${errorData.message}`);
 		}
-
 		const data = await res.json();
-		const content = data.choices[0].message.content;
-		
+		let content = data.choices[0].message.content;
 		// 判断是不是json
 		if (isJson(content)) {
+			content = JSON.parse(content);
+			content = Object.assign(content, {
+				id: data.id
+				, created: data.created
+				, model: data.model
+			})
+			content = JSON.stringify(content);
 			return content;
 		}
-		
+		content = JSON.parse(content);
+		content = Object.assign(content, {
+			id: data.id
+			, created: data.created
+			, model: data.model
+		})
+		content = JSON.stringify(content);
 		// 如果不是 JSON，返回原始内容
 		return content;
 	}

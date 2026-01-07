@@ -5,17 +5,10 @@ import { executeTask } from './index';
 
 export async function runPlan(plan: Plan) {
   const results = [];
-  // 执行过程
   const outputs = [];
-  // 交付结果
+
   for (const [index, step] of plan.steps.entries()) {
-    console.log(step)
-    // 结构在 prompt 内
     const task = taskFromPlanStep(step);
-    const ctx = {
-      vars: {},
-      scratchpad: [],
-    };
     try {
       const result = await executeTask(task);
       results.push({
@@ -33,13 +26,14 @@ export async function runPlan(plan: Plan) {
       results.push({
         stepIndex: index,
         ok: false,
-        error: error instanceof Error ? error.message : '未知错误',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       break;
     }
   }
+
   return {
     results,
-    outputs
-  }
+    outputs,
+  };
 }

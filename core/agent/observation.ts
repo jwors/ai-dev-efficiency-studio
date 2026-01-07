@@ -1,3 +1,7 @@
 import 'server-only';
 
-export type { Observation } from '../types/context';
+export type Observation = {
+  outputs: unknown[];
+  notes?: string[];
+  context?: Record<string, unknown>;
+};

@@ -13,19 +13,9 @@ export async function POST(req: Request) {
   const plan = await planner(input, observation);
   const execution = await runPlan(plan);
 
-  const nextObservation: Observation = {
-    outputs: [
-      ...(observation?.outputs ?? []),
-      ...(execution.outputs ?? []),
-    ],
-    notes: observation?.notes,
-    context: observation?.context,
-  };
-
   return NextResponse.json({
     plan,
     results: execution.results,
     outputs: execution.outputs,
-    observation: nextObservation,
   });
 }

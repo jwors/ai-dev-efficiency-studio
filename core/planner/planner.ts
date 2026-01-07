@@ -23,10 +23,9 @@ export async function planner(input: string, observation?: Observation) {
   } catch {
     throw new Error('Invalid JSON from LLM');
   }
-
   const parsed = PlanSchema.safeParse(json)
   // 进行内容的校验
-  
+  console.log(parsed);
   if (!parsed.success) { 
     throw new Error('Invalid AI output');
   }
