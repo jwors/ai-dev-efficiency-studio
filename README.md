@@ -69,6 +69,7 @@ core/
   planner/      ← AI 决策
   task/         ← 动作定义（类型）
   executor/     ← 执行动作
+  observation/   ← 观察结果
 
 
 

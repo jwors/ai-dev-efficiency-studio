@@ -1,10 +1,10 @@
-// types/context.ts
+// core/types/context.ts
 
 export interface PlanStep {
   action: string;
   params: Record<string, any>;
-  id?: string;          // 可选：用于依赖追踪
-  dependsOn?: string[]; // 可选：依赖的步骤 ID
+  id?: string;
+  dependsOn?: string[];
 }
 
 export interface Plan {
@@ -28,14 +28,19 @@ export interface OutputItem {
 
 export interface Observation {
   outputs: OutputItem[];
-  // 未来可扩展：errors, variables, etc.
+  notes?: string[];
+  context?: Record<string, unknown>;
+  results?: ExecutionResult[];
+  currentStepIndex?: number;
+  variables?: Record<string, unknown>;
+  errors?: string[];
 }
 
 export interface ContextState {
   plan: Plan | null;
   results: ExecutionResult[];
   outputs: OutputItem[];
-  // 内部状态（不直接暴露给前端）
-  variables: Record<string, any>; // 用于步骤间传值
+  // Internal state (not exposed to UI directly).
+  variables: Record<string, any>;
   currentStepIndex: number;
 }
