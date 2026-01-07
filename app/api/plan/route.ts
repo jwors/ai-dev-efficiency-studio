@@ -6,8 +6,8 @@ export async function POST(req: Request) {
 	// 调用一次
 	initLLMOnce()
 
-	const { input } = await req.json()
+	const { input, observation } = await req.json()
 
-	const plan = await planner(input)
+	const plan = await planner(input, observation)
 	return NextResponse.json(plan)
 }

@@ -1,20 +1,29 @@
 import 'server-only';
-export function plannerPrompt(input: string) {
+import type { Observation } from '../agent/observation';
+
+export function plannerPrompt(input: string, observation?: Observation) {
+  const serializedObservation =
+    observation !== undefined
+      ? JSON.stringify(observation, null, 2)
+      : JSON.stringify({ outputs: [] });
+
   return `
 你是一个任务规划器（Task Planner），你的职责是把用户输入转化为【可执行的 JSON 指令计划】。
 
 【强制规则】：
 1. 你必须【只返回 JSON】，不能包含任何解释、注释、Markdown 或多余文本
-2. 返回内容必须是一个 JSON 对象，而不是数组或字符串
+2. 返回内容必须是一个 JSON 对象
 3. JSON 必须可以被 JSON.parse 正确解析
 4. 严格遵守下面给定的 Schema
 5. 如果无法生成计划，也必须返回合法 JSON
-6. 注意：如果输出不是合法 JSON，将被视为严重错误。
-When you want to deliver the final useful result to the user,
-use an action named "emit" and put the structured result in params.data.
+
+当需要向用户交付最终可用结果时，
+请使用名为 "emit" 的 action，并将结构化结果放入 params.data 中。
 
 【允许的 action 列表】：
-- log：用于输出一段文本信息
+- log：输出调试/中间信息，params.message 为字符串
+- emit：向用户返回最终结构化结果，params.data 为任意结构
+- http：发起 HTTP 请求，必须提供 params.url，可选 params.method/headers/body
 
 【Schema 定义】：
 {
@@ -23,38 +32,45 @@ use an action named "emit" and put the structured result in params.data.
     {
       "action": "string（必须是允许的 action）",
       "params": "object"
-    },
-    {
-      "action": "emit",
-      "params": {
-        "data": {
-          "summary": "..."
-        }
-      }
     }
   ]
 }
 
 【示例输出】：
 {
-  "goal": "introduce yourself",
+  "goal": "示例：获取远程配置并写入本地",
   "steps": [
     {
       "action": "log",
       "params": {
-        "message": "My name is Assistant."
+        "message": "准备获取配置"
+      }
+    },
+    {
+      "action": "http",
+      "params": {
+        "url": "https://example.com/config.json",
+        "method": "GET"
+      }
+    },
+    {
+      "action": "write_file",
+      "params": {
+        "path": "tmp/config.json",
+        "content": "这里填写上一步的 http 响应结果"
       }
     },
     {
       "action": "emit",
       "params": {
-        "data": {
-          "summary": "..."
-        }
+        "data": { "message": "配置已保存到 tmp/config.json" }
       }
     }
   ]
 }
+
+【可用上下文 Observation】：
+${serializedObservation}
 
 【用户输入】：
 ${input}

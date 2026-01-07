@@ -32,6 +32,7 @@ export default function Page() {
       }
 
       const data = await response.json()
+      console.log(data)
       setResult(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : '请求失败')

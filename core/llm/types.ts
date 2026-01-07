@@ -9,10 +9,5 @@ export interface LLMProvider {
 export const Action = z.enum([
   'log',
   'emit',
-	'shell',
   'http',
-  'read_file',
-  'write_file',
-  'call_function',
-  'wait',
-])
+]);

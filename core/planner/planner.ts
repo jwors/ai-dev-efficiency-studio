@@ -8,9 +8,10 @@ import 'server-only';
 import { PlanSchema } from './schema';
 import { plannerPrompt } from './prompt';
 import { callLLM } from '../llm';
+import { Observation } from '../agent/observation';
 
-export async function planner(input: string) { 
-  const prompt = plannerPrompt(input);
+export async function planner(input: string,observation?:Observation) { 
+  const prompt = plannerPrompt(input, observation);
   // 对 ai 返回的内容进行严格的约束
 
   const rawText = await callLLM(prompt);

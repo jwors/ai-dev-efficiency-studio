@@ -4,13 +4,8 @@ import {z} from 'zod'
 export const Action = z.enum([
   'log',
   'emit',
-	'shell',
   'http',
-  'read_file',
-  'write_file',
-  'call_function',
-  'wait',
-])
+]);
 
 export type LogTask = {
   type: 'log';
@@ -22,8 +17,21 @@ export type LogTask = {
 export type EmitTask = {
   type: 'emit';
   params: {
-    data: string;
+    data: unknown;
   };
 };
 
-export type Task = LogTask | EmitTask;
+export type HttpTask = {
+  type: 'http';
+  params: {
+    url: string;
+    method?: string;
+    headers?: Record<string, string>;
+    body?: unknown;
+  };
+};
+
+export type Task =
+  | LogTask
+  | EmitTask
+  | HttpTask;

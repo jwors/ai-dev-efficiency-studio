@@ -13,14 +13,30 @@ export function taskFromPlanStep(step: {
       return {
         type: 'log',
         params: {
-          message: String(params.message ?? ''),
+          message: params.message ?? '',
         },
       };
     case 'emit':
       return {
         type: 'emit',
         params: {
-          data: String(params.data ?? ''),
+          data: params.data ?? null,
+        },
+      };
+    case 'http':
+      if (!params.url || typeof params.url !== 'string') {
+        throw new Error('http action requires params.url');
+      }
+      return {
+        type: 'http',
+        params: {
+          url: params.url,
+          method: typeof params.method === 'string' ? params.method : 'GET',
+          headers:
+            params.headers && typeof params.headers === 'object'
+              ? params.headers
+              : undefined,
+          body: params.body,
         },
       };
     default:
