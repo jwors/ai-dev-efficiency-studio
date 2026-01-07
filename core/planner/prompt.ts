@@ -17,13 +17,13 @@ export function plannerPrompt(input: string, observation?: Observation) {
 4. 严格遵守下面给定的 Schema
 5. 如果无法生成计划，也必须返回合法 JSON
 
-当需要向用户交付最终可用结果时，
-请使用名为 "emit" 的 action，并将结构化结果放入 params.data 中。
+- 所有最终交付给用户的内容，必须通过 emit 操作完成
+- emit.params.data 中【只能包含以下字段】：
+  - content: string
+- 不允许使用 answer、introduce、description 等任何其他字段
+- 无论用户问题的语义类型如何，统一映射为 content
 
-【允许的 action 列表】：
-- log：输出调试/中间信息，params.message 为字符串
-- emit：向用户返回最终结构化结果，params.data 为任意结构
-- http：发起 HTTP 请求，必须提供 params.url，可选 params.method/headers/body
+
 
 【Schema 定义】：
 {
