@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const { input, observation }: { input: string; observation?: Observation } =
     await req.json();
 
-  const plan = await planner(input, observation);
+  const plan = await planner(input);
   const execution = await runPlan(plan);
 
   return NextResponse.json({

@@ -1,5 +1,6 @@
 import 'server-only';
 import { LLMProvider } from './types';
+import { Message } from '../types/context';
 
 let provider: LLMProvider;
 
@@ -13,7 +14,7 @@ export function initLLM(providerInstance?: LLMProvider) {
 
 
 // 调用llm
-export async function callLLM(prompt: string): Promise<string> {
+export async function callLLM(prompt: Message[]): Promise<string> {
   if (!provider) {
     throw new Error('LLM not initialized');
   }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { isJson } from '@/utils';
 import { LLMProvider } from '../types';
+import { Message  } from '@/core/types/context';
 
 export class QwenProvide implements LLMProvider { 
 	constructor(
@@ -8,7 +9,7 @@ export class QwenProvide implements LLMProvider {
 		private model = 'qwen-plus'
 	) { }
 
-	async call(prompt: string): Promise<string> { 
+	async call(prompt: Message[]): Promise<string> { 
 		const res = await fetch(
 			'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
 			{
@@ -19,12 +20,7 @@ export class QwenProvide implements LLMProvider {
 				},
 				body: JSON.stringify({
 					model: this.model,
-					messages: [
-						{
-							role: 'user',
-							content:prompt
-						}
-					],
+					messages: prompt,
 						temperature: 0
 				})
 			}

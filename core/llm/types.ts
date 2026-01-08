@@ -1,8 +1,9 @@
 import 'server-only';
 import z from 'zod'
+import type { Message } from '../types/context';
 
 export interface LLMProvider { 
-	call(prompt:string):Promise<string>
+	call(prompt:Message[]):Promise<string>
 }
 
 

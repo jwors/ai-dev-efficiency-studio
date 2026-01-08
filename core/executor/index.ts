@@ -17,7 +17,6 @@ function ensureWorkspacePath(filePath: string) {
 export async function executeTask(task: Task) {
   switch (task.type) {
     case 'log':
-      console.log(task.params.message);
       return {
         type: 'log',
         ok: true,

@@ -7,6 +7,11 @@ export interface PlanStep {
   dependsOn?: string[];
 }
 
+export interface Message { 
+  role:'user' | 'assistant' | 'system',
+  content:string  
+}
+
 export interface Plan {
   goal: string;
   steps: PlanStep[];

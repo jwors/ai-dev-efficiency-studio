@@ -138,13 +138,11 @@ export default function Page() {
       inputRef.current.value = '';
     }
   }
-  console.log(result)
   const stepsCount = result?.plan?.steps?.length ?? 0;
   const outputsCount = result?.outputs?.length ?? 0;
   const results: ExecutionResult[] = Array.isArray(result?.results)
   ? result.results
   : [];
-  console.log(results)
   const errorCount = results.filter((item) => !item.ok).length;
 
   return (
