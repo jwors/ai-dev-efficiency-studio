@@ -1,5 +1,7 @@
 // core/types/context.ts
 
+import { emit } from 'process';
+
 export interface PlanStep {
   action: string;
   params: Record<string, any>;
@@ -9,8 +11,26 @@ export interface PlanStep {
 
 export interface Message { 
   role:'user' | 'assistant' | 'system',
-  content:string  
+  content: string,
+  mate?:{ tag?: string };
 }
+
+export interface Observation  { 
+  emits: Array<{ context: string, at: string }>
+  facts?:Record<string,unknown>
+}
+
+
+export type SessionState = {
+  sessionId: string;
+  summary: string;        // 长期摘要（短，稳定携带）
+  history: Message[];     // 最近对话（滚动窗口）
+  observation?: {
+    emits: Array<{ content: string; at: string }>;
+  };
+  updatedAt: number,
+  createdAt: number;
+};
 
 export interface Plan {
   goal: string;

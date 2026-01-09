@@ -1,6 +1,6 @@
 import 'server-only';
 import { LLMProvider } from './types';
-import { Message } from '../types/context';
+import { Message } from '../types/type';
 
 let provider: LLMProvider;
 

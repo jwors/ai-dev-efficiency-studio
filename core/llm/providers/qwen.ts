@@ -1,7 +1,7 @@
 import 'server-only';
 import { isJson } from '@/utils';
 import { LLMProvider } from '../types';
-import { Message  } from '@/core/types/context';
+import { Message  } from '@/core/types/type';
 
 export class QwenProvide implements LLMProvider { 
 	constructor(

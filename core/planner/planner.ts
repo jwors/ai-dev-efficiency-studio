@@ -8,15 +8,17 @@ import 'server-only';
 import { PlanSchema } from './schema';
 import { plannerPrompt } from './prompt';
 import { callLLM } from '../llm';
-import { Observation } from '../agent/observation';
-import { Message } from '../types/context';
+import { Message, SessionState } from '../types/type';
+import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
 
 let context:Message[] = [] 
 
-export async function planner(input: string, ) { 
+export async function planner(input: string, state:SessionState ) { 
   
-
-  context = plannerPrompt(input);
+  // 1) 如果 history 太长，先摘要
+  await updateSummaryIfNeeded(state, callLLM)
+  
+  context = plannerPrompt(input,state);
   // 对 ai 返回的内容进行严格的约束
 
   const rawText = await callLLM(context);
@@ -32,18 +34,6 @@ export async function planner(input: string, ) {
   if (!parsed.success) { 
     throw new Error('Invalid AI output');
   }
-  for (let i = 0; i < parsed.data.steps.length; i++) { 
-    let item = parsed.data.steps[i]
-    if (item.action === 'emit' && item.params?.data?.content) { 
-      // 系统回答的
-      context.push({
-        role: "assistant",
-        content: item.params.data.content
-      })
-      break;
-    }
-  }
-  console.log(context)
   return parsed.data;
   // 返回内容
 }
