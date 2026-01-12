@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { getOrCreateSessionId } from '@/utils';
+import { use, useEffect, useRef, useState } from 'react';
 import ReactFlow, { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -23,6 +24,12 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [flow, setFlow] = useState<Flow | null>(null);
+  const [uuid,setUuid] = useState<string | null>(null)
+  useEffect(()=>{
+    
+    const id = getOrCreateSessionId()
+    setUuid(id)
+  },[])
 
   function buildFlow(data: any): Flow {
     const nodes: Node[] = [];

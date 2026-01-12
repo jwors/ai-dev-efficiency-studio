@@ -83,7 +83,6 @@ export function plannerPrompt(input: string, opts: {
     }
   
     messages.push(...(opts.history ?? []));
-    messages.push({ role: "user", content: input });
   
   messages.push({
     role: 'user',

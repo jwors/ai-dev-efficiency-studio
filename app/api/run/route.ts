@@ -2,15 +2,14 @@ import { NextResponse } from 'next/server';
 import { planner } from '@/core/planner';
 import { runPlan } from '@/core/executor/runPlan';
 import { initLLMOnce } from '@/core/llm/init';
-import crypto from 'crypto'
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
 
 export async function POST(req: Request) {
   initLLMOnce();
 
-  const { input }: { input: string} =
+  const { input,uuid }: { input: string,uuid:string} =
   await req.json();
-  const uuid = crypto.randomUUID()
+  console.log(uuid)
   const state  = getSession(uuid)
   const plan = await planner(input,state);
   const execution = await runPlan(plan);

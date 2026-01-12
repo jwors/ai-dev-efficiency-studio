@@ -1,3 +1,4 @@
+
 /**
  * 判断一个字符串是否为有效的 JSON 字符串
  * @param str 要判断的字符串
@@ -18,4 +19,16 @@ export function isJson(str: string): boolean{
   } catch (e) {
     return false;
   }
+}
+
+// 前端：拿 sessionId
+export function getOrCreateSessionId() {
+  const key = "agent_session_id";
+  let id = sessionStorage.getItem(key);
+  if (!id) {
+    const newId = crypto.randomUUID();
+    sessionStorage.setItem(key, newId);
+    id = newId;
+  }
+  return id;
 }
