@@ -18,5 +18,6 @@ export async function callLLM(prompt: Message[]): Promise<string> {
   if (!provider) {
     throw new Error('LLM not initialized');
   }
+  console.log('prompt')
   return provider.call(prompt);
 }

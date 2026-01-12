@@ -25,11 +25,14 @@ export class QwenProvide implements LLMProvider {
 				})
 			}
 		);
+		console.log('))))))))))))))))')
+		console.log(res)
 		if (!res.ok) { 
 			const errorData = await res.json();
 			throw new Error(`API Error: ${errorData.message}`);
 		}
 		const data = await res.json();
+		console.log(data)
 		let content = data.choices[0].message.content;
 		// 判断是不是json
 		if (isJson(content)) {

@@ -14,7 +14,6 @@ export async function POST(req: Request) {
   const state  = getSession(uuid)
   const plan = await planner(input,state);
   const execution = await runPlan(plan);
-  console.log(state)
   saveSession(state)
   // 存储
   return NextResponse.json({

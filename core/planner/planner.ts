@@ -17,10 +17,9 @@ export async function planner(input: string, state:SessionState ) {
   
   // 1) 如果 history 太长，先摘要
   await updateSummaryIfNeeded(state, callLLM)
-  
   context = plannerPrompt(input,state);
   // 对 ai 返回的内容进行严格的约束
-
+  console.log(context)
   const rawText = await callLLM(context);
   // ai 返回的内容
   let json: unknown;
