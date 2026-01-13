@@ -9,10 +9,28 @@ export async function POST(req: Request) {
 
   const { input,uuid }: { input: string,uuid:string} =
   await req.json();
-  console.log(uuid)
   const state  = getSession(uuid)
+
   const plan = await planner(input,state);
+
+  state.history.push({
+    role:'assistant',
+    content:input
+  })
+
+  // 存储当前用户的input 以及 llm 的 callback content
+  for (let i = 0; i < plan.steps.length; i++){
+    let item = plan.steps[i]
+    if(item.action === 'emit') {
+      state.history.push({
+        role:"assistant",
+        content:item.params?.data.content 
+      })
+      break;
+    }
+  }
   const execution = await runPlan(plan);
+  console.log(state)
   saveSession(state)
   // 存储
   return NextResponse.json({

@@ -1,6 +1,6 @@
 import 'server-only';
 import { LLMProvider } from './types';
-import { Message } from '../types/type';
+import { LLMRawResponse, Message } from '../types/type';
 
 let provider: LLMProvider;
 
@@ -14,9 +14,16 @@ export function initLLM(providerInstance?: LLMProvider) {
 
 
 // 调用llm
-export async function callLLM(prompt: Message[]): Promise<string> {
+export async function callLLM(prompt: Message[]): Promise<LLMRawResponse> {
   if (!provider) {
     throw new Error('LLM not initialized');
   }
   return provider.call(prompt);
+}
+
+
+// 摘要
+export async function callLLmSummary(prompt:Message[]):Promise<string>{
+  const  summary = await callLLM(prompt)
+  return summary.content.trim()
 }

@@ -7,32 +7,40 @@ import 'server-only';
 
 import { PlanSchema } from './schema';
 import { plannerPrompt } from './prompt';
-import { callLLM } from '../llm';
+import { callLLM,callLLmSummary } from '../llm';
 import { Message, SessionState } from '../types/type';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
 
 let context:Message[] = [] 
 
 export async function planner(input: string, state:SessionState ) { 
-  
   // 1) 如果 history 太长，先摘要
-  await updateSummaryIfNeeded(state, callLLM)
-  console.log(state)
+  await updateSummaryIfNeeded(state, callLLmSummary)
+  
   context = plannerPrompt(input,state);
   // 对 ai 返回的内容进行严格的约束
   const rawText = await callLLM(context);
-  // ai 返回的内容
   let json: unknown;
   try {
-    json = JSON.parse(rawText);
+    json = JSON.parse(rawText.content);
   } catch {
-    throw new Error('Invalid JSON from LLM');
+    throw new Error("Planner must return valid JSON");
   }
-  const parsed = PlanSchema.safeParse(json)
-  // 进行内容的校验
-  if (!parsed.success) { 
-    throw new Error('Invalid AI output');
+
+  const parsed = PlanSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error("Invalid planner output (PlanSchema mismatch)");
   }
-  return parsed.data;
+
+  // 你如果希望 plan 里也带 meta（保持你现有习惯），可以这样做：
+  const planWithMeta = {
+    ...parsed.data,
+    id: parsed.data.id ?? rawText.meta.id ?? crypto.randomUUID(),
+    model: parsed.data.model ?? rawText.meta.model ?? "unknown",
+    created: parsed.data.created ?? rawText.meta.created ?? Date.now(),
+  };
+
+  // 或者你想更干净：return { plan: parsed.data, meta: raw.meta }
+  return planWithMeta;
   // 返回内容
 }

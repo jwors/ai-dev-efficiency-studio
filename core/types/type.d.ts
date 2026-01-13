@@ -69,3 +69,8 @@ export interface ContextState {
   variables: Record<string, any>;
   currentStepIndex: number;
 }
+
+type LLMRawResponse = {
+  content: string;
+  meta: { id?: string; created?: number; model?: string };
+};

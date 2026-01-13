@@ -120,7 +120,7 @@ export default function Page() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input }),
+        body: JSON.stringify({ input,uuid }),
       });
 
       if (!response.ok) {
@@ -134,6 +134,13 @@ export default function Page() {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void handleRun();
     }
   }
 
@@ -171,6 +178,7 @@ export default function Page() {
             className="input"
             placeholder="Describe the task you want to execute"
             disabled={loading}
+            onKeyDown={handleInputKeyDown}
           />
           <div className="actions">
             <button

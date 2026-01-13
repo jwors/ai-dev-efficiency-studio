@@ -46,7 +46,7 @@ export function plannerPrompt(input: string, opts: {
           {
             "action": "log",
             "params": {
-              "message": "准备获取配置"
+              "content": "准备获取配置"
             }
           },
           {
@@ -66,7 +66,7 @@ export function plannerPrompt(input: string, opts: {
           {
             "action": "emit",
             "params": {
-              "data": { "message": "配置已保存到 tmp/config.json" }
+              "data": { "content": "配置已保存到 tmp/config.json" }
             }
           }
         ]

@@ -1,9 +1,11 @@
 import 'server-only';
 import z from 'zod'
-import type { Message } from '../types/type';
+import type { LLMRawResponse, Message } from '../types/type';
+
+
 
 export interface LLMProvider { 
-	call(prompt:Message[]):Promise<string>
+	call(prompt:Message[]):Promise<LLMRawResponse>
 }
 
 
