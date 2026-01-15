@@ -1,6 +1,5 @@
 import 'server-only';
-import type { Task } from './types';
-import { Action } from '../llm/types';
+import type { Task,Action } from './types';
 import { z } from 'zod';
 
 export function taskFromPlanStep(step: {
@@ -39,6 +38,8 @@ export function taskFromPlanStep(step: {
           body: params.body,
         },
       };
+      case 'export_flow':
+        return { type: 'export_flow', params: step.params ?? {} };
     default:
       throw new Error(`Unknown action: ${step.action}`);
   }

@@ -244,6 +244,17 @@ body {
   border-color: rgba(255, 107, 107, 0.4);
 }
 
+.emit-list .emit-item {
+  background: #f2e3c6;
+  border-color: #d8c298;
+  color: #3a2f1e;
+  justify-content: flex-start;
+}
+
+.emit-list .emit-item span {
+  white-space: pre-wrap;
+}
+
 .pre {
   margin: 0;
   white-space: pre-wrap;

@@ -58,6 +58,15 @@ export async function executeTask(task: Task) {
         data: responseBody,
       };
     }
+    case 'export_flow':
+      return {
+        ok: true,
+        type: 'export_flow' as const,
+        artifact: {
+          kind: task.params?.format ?? 'png',
+          filename: task.params?.filename ?? 'plan-flow.png',
+        },
+      };
     default:
       throw new Error('Unhandled task');
   }

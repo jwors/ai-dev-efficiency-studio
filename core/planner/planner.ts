@@ -10,14 +10,19 @@ import { plannerPrompt } from './prompt';
 import { callLLM,callLLmSummary } from '../llm';
 import { Message, SessionState } from '../types/type';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
+import { clampMessagesToBudget } from '../llm/estimateToken';
 
-let context:Message[] = [] 
+let context: Message[] = [] 
+const MAX_PROMPT_TOKENS = 8000;   // 你用的 qwen-plus 自己设个上限即可
+const RESERVED_OUTPUT = 1000;     // 给 planner 输出 JSON 留空间
+
 
 export async function planner(input: string, state:SessionState ) { 
   // 1) 如果 history 太长，先摘要
   await updateSummaryIfNeeded(state, callLLmSummary)
   
   context = plannerPrompt(input, state);
+  context = clampMessagesToBudget(context, MAX_PROMPT_TOKENS - RESERVED_OUTPUT);
   console.log(state)
   // 对 ai 返回的内容进行严格的约束
   const rawText = await callLLM(context);

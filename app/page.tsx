@@ -1,7 +1,7 @@
 'use client';
 
 import { getOrCreateSessionId } from '@/utils';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactFlow, { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -68,10 +68,16 @@ export default function Page() {
     steps.forEach((step: any, index: number) => {
       const stepId = `step-${index}`;
       const isError = errorSteps.has(index);
+      const emitContent =
+        step.action === 'emit' ? step?.params?.data?.content : undefined;
+      const stepLabel =
+        step.action === 'emit' && typeof emitContent === 'string'
+          ? `${index + 1}. emit: ${emitContent}`
+          : `${index + 1}. ${step.action}`;
 
       nodes.push({
         id: stepId,
-        data: { label: `${index + 1}. ${step.action}` },
+        data: { label: stepLabel },
         position: { x: baseX, y: stepGap * (index + 2) },
         style: isError
           ? { border: '1px solid #ff6b6b', color: '#ff6b6b' }
@@ -158,6 +164,23 @@ export default function Page() {
   ? result.results
   : [];
   const errorCount = results.filter((item) => !item.ok).length;
+  const hasExportFlow =
+    Array.isArray(result?.plan?.steps) &&
+    result.plan.steps.some((step: any) => step.action === 'export_flow');
+  const emitContents = Array.isArray(result?.plan?.steps)
+    ? result.plan.steps
+        .filter((step: any) => step.action === 'emit')
+        .map((step: any) => step?.params?.data?.content)
+        .filter((content: unknown) => typeof content === 'string')
+    : [];
+  const renderFlowBody = () =>
+    flow ? (
+      <ReactFlow nodes={flow.nodes} edges={flow.edges} fitView />
+    ) : (
+      <div className="flow-empty">
+        Run a task to visualize the planner and executor flow.
+      </div>
+    );
 
   return (
     <div className="page">
@@ -207,64 +230,44 @@ export default function Page() {
         </div>
 
         <div className="panel delay-2">
-          <div className="panel-title">Execution Flow</div>
-          <div className="flow-wrap">
-            {flow ? (
-              <ReactFlow nodes={flow.nodes} edges={flow.edges} fitView />
-            ) : (
-              <div className="flow-empty">
-                Run a task to visualize the planner and executor flow.
-              </div>
-            )}
-          </div>
+          <div className="panel-title">Content Container</div>
+          {emitContents.length ? (
+            <div className="list emit-list">
+              {emitContents.map((content: string, index: number) => (
+                <div key={`emit-${index}`} className="list-item emit-item">
+                  <span>{content}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty">No emit content yet.</div>
+          )}
         </div>
       </div>
 
+      {hasExportFlow && (
+        <div className="grid">
+          <div className="panel delay-1">
+            <div className="panel-title">Flow</div>
+            <div className="flow-wrap">{renderFlowBody()}</div>
+          </div>
+
+          <div className="panel delay-2">
+            <div className="panel-title">Flow</div>
+            <div className="flow-wrap">{renderFlowBody()}</div>
+          </div>
+
+          <div className="panel delay-3">
+            <div className="panel-title">Flow</div>
+            <div className="flow-wrap">{renderFlowBody()}</div>
+          </div>
+        </div>
+      )}
+
       <div className="grid">
-        <div className="panel delay-1">
-          <div className="panel-title">Plan JSON</div>
-          {result?.plan ? (
-            <pre className="pre">{JSON.stringify(result.plan, null, 2)}</pre>
-          ) : (
-            <div className="empty">No plan yet.</div>
-          )}
-        </div>
-
         <div className="panel delay-2">
-          <div className="panel-title">Execution Results</div>
-          {results.length ? (
-            <div className="list">
-              {results.map((item, index) => (
-                <div
-                  key={`${item.stepIndex}-${index}`}
-                  className={`list-item ${item.ok ? 'ok' : 'fail'}`}
-                >
-                  <span>
-                    Step {item.stepIndex + 1} {item.type ? `(${item.type})` : ''}
-                  </span>
-                  <span>{item.ok ? 'ok' : item.error ?? 'failed'}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No execution results yet.</div>
-          )}
-        </div>
-
-        <div className="panel delay-3">
-          <div className="panel-title">Outputs</div>
-          {outputsCount ? (
-            <div className="list">
-              {result.outputs.map((item: any, index: number) => (
-                <div key={`out-${index}`} className="list-item">
-                  <span>{item.type}</span>
-                  <span>{JSON.stringify(item.payload)}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No outputs yet.</div>
-          )}
+          <div className="panel-title">Execution Flow</div>
+          <div className="flow-wrap">{renderFlowBody()}</div>
         </div>
       </div>
     </div>

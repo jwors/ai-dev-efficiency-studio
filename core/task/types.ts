@@ -5,6 +5,7 @@ export const Action = z.enum([
   'log',
   'emit',
   'http',
+  'export_flow'
 ]);
 
 export type LogTask = {
@@ -17,7 +18,7 @@ export type LogTask = {
 export type EmitTask = {
   type: 'emit';
   params: {
-    data: unknown;
+    data: { data: { content: string } };
   };
 };
 
@@ -31,7 +32,16 @@ export type HttpTask = {
   };
 };
 
+export type ExportFlowTask = {
+  type: 'export_flow',
+  params?: {
+    format?: 'png' | 'svg';     // 先 png 就够
+    filename?: string;          // e.g. "plan-flow.png"
+  };
+}
+
 export type Task =
   | LogTask
   | EmitTask
-  | HttpTask;
+  | HttpTask
+  | ExportFlowTask;
