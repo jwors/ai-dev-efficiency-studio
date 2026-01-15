@@ -1,6 +1,6 @@
 import { SessionState } from '../types/type';	
 import { Message } from '../types/type';
-const MAX_HISTORY = 12;
+const MAX_HISTORY = 6;
 
 
 export async function updateSummaryIfNeeded(

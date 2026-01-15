@@ -30,7 +30,6 @@ export async function POST(req: Request) {
     }
   }
   const execution = await runPlan(plan);
-  console.log(state)
   saveSession(state)
   // 存储
   return NextResponse.json({

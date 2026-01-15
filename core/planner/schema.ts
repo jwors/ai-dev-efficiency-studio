@@ -11,8 +11,10 @@ export const StepSchema = z.object({
 export const PlanSchema = z.object({
 	goal: z.string(),
 	steps: z.array(StepSchema), 
-	id: z.string(),
-	model: z.string(),
-	created: z.number(),
+	meta: z.object({
+		id: z.string(),
+		model: z.string(),
+		created: z.number(),
+	}).optional()
 })
 export type Plan = z.infer<typeof PlanSchema>;
