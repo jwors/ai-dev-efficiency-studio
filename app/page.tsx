@@ -1,14 +1,8 @@
 'use client';
 
 import { getOrCreateSessionId } from '@/utils';
-import { useEffect, useRef, useState } from 'react';
-import ReactFlow, { Node, Edge } from 'reactflow';
-import 'reactflow/dist/style.css';
-
-type Flow = {
-  nodes: Node[];
-  edges: Edge[];
-};
+import { useEffect, useMemo, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 type ExecutionResult = {
   stepIndex: number;
@@ -18,96 +12,39 @@ type ExecutionResult = {
   error?: string;
 };
 
+type OutlineNode = {
+  id: string;
+  text: string;
+  level: number;
+  children: OutlineNode[];
+  targetId?: string;
+};
+
+type OutlineData = {
+  roots: OutlineNode[];
+  headingIds: string[];
+  listIds: string[];
+};
+
+type MarkdownHeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
+  node?: unknown;
+};
+
+type MarkdownListItemProps = React.LiHTMLAttributes<HTMLLIElement> & {
+  node?: unknown;
+};
+
 export default function Page() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [flow, setFlow] = useState<Flow | null>(null);
   const [uuid,setUuid] = useState<string | null>(null)
   useEffect(()=>{
     
     const id = getOrCreateSessionId()
     setUuid(id)
   },[])
-
-  function buildFlow(data: any): Flow {
-    const nodes: Node[] = [];
-    const edges: Edge[] = [];
-    const stepGap = 120;
-    const baseX = 40;
-    const results: ExecutionResult[] = Array.isArray(data?.results)
-      ? data.results
-      : [];
-    const errorSteps = new Set<number>();
-    results.forEach((item) => {
-      if (!item.ok && typeof item.stepIndex === 'number') {
-        errorSteps.add(item.stepIndex);
-      }
-    });
-
-    nodes.push({
-      id: 'input',
-      data: { label: 'User Input' },
-      position: { x: baseX, y: 0 },
-    });
-
-    nodes.push({
-      id: 'planner',
-      data: { label: `Goal: ${data.plan?.goal ?? 'N/A'}` },
-      position: { x: baseX, y: stepGap },
-    });
-
-    edges.push({
-      id: 'e-input-planner',
-      source: 'input',
-      target: 'planner',
-    });
-
-    const steps = Array.isArray(data.plan?.steps) ? data.plan.steps : [];
-    steps.forEach((step: any, index: number) => {
-      const stepId = `step-${index}`;
-      const isError = errorSteps.has(index);
-      const emitContent =
-        step.action === 'emit' ? step?.params?.data?.content : undefined;
-      const stepLabel =
-        step.action === 'emit' && typeof emitContent === 'string'
-          ? `${index + 1}. emit: ${emitContent}`
-          : `${index + 1}. ${step.action}`;
-
-      nodes.push({
-        id: stepId,
-        data: { label: stepLabel },
-        position: { x: baseX, y: stepGap * (index + 2) },
-        style: isError
-          ? { border: '1px solid #ff6b6b', color: '#ff6b6b' }
-          : undefined,
-      });
-
-      edges.push({
-        id: `e-${index}`,
-        source: index === 0 ? 'planner' : `step-${index - 1}`,
-        target: stepId,
-      });
-    });
-
-    const outputs = Array.isArray(data.outputs) ? data.outputs : [];
-    if (outputs.length > 0) {
-      nodes.push({
-        id: 'output',
-        data: { label: `Output (${outputs.length})` },
-        position: { x: baseX, y: stepGap * (steps.length + 2) },
-      });
-
-      edges.push({
-        id: 'e-output',
-        source: steps.length ? `step-${steps.length - 1}` : 'planner',
-        target: 'output',
-      });
-    }
-
-    return { nodes, edges };
-  }
 
   async function handleRun() {
     const input = inputRef.current?.value;
@@ -135,7 +72,6 @@ export default function Page() {
 
       const data = await response.json();
       setResult(data);
-      setFlow(buildFlow(data));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
@@ -152,7 +88,6 @@ export default function Page() {
 
   function handleClear() {
     setResult(null);
-    setFlow(null);
     setError(null);
     if (inputRef.current) {
       inputRef.current.value = '';
@@ -164,111 +99,286 @@ export default function Page() {
   ? result.results
   : [];
   const errorCount = results.filter((item) => !item.ok).length;
-  const hasExportFlow =
-    Array.isArray(result?.plan?.steps) &&
-    result.plan.steps.some((step: any) => step.action === 'export_flow');
   const emitContents = Array.isArray(result?.plan?.steps)
     ? result.plan.steps
         .filter((step: any) => step.action === 'emit')
         .map((step: any) => step?.params?.data?.content)
         .filter((content: unknown) => typeof content === 'string')
     : [];
-  const renderFlowBody = () =>
-    flow ? (
-      <ReactFlow nodes={flow.nodes} edges={flow.edges} fitView />
-    ) : (
-      <div className="flow-empty">
-        Run a task to visualize the planner and executor flow.
-      </div>
-    );
+  const outlineData = useMemo<OutlineData[]>(
+    () =>
+      emitContents.map((content, emitIndex) => {
+        const roots: OutlineNode[] = [];
+        const stack: OutlineNode[] = [];
+        const headingIds: string[] = [];
+        const listIds: string[] = [];
+        let headingCounter = 0;
+        let listCounter = 0;
+        let currentHeadingLevel = 0;
+
+        content.split('\n').forEach((line) => {
+          const trimmed = line.trim();
+          const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
+          if (headingMatch) {
+            const level = headingMatch[1].length;
+            const text = headingMatch[2].trim();
+            const headingIndex = headingCounter++;
+            const targetId = `emit-${emitIndex}-h-${headingIndex}`;
+            headingIds.push(targetId);
+            const node: OutlineNode = {
+              id: `outline-${emitIndex}-h-${headingIndex}`,
+              text,
+              level,
+              children: [],
+              targetId,
+            };
+
+            while (stack.length && level <= stack[stack.length - 1].level) {
+              stack.pop();
+            }
+
+            if (stack.length) {
+              stack[stack.length - 1].children.push(node);
+            } else {
+              roots.push(node);
+            }
+
+            stack.push(node);
+            currentHeadingLevel = level;
+            return;
+          }
+
+          const listMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(line);
+          if (listMatch) {
+            const indentLevel = Math.floor(listMatch[1].length / 2);
+            const text = listMatch[3].trim();
+            if (!text) {
+              return;
+            }
+            const level = Math.max(1, currentHeadingLevel + 1 + indentLevel);
+            const listIndex = listCounter++;
+            const targetId = `emit-${emitIndex}-li-${listIndex}`;
+            listIds.push(targetId);
+            const node: OutlineNode = {
+              id: `outline-${emitIndex}-li-${listIndex}`,
+              text,
+              level,
+              children: [],
+              targetId,
+            };
+
+            while (stack.length && level <= stack[stack.length - 1].level) {
+              stack.pop();
+            }
+
+            if (stack.length) {
+              stack[stack.length - 1].children.push(node);
+            } else {
+              roots.push(node);
+            }
+
+            stack.push(node);
+          }
+        });
+
+        return { roots, headingIds, listIds };
+      }),
+    [emitContents],
+  );
+
+  const outlineTree = useMemo(() => {
+    const roots: OutlineNode[] = [];
+    outlineData.forEach((data, index) => {
+      if (!data.roots.length) {
+        return;
+      }
+      roots.push({
+        id: `outline-emit-${index}`,
+        text: `Emit ${index + 1}`,
+        level: 1,
+        children: data.roots,
+      });
+    });
+    return roots;
+  }, [outlineData]);
+
+  const handleOutlineClick = (targetId?: string) => {
+    if (!targetId) {
+      return;
+    }
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const renderOutline = (nodes: OutlineNode[]) => (
+    <ul className="outline-list">
+      {nodes.map((node) => (
+        <li key={node.id} className="outline-item">
+          <button
+            type="button"
+            className="outline-text"
+            onClick={() => handleOutlineClick(node.targetId)}
+            disabled={!node.targetId}
+          >
+            {node.text}
+          </button>
+          {node.children.length ? renderOutline(node.children) : null}
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div className="page">
-      <div className="hero">
-        <div className="title">AI Planner Studio</div>
-        <div className="subtitle">
-          Turn natural language into structured plans, then run them with
-          auditable execution logs.
-        </div>
-      </div>
+      <div className="layout">
+        <aside className="nav">
+          <div className="nav-title">导航栏</div>
+          <button className="nav-item">
+            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-6 1.6-6 3.6V20h12v-2.4c0-2-2.7-3.6-6-3.6z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>个人信息</span>
+          </button>
+          <button className="nav-item">
+            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M14 2H10l-.4 2.1-1.8.7-1.7-1.2-2.8 2.8 1.2 1.7-.7 1.8L2 10v4l2.1.4.7 1.8-1.2 1.7 2.8 2.8 1.7-1.2 1.8.7L10 22h4l.4-2.1 1.8-.7 1.7 1.2 2.8-2.8-1.2-1.7.7-1.8L22 14v-4l-2.1-.4-.7-1.8 1.2-1.7-2.8-2.8-1.7 1.2-1.8-.7L14 2zm-2 6a4 4 0 1 1-4 4 4 4 0 0 1 4-4z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>插件</span>
+          </button>
+          <button className="nav-item">
+            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-4.5 3v-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>聊天</span>
+          </button>
+        </aside>
 
-      <div className="grid">
-        <div className="panel delay-1">
-          <div className="panel-title">Task Input</div>
-          <input
-            type="text"
-            ref={inputRef}
-            className="input"
-            placeholder="Describe the task you want to execute"
-            disabled={loading}
-            onKeyDown={handleInputKeyDown}
-          />
-          <div className="actions">
-            <button
-              className="button button-primary"
-              onClick={handleRun}
-              disabled={loading}
-            >
-              {loading ? 'Running...' : 'Run Task'}
-            </button>
-            <button className="button button-ghost" onClick={handleClear}>
-              Clear
-            </button>
-          </div>
-          <div className="status">
-            {loading
-              ? 'Planner and executor are working...'
-              : 'Ready to build a plan.'}
-          </div>
-          {error && <div className="status">Error: {error}</div>}
-          <div className="badges">
-            <div className="badge">Steps: {stepsCount}</div>
-            <div className="badge">Outputs: {outputsCount}</div>
-            <div className="badge badge-ok">Success: {results.length - errorCount}</div>
-            <div className="badge badge-fail">Errors: {errorCount}</div>
-          </div>
-        </div>
+        <main className="main">
+          <div className="main-top">
+            <section className="panel content-panel">
+              <div className="panel-title">内容</div>
+              {emitContents.length ? (
+                <div className="emit-list">
+                  {emitContents.map((content: string, index: number) => {
+                    const headingIds = outlineData[index]?.headingIds ?? [];
+                    const listIds = outlineData[index]?.listIds ?? [];
+                    let headingCursor = 0;
+                    let listCursor = 0;
+                    const components = {
+                      h1: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h1 id={id} {...rest} />;
+                      },
+                      h2: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h2 id={id} {...rest} />;
+                      },
+                      h3: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h3 id={id} {...rest} />;
+                      },
+                      h4: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h4 id={id} {...rest} />;
+                      },
+                      h5: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h5 id={id} {...rest} />;
+                      },
+                      h6: (props: MarkdownHeadingProps) => {
+                        const { node, ...rest } = props;
+                        const id = headingIds[headingCursor++];
+                        return <h6 id={id} {...rest} />;
+                      },
+                      li: (props: MarkdownListItemProps) => {
+                        const { node, ...rest } = props;
+                        const id = listIds[listCursor++];
+                        return <li id={id} {...rest} />;
+                      },
+                    };
 
-        <div className="panel delay-2">
-          <div className="panel-title">Content Container</div>
-          {emitContents.length ? (
-            <div className="list emit-list">
-              {emitContents.map((content: string, index: number) => (
-                <div key={`emit-${index}`} className="list-item emit-item">
-                  <span>{content}</span>
+                    return (
+                      <div key={`emit-${index}`} className="emit-card">
+                      <div className="emit-body markdown">
+                        <ReactMarkdown components={components}>
+                          {content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                    );
+                  })}
                 </div>
-              ))}
+              ) : (
+                <div className="empty">No emit content yet.</div>
+              )}
+            </section>
+
+            <section className="panel flow-panel">
+              <div className="panel-title">内容地图</div>
+              <div className="flow-wrap">
+                {outlineTree.length ? (
+                  <div className="outline-tree">{renderOutline(outlineTree)}</div>
+                ) : (
+                  <div className="flow-empty">No outline yet.</div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <section className="panel input-panel">
+            <div className="panel-title">Input Container</div>
+            <input
+              type="text"
+              ref={inputRef}
+              className="input"
+              placeholder="Describe the task you want to execute"
+              disabled={loading}
+              onKeyDown={handleInputKeyDown}
+            />
+            <div className="actions">
+              <button
+                className="button button-primary"
+                onClick={handleRun}
+                disabled={loading}
+              >
+                {loading ? 'Running...' : 'Run Task'}
+              </button>
+              <button className="button button-ghost" onClick={handleClear}>
+                Clear
+              </button>
             </div>
-          ) : (
-            <div className="empty">No emit content yet.</div>
-          )}
-        </div>
-      </div>
-
-      {hasExportFlow && (
-        <div className="grid">
-          <div className="panel delay-1">
-            <div className="panel-title">Flow</div>
-            <div className="flow-wrap">{renderFlowBody()}</div>
-          </div>
-
-          <div className="panel delay-2">
-            <div className="panel-title">Flow</div>
-            <div className="flow-wrap">{renderFlowBody()}</div>
-          </div>
-
-          <div className="panel delay-3">
-            <div className="panel-title">Flow</div>
-            <div className="flow-wrap">{renderFlowBody()}</div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid">
-        <div className="panel delay-2">
-          <div className="panel-title">Execution Flow</div>
-          <div className="flow-wrap">{renderFlowBody()}</div>
-        </div>
+            <div className="status">
+              {loading
+                ? 'Planner and executor are working...'
+                : 'Ready to build a plan.'}
+            </div>
+            {error && <div className="status">Error: {error}</div>}
+            <div className="badges">
+              <div className="badge">Steps: {stepsCount}</div>
+              <div className="badge">Outputs: {outputsCount}</div>
+              <div className="badge badge-ok">
+                Success: {results.length - errorCount}
+              </div>
+              <div className="badge badge-fail">Errors: {errorCount}</div>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );

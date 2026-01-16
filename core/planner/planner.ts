@@ -23,7 +23,6 @@ export async function planner(input: string, state:SessionState ) {
   
   context = plannerPrompt(input, state);
   context = clampMessagesToBudget(context, MAX_PROMPT_TOKENS - RESERVED_OUTPUT);
-  console.log(state)
   // 对 ai 返回的内容进行严格的约束
   const rawText = await callLLM(context);
   let json: unknown;
