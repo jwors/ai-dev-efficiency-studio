@@ -40,11 +40,25 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [uuid,setUuid] = useState<string | null>(null)
+  const [isFlowOpen, setIsFlowOpen] = useState(false);
   useEffect(()=>{
     
     const id = getOrCreateSessionId()
     setUuid(id)
   },[])
+
+  useEffect(() => {
+    if (!isFlowOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsFlowOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFlowOpen]);
 
   async function handleRun() {
     const input = inputRef.current?.value;
@@ -201,6 +215,21 @@ export default function Page() {
     });
     return roots;
   }, [outlineData]);
+
+  const executorFlowText = useMemo(() => {
+    if (!result) {
+      return '';
+    }
+    return JSON.stringify(
+      {
+        plan: result.plan ?? null,
+        results: result.results ?? [],
+        outputs: result.outputs ?? [],
+      },
+      null,
+      2,
+    );
+  }, [result]);
 
   const handleOutlineClick = (targetId?: string) => {
     if (!targetId) {
@@ -359,6 +388,13 @@ export default function Page() {
               >
                 {loading ? 'Running...' : 'Run Task'}
               </button>
+              <button
+                className="button button-ghost"
+                onClick={() => setIsFlowOpen(true)}
+                disabled={!result}
+              >
+                View Executor Flow
+              </button>
               <button className="button button-ghost" onClick={handleClear}>
                 Clear
               </button>
@@ -380,6 +416,41 @@ export default function Page() {
           </section>
         </main>
       </div>
+      {isFlowOpen && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setIsFlowOpen(false)}
+        >
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="executor-flow-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2 className="modal-title" id="executor-flow-title">
+                Executor Flow
+              </h2>
+              <button
+                className="button button-ghost modal-close"
+                type="button"
+                onClick={() => setIsFlowOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              {executorFlowText ? (
+                <pre className="modal-pre">{executorFlowText}</pre>
+              ) : (
+                <div className="empty">No executor flow yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
