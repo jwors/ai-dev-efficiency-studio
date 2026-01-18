@@ -282,15 +282,6 @@ export default function Page() {
             </svg>
             <span>插件</span>
           </button>
-          <button className="nav-item">
-            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-4.5 3v-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
-                fill="currentColor"
-              />
-            </svg>
-            <span>聊天</span>
-          </button>
         </aside>
 
         <main className="main">
