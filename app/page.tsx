@@ -107,7 +107,7 @@ export default function Page() {
     : [];
   const outlineData = useMemo<OutlineData[]>(
     () =>
-      emitContents.map((content, emitIndex) => {
+      emitContents.map((content:any, emitIndex:any) => {
         const roots: OutlineNode[] = [];
         const stack: OutlineNode[] = [];
         const headingIds: string[] = [];
@@ -116,7 +116,7 @@ export default function Page() {
         let listCounter = 0;
         let currentHeadingLevel = 0;
 
-        content.split('\n').forEach((line) => {
+        content.split('\n').forEach((line:any) => {
           const trimmed = line.trim();
           const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
           if (headingMatch) {
