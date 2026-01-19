@@ -3,6 +3,7 @@ import type { Task } from '@/core/task/types';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { SessionState } from '../types/type';
+import { PolicyError, policyGuard } from '../security/policyGuard';
 
 const workspaceRoot = path.resolve(process.cwd());
 
@@ -15,7 +16,23 @@ function ensureWorkspacePath(filePath: string) {
   return resolved;
 }
 
-export async function executeTask(task: Task,state:SessionState) {
+export async function executeTask(task: Task, state: SessionState) {
+  try {
+    policyGuard(task)
+  } catch(e) {
+    const msg = e instanceof PolicyError ? e.message : '任务被安全策略拦截。';
+    return {
+      ok: false,
+      type: task.type,
+      error:msg,
+      output: {
+        type:'emit',
+        payload: {
+          content:`⚠️ 安全限制：${msg}`
+        }
+      }
+    }
+  }
   switch (task.type) {
     case 'log':
       return {
@@ -23,7 +40,7 @@ export async function executeTask(task: Task,state:SessionState) {
         ok: true,
         message: task.params.message,
       };
-      case 'emit':
+    case 'emit':
       const content = String(task.params?.data?.content ?? "");
       state.observation ??= {emits:[]}
       state.observation.emits.push({

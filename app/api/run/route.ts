@@ -3,14 +3,23 @@ import { planner } from '@/core/planner';
 import { runPlan } from '@/core/executor/runPlan';
 import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
+import { inputGuard } from '@/core/security/inputGuard';
 
 export async function POST(req: Request) {
   initLLMOnce();
 
   const { input,uuid }: { input: string,uuid:string} =
   await req.json();
-
+  const blocked = inputGuard(input)
   const state = getSession(uuid)
+  if (blocked) {
+    return Response.json({
+      plan: null,
+      results: [],
+      output: [blocked],
+      observation:state?.observation ?? null
+    })
+  }
 
 
   const plan = await planner(input,state);
