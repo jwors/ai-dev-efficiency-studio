@@ -18,7 +18,7 @@ export type LogTask = {
 export type EmitTask = {
   type: 'emit';
   params: {
-    data: { data: { content: string } };
+    data: { content: string };
   };
 };
 

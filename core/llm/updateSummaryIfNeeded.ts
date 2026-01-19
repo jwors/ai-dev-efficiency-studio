@@ -1,6 +1,6 @@
 import { SessionState } from '../types/type';	
 import { Message } from '../types/type';
-const MAX_HISTORY = 6;
+const MAX_HISTORY =12;
 
 
 export async function updateSummaryIfNeeded(
@@ -35,5 +35,8 @@ export async function updateSummaryIfNeeded(
   const newSummary = (await callLLM(messages)).trim();
 
   state.summary = newSummary;
+  // 相当于摘要
   state.history = keep;
+  // history 最近的对话
+
 }

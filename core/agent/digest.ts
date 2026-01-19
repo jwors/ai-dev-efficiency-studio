@@ -1,8 +1,12 @@
+import type { SessionState } from "../types/type";
 
-function buildObservationDigest(obs?: { emits: Array<{content:string, at:string}>, facts?: Record<string, unknown> }) {
-  if (!obs) return "";
-  return JSON.stringify({
-    lastEmits: obs.emits.slice(-3).map(e => e.content),
-    factsKeys: obs.facts ? Object.keys(obs.facts).slice(0, 20) : [],
-  });
+export function buildObservationDigest(state: SessionState) {
+  const obs = state.observation;
+  if (!obs || !obs.emits || obs.emits.length === 0) return "";
+
+  const lastEmits = obs.emits
+    .slice(-3)
+    .map(e => String(e.content ?? "").slice(0, 200)); // 每条最多200字，防token爆
+
+  return JSON.stringify({ lastEmits });
 }

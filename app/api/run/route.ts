@@ -9,9 +9,8 @@ export async function POST(req: Request) {
 
   const { input,uuid }: { input: string,uuid:string} =
   await req.json();
+
   const state = getSession(uuid)
-  console.log("LLM_PROVIDER:", process.env.LLM_PROVIDER);
-  console.log("QWEN_API_KEY exists:", !!process.env.QWEN_API_KEY);
 
 
   const plan = await planner(input,state);
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
       break;
     }
   }
-  const execution = await runPlan(plan);
+  const execution = await runPlan(plan,state);
   saveSession(state)
   // 存储
   return NextResponse.json({

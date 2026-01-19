@@ -1,16 +1,13 @@
 import 'server-only';
-import type { Message } from '../types/type';
+import type { Message, SessionState } from '../types/type';
+import { buildObservationDigest } from '../agent/digest';
 
 
-export function plannerPrompt(input: string, opts: {
-  history?: Message[];
-  summary?: string;
-  observationDigest?: string;
-}):Message[] {
-    const  messages: Message[] = [
-      {
-        role: 'system',
-        content:`
+export function plannerPrompt(input: string, opts: SessionState): Message[] {
+  const messages: Message[] = [
+    {
+      role: 'system',
+      content: `
           你是 Task Planner：将用户输入转换为【可执行的 Plan JSON】。
 
           【硬性要求（必须遵守）】
@@ -40,21 +37,26 @@ export function plannerPrompt(input: string, opts: {
             ]
           }
       `
-      }
-    ]
+    }
+  ]
 
-    if (opts.summary) {
-      messages.push({ role: "system", content: `SESSION_SUMMARY:\n${opts.summary}` });
-    }
-    if (opts.observationDigest) {
-      messages.push({ role: "system", content: `SYSTEM_OBSERVATION_DIGEST:\n${opts.observationDigest}` });
-    }
-  
-    messages.push(...(opts.history ?? []));
-  
+  if (opts.summary) {
+    messages.push({ role: "system", content: `SESSION_SUMMARY:\n${opts.summary}` });
+  }
+  const digest = buildObservationDigest(opts)
+
+  if (digest) {
+    messages.push({
+      role: "system",
+      content: `SYSTEM_OBSERVATION_DIGEST:\n${digest}`,
+    });
+  }
+
+  messages.push(...(opts.history ?? []));
+
   messages.push({
     role: 'user',
-    content:input
+    content: input
   })
   return messages
 }

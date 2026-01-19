@@ -2,15 +2,17 @@ import 'server-only';
 import type { Plan } from '@/core/planner/schema';
 import { taskFromPlanStep } from '@/core/task/fromPlan';
 import { executeTask } from './index';
+import { SessionState } from '../types/type';
 
-export async function runPlan(plan: Plan) {
+export async function runPlan(plan: Plan,state:SessionState) {
   const results = [];
   const outputs = [];
 
   for (const [index, step] of plan.steps.entries()) {
     const task = taskFromPlanStep(step);
+    // 对于不同的 step 做不同的处理
     try {
-      const result = await executeTask(task);
+      const result = await executeTask(task,state);
       results.push({
         stepIndex: index,
         ...result,

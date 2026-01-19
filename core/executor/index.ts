@@ -2,6 +2,7 @@ import 'server-only';
 import type { Task } from '@/core/task/types';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { SessionState } from '../types/type';
 
 const workspaceRoot = path.resolve(process.cwd());
 
@@ -14,7 +15,7 @@ function ensureWorkspacePath(filePath: string) {
   return resolved;
 }
 
-export async function executeTask(task: Task) {
+export async function executeTask(task: Task,state:SessionState) {
   switch (task.type) {
     case 'log':
       return {
@@ -22,7 +23,13 @@ export async function executeTask(task: Task) {
         ok: true,
         message: task.params.message,
       };
-    case 'emit':
+      case 'emit':
+      const content = String(task.params?.data?.content ?? "");
+      state.observation ??= {emits:[]}
+      state.observation.emits.push({
+        content,
+        at:new Date().toISOString()
+      })
       return {
         type: 'emit',
         ok: true,

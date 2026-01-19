@@ -18,10 +18,11 @@ const RESERVED_OUTPUT = 1000;     // 给 planner 输出 JSON 留空间
 
 
 export async function planner(input: string, state:SessionState ) { 
-  // 1) 如果 history 太长，先摘要
   await updateSummaryIfNeeded(state, callLLmSummary)
+  // 1) 如果 history 太长，先摘要
   
   context = plannerPrompt(input, state);
+  // 2) 
   context = clampMessagesToBudget(context, MAX_PROMPT_TOKENS - RESERVED_OUTPUT);
   // 对 ai 返回的内容进行严格的约束
   const rawText = await callLLM(context);
