@@ -260,144 +260,129 @@ export default function Page() {
   );
 
   return (
-    <div className="page">
-      <div className="layout">
-        <aside className="nav">
-          <div className="nav-title">Navigation</div>
-          <button className="nav-item">
-            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M14 2H10l-.4 2.1-1.8.7-1.7-1.2-2.8 2.8 1.2 1.7-.7 1.8L2 10v4l2.1.4.7 1.8-1.2 1.7 2.8 2.8 1.7-1.2 1.8.7L10 22h4l.4-2.1 1.8-.7 1.7 1.2 2.8-2.8-1.2-1.7.7-1.8L22 14v-4l-2.1-.4-.7-1.8 1.2-1.7-2.8-2.8-1.7 1.2-1.8-.7L14 2zm-2 6a4 4 0 1 1-4 4 4 4 0 0 1 4-4z"
-                fill="currentColor"
-              />
-            </svg>
-            <span>插件</span>
-          </button>
-        </aside>
+    <>
+      <main className="main">
+        <div className="main-top">
+          <section className="panel content-panel">
+            <div className="panel-title">内容</div>
+            {emitContents.length ? (
+              <div className="emit-list">
+                {emitContents.map((content: string, index: number) => {
+                  const headingIds = outlineData[index]?.headingIds ?? [];
+                  const listIds = outlineData[index]?.listIds ?? [];
+                  let headingCursor = 0;
+                  let listCursor = 0;
+                  const components = {
+                    h1: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h1 id={id} {...rest} />;
+                    },
+                    h2: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h2 id={id} {...rest} />;
+                    },
+                    h3: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h3 id={id} {...rest} />;
+                    },
+                    h4: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h4 id={id} {...rest} />;
+                    },
+                    h5: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h5 id={id} {...rest} />;
+                    },
+                    h6: (props: MarkdownHeadingProps) => {
+                      const { node, ...rest } = props;
+                      const id = headingIds[headingCursor++];
+                      return <h6 id={id} {...rest} />;
+                    },
+                    li: (props: MarkdownListItemProps) => {
+                      const { node, ...rest } = props;
+                      const id = listIds[listCursor++];
+                      return <li id={id} {...rest} />;
+                    },
+                  };
 
-        <main className="main">
-          <div className="main-top">
-            <section className="panel content-panel">
-              <div className="panel-title">内容</div>
-              {emitContents.length ? (
-                <div className="emit-list">
-                  {emitContents.map((content: string, index: number) => {
-                    const headingIds = outlineData[index]?.headingIds ?? [];
-                    const listIds = outlineData[index]?.listIds ?? [];
-                    let headingCursor = 0;
-                    let listCursor = 0;
-                    const components = {
-                      h1: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h1 id={id} {...rest} />;
-                      },
-                      h2: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h2 id={id} {...rest} />;
-                      },
-                      h3: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h3 id={id} {...rest} />;
-                      },
-                      h4: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h4 id={id} {...rest} />;
-                      },
-                      h5: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h5 id={id} {...rest} />;
-                      },
-                      h6: (props: MarkdownHeadingProps) => {
-                        const { node, ...rest } = props;
-                        const id = headingIds[headingCursor++];
-                        return <h6 id={id} {...rest} />;
-                      },
-                      li: (props: MarkdownListItemProps) => {
-                        const { node, ...rest } = props;
-                        const id = listIds[listCursor++];
-                        return <li id={id} {...rest} />;
-                      },
-                    };
-
-                    return (
-                      <div key={`emit-${index}`} className="emit-card">
+                  return (
+                    <div key={`emit-${index}`} className="emit-card">
                       <div className="emit-body markdown">
                         <ReactMarkdown components={components}>
                           {content}
                         </ReactMarkdown>
                       </div>
                     </div>
-                    );
-                  })}
-                </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty">No emit content yet.</div>
+            )}
+          </section>
+
+          <section className="panel flow-panel">
+            <div className="panel-title">内容地图</div>
+            <div className="flow-wrap">
+              {outlineTree.length ? (
+                <div className="outline-tree">{renderOutline(outlineTree)}</div>
               ) : (
-                <div className="empty">No emit content yet.</div>
+                <div className="flow-empty">No outline yet.</div>
               )}
-            </section>
-
-            <section className="panel flow-panel">
-              <div className="panel-title">内容地图</div>
-              <div className="flow-wrap">
-                {outlineTree.length ? (
-                  <div className="outline-tree">{renderOutline(outlineTree)}</div>
-                ) : (
-                  <div className="flow-empty">No outline yet.</div>
-                )}
-              </div>
-            </section>
-          </div>
-
-          <section className="panel input-panel">
-            <div className="panel-title">Input Container</div>
-            <input
-              type="text"
-              ref={inputRef}
-              className="input"
-              placeholder="Describe the task you want to execute"
-              disabled={loading}
-              onKeyDown={handleInputKeyDown}
-            />
-            <div className="actions">
-              <button
-                className="button button-primary"
-                onClick={handleRun}
-                disabled={loading}
-              >
-                {loading ? 'Running...' : 'Run Task'}
-              </button>
-              <button
-                className="button button-ghost"
-                onClick={() => setIsFlowOpen(true)}
-                disabled={!result}
-              >
-                View Executor Flow
-              </button>
-              <button className="button button-ghost" onClick={handleClear}>
-                Clear
-              </button>
-            </div>
-            <div className="status">
-              {loading
-                ? 'Planner and executor are working...'
-                : 'Ready to build a plan.'}
-            </div>
-            {error && <div className="status errmsg">Error: {error}</div>}
-            <div className="badges">
-              <div className="badge">Steps: {stepsCount}</div>
-              <div className="badge">Outputs: {outputsCount}</div>
-              <div className="badge badge-ok">
-                Success: {results.length - errorCount}
-              </div>
-              <div className="badge badge-fail">Errors: {errorCount}</div>
             </div>
           </section>
-        </main>
-      </div>
+        </div>
+
+        <section className="panel input-panel">
+          <div className="panel-title">Input Container</div>
+          <input
+            type="text"
+            ref={inputRef}
+            className="input"
+            placeholder="Describe the task you want to execute"
+            disabled={loading}
+            onKeyDown={handleInputKeyDown}
+          />
+          <div className="actions">
+            <button
+              className="button button-primary"
+              onClick={handleRun}
+              disabled={loading}
+            >
+              {loading ? 'Running...' : 'Run Task'}
+            </button>
+            <button
+              className="button button-ghost"
+              onClick={() => setIsFlowOpen(true)}
+              disabled={!result}
+            >
+              View Executor Flow
+            </button>
+            <button className="button button-ghost" onClick={handleClear}>
+              Clear
+            </button>
+          </div>
+          <div className="status">
+            {loading
+              ? 'Planner and executor are working...'
+              : 'Ready to build a plan.'}
+          </div>
+          {error && <div className="status errmsg">Error: {error}</div>}
+          <div className="badges">
+            <div className="badge">Steps: {stepsCount}</div>
+            <div className="badge">Outputs: {outputsCount}</div>
+            <div className="badge badge-ok">
+              Success: {results.length - errorCount}
+            </div>
+            <div className="badge badge-fail">Errors: {errorCount}</div>
+          </div>
+        </section>
+      </main>
       {isFlowOpen && (
         <div
           className="modal-backdrop"
@@ -433,6 +418,6 @@ export default function Page() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

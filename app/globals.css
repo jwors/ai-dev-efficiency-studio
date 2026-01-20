@@ -108,6 +108,7 @@ body {
   gap: 10px;
   cursor: pointer;
   transition: border-color 150ms ease, transform 150ms ease;
+  text-decoration: none;
 }
 
 .nav-item:hover {
@@ -128,6 +129,29 @@ body {
   gap: 2%;
   height: 100%;
   overflow: hidden;
+}
+
+.route {
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+}
+
+.route > * {
+  width: 100%;
+}
+
+.route-single {
+  height: 100%;
+  display: flex;
+}
+
+.route-single .panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .main-top {
@@ -557,6 +581,11 @@ body {
   .content-panel,
   .flow-panel {
     height: 420px;
+  }
+
+  .route {
+    height: auto;
+    overflow: visible;
   }
 }
 
