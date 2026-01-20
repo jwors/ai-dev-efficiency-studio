@@ -11,15 +11,17 @@ export async function POST(req: Request) {
   const { input,uuid }: { input: string,uuid:string} =
   await req.json();
   const blocked = inputGuard(input)
-  const state = getSession(uuid)
   if (blocked) {
-    return Response.json({
-      plan: null,
-      results: [],
-      output: [blocked],
-      observation:state?.observation ?? null
-    })
+    return NextResponse.json(
+      {
+        error: blocked.payload.content as string
+      },
+      {
+        status: 400
+      }
+    )
   }
+  const state = getSession(uuid)
 
 
   const plan = await planner(input,state);

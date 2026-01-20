@@ -79,14 +79,14 @@ export default function Page() {
         },
         body: JSON.stringify({ input,uuid }),
       });
-
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP Error ${response.status}`);
       }
 
       const data = await response.json();
       setResult(data);
-    } catch (err) {
+    } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
       setLoading(false);
@@ -263,16 +263,7 @@ export default function Page() {
     <div className="page">
       <div className="layout">
         <aside className="nav">
-          <div className="nav-title">导航栏</div>
-          <button className="nav-item">
-            <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-6 1.6-6 3.6V20h12v-2.4c0-2-2.7-3.6-6-3.6z"
-                fill="currentColor"
-              />
-            </svg>
-            <span>个人信息</span>
-          </button>
+          <div className="nav-title">Navigation</div>
           <button className="nav-item">
             <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -395,7 +386,7 @@ export default function Page() {
                 ? 'Planner and executor are working...'
                 : 'Ready to build a plan.'}
             </div>
-            {error && <div className="status">Error: {error}</div>}
+            {error && <div className="status errmsg">Error: {error}</div>}
             <div className="badges">
               <div className="badge">Steps: {stepsCount}</div>
               <div className="badge">Outputs: {outputsCount}</div>

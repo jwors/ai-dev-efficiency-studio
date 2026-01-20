@@ -124,7 +124,7 @@ body {
 
 .main {
   display: grid;
-  grid-template-rows: 73% 25%;
+  grid-template-rows: 63% 35%;
   gap: 2%;
   height: 100%;
   overflow: hidden;
@@ -286,6 +286,9 @@ body {
   margin-top: 14px;
   font-size: 14px;
   color: var(--muted);
+}
+.errmsg {
+  color:red
 }
 
 .badges {
