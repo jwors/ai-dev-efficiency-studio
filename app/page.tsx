@@ -107,6 +107,11 @@ export default function Page() {
       inputRef.current.value = '';
     }
   }
+
+  function saveLog() { 
+
+  }
+
   const stepsCount = result?.plan?.steps?.length ?? 0;
   const outputsCount = result?.outputs?.length ?? 0;
   const results: ExecutionResult[] = Array.isArray(result?.results)
@@ -365,6 +370,9 @@ export default function Page() {
             </button>
             <button className="button button-ghost" onClick={handleClear}>
               Clear
+            </button>
+            <button className="button button-ghost" onClick={saveLog}>
+              Save Log
             </button>
           </div>
           <div className="status">

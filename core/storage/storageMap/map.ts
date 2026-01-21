@@ -1,4 +1,5 @@
 import { SessionState } from '@/core/types/type';
+import { saveSessiontoFile } from '@/core/storage/fileStorage/fileSave';
 
 const memStore = new Map<string, SessionState>
 
@@ -22,4 +23,5 @@ export function getSession(sessionId: string): SessionState {
 export function saveSession(state: SessionState) { 
 	state.updatedAt = Date.now();
 	memStore.set(state.sessionId,state)
+	saveSessiontoFile(state);
 }

@@ -17,7 +17,7 @@ export function loadSessionFromFile(sessionId: string): SessionState | null {
 }
 
 export function saveSessiontoFile(state: SessionState) { 
-	ensureDir;
+	ensureDir();
 	const p = path.join(DIR, `${state.sessionId}.json`);
 	fs.writeFileSync(p, JSON.stringify(state, null, 2), "utf-8");
 }
