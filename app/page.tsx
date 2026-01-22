@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 type ExecutionResult = {
   stepIndex: number;
   type?: string;
-  ok: boolean;
+  fatal: boolean;
   data?: unknown;
   error?: string;
 };
@@ -117,7 +117,7 @@ export default function Page() {
   const results: ExecutionResult[] = Array.isArray(result?.results)
   ? result.results
   : [];
-  const errorCount = results.filter((item) => !item.ok).length;
+  const errorCount = results.filter((item) => item.fatal).length;
   const emitContents = Array.isArray(result?.results)
     ? result.results
         .map((item: any) => {
@@ -276,7 +276,6 @@ export default function Page() {
       ))}
     </ul>
   );
-  console.log(emitContents)
   return (
     <>
       <main className="main">

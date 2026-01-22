@@ -40,7 +40,7 @@ export interface Plan {
 export interface ExecutionResult {
   stepIndex: number;
   type: string;
-  ok: boolean;
+  fatal: boolean;
   data?: any;
   error?: string;
   timestamp: number;
