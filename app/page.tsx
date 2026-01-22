@@ -118,15 +118,28 @@ export default function Page() {
   ? result.results
   : [];
   const errorCount = results.filter((item) => !item.ok).length;
-  const emitContents = Array.isArray(result?.plan?.steps)
-    ? result.plan.steps
-        .filter((step: any) => step.action === 'emit')
-        .map((step: any) => step?.params?.data?.content)
-        .filter((content: unknown) => typeof content === 'string')
+  const emitContents = Array.isArray(result?.results)
+    ? result.results
+        .map((item: any) => {
+          if (item?.type === 'emit' && item?.data?.content) {
+            return { content: item.data.content as string, type: 'emit' };
+          }
+          if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
+            return {
+              content: item.output.payload.content as string,
+              type: 'emit',
+            };
+          }
+          return null;
+        })
+        .filter(
+          (item: { content: string; type: string } | null) =>
+            item && typeof item.content === 'string',
+        )
     : [];
   const outlineData = useMemo<OutlineData[]>(
     () =>
-      emitContents.map((content:any, emitIndex:any) => {
+      emitContents.map((item: any, emitIndex: any) => {
         const roots: OutlineNode[] = [];
         const stack: OutlineNode[] = [];
         const headingIds: string[] = [];
@@ -135,7 +148,7 @@ export default function Page() {
         let listCounter = 0;
         let currentHeadingLevel = 0;
 
-        content.split('\n').forEach((line:any) => {
+        item.content.split('\n').forEach((line:any) => {
           const trimmed = line.trim();
           const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
           if (headingMatch) {
@@ -263,7 +276,7 @@ export default function Page() {
       ))}
     </ul>
   );
-
+  console.log(emitContents)
   return (
     <>
       <main className="main">
@@ -272,7 +285,7 @@ export default function Page() {
             <div className="panel-title">内容</div>
             {emitContents.length ? (
               <div className="emit-list">
-                {emitContents.map((content: string, index: number) => {
+                {emitContents.map((item: any, index: number) => {
                   const headingIds = outlineData[index]?.headingIds ?? [];
                   const listIds = outlineData[index]?.listIds ?? [];
                   let headingCursor = 0;
@@ -319,7 +332,7 @@ export default function Page() {
                     <div key={`emit-${index}`} className="emit-card">
                       <div className="emit-body markdown">
                         <ReactMarkdown components={components}>
-                          {content}
+                          {item.content}
                         </ReactMarkdown>
                       </div>
                     </div>

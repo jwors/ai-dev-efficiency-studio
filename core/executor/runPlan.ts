@@ -11,6 +11,7 @@ export async function runPlan(plan: Plan,state:SessionState) {
   for (const [index, step] of plan.steps.entries()) {
     const task = taskFromPlanStep(step);
     // 对于不同的 step 做不同的处理
+    console.log(task)
     try {
       const result = await executeTask(task,state);
       results.push({

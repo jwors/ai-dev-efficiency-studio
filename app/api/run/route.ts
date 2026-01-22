@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const plan = await planner(input,state);
 
   state.history.push({
-    role:'assistant',
+    role:'user',
     content:input
   })
 

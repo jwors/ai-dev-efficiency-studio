@@ -38,7 +38,7 @@ body {
 .page {
   min-height: 100vh;
   height: 100vh;
-  padding: 28px clamp(16px, 4vw, 48px) 40px;
+  padding: 28px  40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -133,7 +133,6 @@ body {
 
 .route {
   min-height: 100%;
-  height: 100%;
   overflow: hidden;
   display: flex;
 }
