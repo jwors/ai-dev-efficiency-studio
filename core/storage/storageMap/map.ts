@@ -22,6 +22,6 @@ export function getSession(sessionId: string): SessionState {
 // 存储会话信息
 export function saveSession(state: SessionState) { 
 	state.updatedAt = Date.now();
-	memStore.set(state.sessionId,state)
+	memStore.set(state.sessionId, state)
 	saveSessiontoFile(state);
 }

@@ -36,7 +36,6 @@ export class QwenProvide implements LLMProvider {
 		const data: any = await res.json();
 		
 		const content = String(data?.choices?.[0]?.message?.content ?? ""); // ✅ 强制 string
-	  
 		return {
 		  content,
 		  meta: {

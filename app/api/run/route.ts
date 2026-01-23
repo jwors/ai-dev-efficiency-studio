@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       break;
     }
   }
-  const execution = await runPlan(plan,state);
+  const execution = await runPlan(plan, state);
   saveSession(state)
   // 存储
   return NextResponse.json({
