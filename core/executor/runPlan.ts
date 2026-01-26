@@ -52,22 +52,18 @@ export async function runPlan(plan: Plan, state: SessionState) {
 
     try {
       const result = await executeTask(task, state);
-      console.log(result)
       results.push({ stepIndex: index, ...result });
 
-      // ✅ 1) 先收集“输出”
-      // 情况A：task 本身就是 emit
-      if (result.type === "emit" && result.data) {
-        outputs.push({ type: "emit", payload: result.data });
+      if (result.type === "emit" && result.payload?.content) {
+        outputs.push({ type: "emit", payload: result.payload }); // payload={content}
       }
 
-      // 情况B：task 不是 emit，但携带 output（比如 policy 拦截）
-      if (result.output?.type === "emit") {
-        outputs.push(result.output);
+      // B) 任意 task 附带 output（policy 拦截等）
+      if (result.output?.type === "emit" && result.output?.payload?.content) {
+        outputs.push(result.output); // output 已是 {type:'emit',payload:{content}}
       }
 
-      // ✅ 2) 再决定是否中断
-      if (result.fatal) break;
+      if (result.fatal) break;  
 
     } catch (error: any) {
       results.push({

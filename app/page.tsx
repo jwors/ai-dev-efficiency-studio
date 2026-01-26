@@ -119,10 +119,29 @@ export default function Page() {
   const stepsCount = result?.plan?.steps?.length ?? 0;
   const outputsCount = result?.outputs?.length ?? 0;
   const results: ExecutionResult[] = Array.isArray(result?.results)
-  ? result.results
-  : [];
+    ? result.results
+    : [];
   const errorCount = results.filter((item) => !item.ok).length;
-  const emitContents = Array.isArray(result?.results)
+  const emitContents = Array.isArray(result?.outputs)
+    ? result.outputs
+        .map((item: any) => {
+          if (item?.type === 'emit' && item?.payload?.content) {
+            return { content: item.payload.content as string, type: 'emit' };
+          }
+          if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
+            return {
+              content: item.output.payload.content as string,
+              type: 'emit',
+            };
+          }
+          return null;
+        })
+        .filter(
+          (item: { content: string; type: string } | null) =>
+            item && typeof item.content === 'string',
+        )
+    : [];
+  const outlineEmitContents = Array.isArray(result?.results)
     ? result.results
         .map((item: any) => {
           if (item?.type === 'emit' && item?.payload?.content) {
@@ -143,7 +162,7 @@ export default function Page() {
     : [];
   const outlineData = useMemo<OutlineData[]>(
     () =>
-      emitContents.map((item: any, emitIndex: any) => {
+      outlineEmitContents.map((item: any, emitIndex: any) => {
         const roots: OutlineNode[] = [];
         const stack: OutlineNode[] = [];
         const headingIds: string[] = [];
@@ -219,7 +238,7 @@ export default function Page() {
 
         return { roots, headingIds, listIds };
       }),
-    [emitContents],
+    [outlineEmitContents],
   );
 
   const outlineTree = useMemo(() => {

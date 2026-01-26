@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Message, SessionState } from '../types/type';
 import { buildObservationDigest } from '../agent/digest';
+import { sanitizeHistoryForPlanner } from './sanitize';
 
 
 export function plannerPrompt(input: string, opts: SessionState): Message[] {
@@ -18,7 +19,7 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
           5) 所有面向用户的最终内容必须通过 emit 输出
           6) emit.params.data 只能是：{ "content": string }
           7) emit.params.data.content 必须是 Markdown（可用标题/列表/加粗/代码块/表格）
-
+          8) 禁止复用历史对话中的 URL/headers/body 等工具参数；只有当用户在本轮输入明确给出 URL 时，才允许生成 http 步骤。
           【Schema】
           {
             "goal": "string",
@@ -51,8 +52,8 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
       content: `SYSTEM_OBSERVATION_DIGEST:\n${digest}`,
     });
   }
-
-  messages.push(...(opts.history ?? []));
+  const safeHistory = sanitizeHistoryForPlanner(opts.history ?? [])
+  messages.push(...safeHistory);
 
   messages.push({
     role: 'user',

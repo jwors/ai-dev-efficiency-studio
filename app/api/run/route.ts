@@ -23,9 +23,8 @@ export async function POST(req: Request) {
   }
   const state = getSession(uuid)
 
-
   const plan = await planner(input,state);
-
+  console.log(plan)
   state.history.push({
     role:'user',
     content:input
@@ -48,8 +47,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     plan,
     observation:state.observation ?? null,
-    results: execution.results,
-    outputs: execution.outputs,
+    results: execution.results, // 系统看的
+    outputs: execution.outputs, // 用户看的
     sessionId:state.sessionId
   });
 }

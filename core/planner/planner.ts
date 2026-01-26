@@ -44,8 +44,7 @@ export async function planner(input: string, state:SessionState ) {
     model: parsed.data.meta?.model ?? rawText.meta.model ?? "unknown",
     created: parsed.data.meta?.created ?? rawText.meta.created ?? Date.now(),
   };
-
-  // 或者你想更干净：return { plan: parsed.data, meta: raw.meta }
+  console.log(planWithMeta)
   return planWithMeta;
   // 返回内容
 }
