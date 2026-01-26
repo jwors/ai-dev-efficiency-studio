@@ -52,7 +52,7 @@ export async function runPlan(plan: Plan, state: SessionState) {
 
     try {
       const result = await executeTask(task, state);
-
+      console.log(result)
       results.push({ stepIndex: index, ...result });
 
       // ✅ 1) 先收集“输出”

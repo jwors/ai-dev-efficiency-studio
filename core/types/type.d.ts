@@ -40,8 +40,9 @@ export interface Plan {
 export interface ExecutionResult {
   stepIndex: number;
   type: string;
-  fatal: boolean;
+  fatal?: boolean; // 表示是否被拦截
   data?: any;
+  ok:boolean  // 表示这一步是否成功执行
   error?: string;
   timestamp: number;
 }

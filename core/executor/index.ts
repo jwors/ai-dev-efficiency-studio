@@ -23,6 +23,7 @@ export async function executeTask(task: Task, state: SessionState) {
     const msg = e instanceof PolicyError ? e.message : '任务被安全策略拦截。';
     return {
       fatal: true,
+      ok:false,
       type: task.type,
       error:msg,
       output: {
@@ -37,7 +38,7 @@ export async function executeTask(task: Task, state: SessionState) {
     case 'log':
       return {
         type: 'log',
-        fatal: false,
+        ok:true,
         message: task.params.message,
       };
     case 'emit':
@@ -49,8 +50,8 @@ export async function executeTask(task: Task, state: SessionState) {
       })
       return {
         type: 'emit',
-        fatal: false,
-        data:task.params.data
+        ok: true,
+        payload:task.params.data
       };
     case 'http': {
       const { url, method = 'GET', headers = {}, body } = task.params;
@@ -78,13 +79,14 @@ export async function executeTask(task: Task, state: SessionState) {
       return {
         type: 'http',
         fatal: !res.ok,
+        ok:res.ok,
         status: res.status,
         data: responseBody,
       };
     }
     case 'export_flow':
       return {
-        fatal: false,
+        ok:true,
         type: 'export_flow' as const,
         artifact: {
           kind: task.params?.format ?? 'png',

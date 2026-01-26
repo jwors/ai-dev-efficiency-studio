@@ -47,7 +47,9 @@ export async function POST(req: Request) {
   // 存储
   return NextResponse.json({
     plan,
+    observation:state.observation ?? null,
     results: execution.results,
     outputs: execution.outputs,
+    sessionId:state.sessionId
   });
 }

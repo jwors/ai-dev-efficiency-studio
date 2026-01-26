@@ -1,14 +1,17 @@
 'use client';
 
+import { mergePlanAndResults } from '@/lib/merge';
 import { getOrCreateSessionId } from '@/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import 'reactflow/dist/style.css';
 
 type ExecutionResult = {
   stepIndex: number;
   type?: string;
-  fatal: boolean;
-  data?: unknown;
+  ok: boolean;
+  payload?: unknown;
   error?: string;
 };
 
@@ -41,6 +44,7 @@ export default function Page() {
   const [result, setResult] = useState<any>(null);
   const [uuid,setUuid] = useState<string | null>(null)
   const [isFlowOpen, setIsFlowOpen] = useState(false);
+  const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
   useEffect(()=>{
     
     const id = getOrCreateSessionId()
@@ -117,12 +121,12 @@ export default function Page() {
   const results: ExecutionResult[] = Array.isArray(result?.results)
   ? result.results
   : [];
-  const errorCount = results.filter((item) => item.fatal).length;
+  const errorCount = results.filter((item) => !item.ok).length;
   const emitContents = Array.isArray(result?.results)
     ? result.results
         .map((item: any) => {
-          if (item?.type === 'emit' && item?.data?.content) {
-            return { content: item.data.content as string, type: 'emit' };
+          if (item?.type === 'emit' && item?.payload?.content) {
+            return { content: item.payload.content as string, type: 'emit' };
           }
           if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
             return {
@@ -234,20 +238,44 @@ export default function Page() {
     return roots;
   }, [outlineData]);
 
-  const executorFlowText = useMemo(() => {
+  const stepViews = useMemo(() => {
     if (!result) {
-      return '';
+      return [];
     }
-    return JSON.stringify(
-      {
-        plan: result.plan ?? null,
-        results: result.results ?? [],
-        outputs: result.outputs ?? [],
-      },
-      null,
-      2,
-    );
+    if (!result?.plan) return [];
+    return mergePlanAndResults(result.plan, result.results ?? []);
   }, [result]);
+  const flowNodes = useMemo(
+    () =>
+      stepViews.map((step, index) => ({
+        id: `step-${step.stepIndex}`,
+        position: { x: 0, y: index * 90 },
+        data: {
+          label: (
+            <div className="flow-node-label">
+              <div className="flow-node-title">
+                Step {step.stepIndex + 1}
+              </div>
+              <div className="flow-node-action">{step.action}</div>
+              <div className="flow-node-status">{step.status}</div>
+            </div>
+          ),
+        },
+        className: `flow-node status-${step.status}`,
+      })),
+    [stepViews],
+  );
+
+  const flowEdges = useMemo(
+    () =>
+      stepViews.slice(0, -1).map((step, index) => ({
+        id: `edge-${step.stepIndex}-${step.stepIndex + 1}`,
+        source: `step-${step.stepIndex}`,
+        target: `step-${stepViews[index + 1].stepIndex}`,
+        animated: step.status === 'failed',
+      })),
+    [stepViews],
+  );
 
   const handleOutlineClick = (targetId?: string) => {
     if (!targetId) {
@@ -429,12 +457,97 @@ export default function Page() {
               </button>
             </div>
             <div className="modal-body">
-              {executorFlowText ? (
-                <pre className="modal-pre">{executorFlowText}</pre>
-              ) : (
-                <div className="empty">No executor flow yet.</div>
-              )}
-            </div>
+  {stepViews.length ? (
+    <div className="flow-modal-grid">
+      {/* 左侧：步骤列表 */}
+      <div className="flow-steps">
+        {stepViews.map((s: any) => {
+          const isActive = s.stepIndex === selectedStepIndex;
+          const statusClass =
+            s.status === "ok"
+              ? "step-ok"
+              : s.status === "failed"
+              ? "step-failed"
+              : "step-skipped";
+
+          return (
+            <button
+              key={s.stepIndex}
+              type="button"
+              className={`flow-step ${statusClass} ${isActive ? "active" : ""}`}
+              onClick={() => setSelectedStepIndex(s.stepIndex)}
+            >
+              <div className="flow-step-title">
+                <span className="flow-step-idx">#{s.stepIndex + 1}</span>
+                <span className="flow-step-action">{s.action}</span>
+              </div>
+              <div className="flow-step-sub">
+                <span className="flow-step-status">{s.status}</span>
+                {s.fatal ? <span className="flow-step-fatal">fatal</span> : null}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 右侧：详情面板 */}
+      <div className="flow-detail">
+        {(() => {
+          const s = stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ?? stepViews[0];
+
+          return (
+            <>
+              <div className="flow-detail-header">
+                <div className="flow-detail-title">
+                  Step {s.stepIndex + 1}: {s.action}
+                </div>
+                <div className={`flow-chip ${
+                  s.status === "ok" ? "chip-ok" : s.status === "failed" ? "chip-failed" : "chip-skipped"
+                }`}>
+                  {s.status}
+                </div>
+              </div>
+
+              {s.error ? (
+                <div className="flow-detail-error">
+                  <strong>Error:</strong> {s.error}
+                </div>
+              ) : null}
+
+              {s.outputContent ? (
+                <div className="flow-detail-output">
+                  <div className="flow-detail-section-title">Output</div>
+                  <div className="markdown">
+                    <ReactMarkdown>{s.outputContent}</ReactMarkdown>
+                  </div>
+                </div>
+              ) : null}
+
+              {s.emitContent ? (
+                <div className="flow-detail-output">
+                  <div className="flow-detail-section-title">Emit</div>
+                  <div className="markdown">
+                    <ReactMarkdown>{s.emitContent}</ReactMarkdown>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flow-detail-section">
+                <div className="flow-detail-section-title">Params</div>
+                <pre className="flow-detail-pre">
+                  {JSON.stringify(s.params ?? {}, null, 2)}
+                </pre>
+              </div>
+            </>
+          );
+        })()}
+      </div>
+    </div>
+  ) : (
+    <div className="empty">No executor flow yet.</div>
+  )}
+</div>
+
           </div>
         </div>
       )}
