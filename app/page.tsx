@@ -264,37 +264,7 @@ export default function Page() {
     if (!result?.plan) return [];
     return mergePlanAndResults(result.plan, result.results ?? []);
   }, [result]);
-  const flowNodes = useMemo(
-    () =>
-      stepViews.map((step, index) => ({
-        id: `step-${step.stepIndex}`,
-        position: { x: 0, y: index * 90 },
-        data: {
-          label: (
-            <div className="flow-node-label">
-              <div className="flow-node-title">
-                Step {step.stepIndex + 1}
-              </div>
-              <div className="flow-node-action">{step.action}</div>
-              <div className="flow-node-status">{step.status}</div>
-            </div>
-          ),
-        },
-        className: `flow-node status-${step.status}`,
-      })),
-    [stepViews],
-  );
 
-  const flowEdges = useMemo(
-    () =>
-      stepViews.slice(0, -1).map((step, index) => ({
-        id: `edge-${step.stepIndex}-${step.stepIndex + 1}`,
-        source: `step-${step.stepIndex}`,
-        target: `step-${stepViews[index + 1].stepIndex}`,
-        animated: step.status === 'failed',
-      })),
-    [stepViews],
-  );
 
   const handleOutlineClick = (targetId?: string) => {
     if (!targetId) {

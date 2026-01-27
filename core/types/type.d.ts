@@ -28,6 +28,7 @@ export type SessionState = {
   observation?: {
     emits: Array<{ content: string; at: string }>;
   };
+  wbs?: WbsGraph;
   updatedAt: number,
   createdAt: number;
 };
@@ -51,6 +52,38 @@ export interface OutputItem {
   type: string;
   payload: any;
 }
+
+export type WbsNodeType = 'goal' | 'milestone' | 'task' | 'subtask';
+export type WbsNodeStatus = 'todo' | 'doing' | 'done' | 'blocked';
+export type WbsEdgeType = 'parent' | 'dependency';
+
+export type WbsNode = {
+  id: string;
+  title: string;
+  type: WbsNodeType;
+  status: WbsNodeStatus;
+  parentId: string | null;
+  dependsOn: string[];
+  notes: string[];
+};
+
+export type WbsEdge = {
+  from: string;
+  to: string;
+  type: WbsEdgeType;
+};
+
+export type WbsGraph = {
+  version: 'wbs.v1';
+  goal: string;
+  nodes: WbsNode[];
+  edges: WbsEdge[];
+  updates: {
+    addedNodeIds: string[];
+    updatedNodeIds: string[];
+    removedNodeIds: string[];
+  };
+};
 
 export interface Observation {
   outputs: OutputItem[];

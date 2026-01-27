@@ -110,11 +110,13 @@ app/
 
 ## 一句话终极总结（你可以记这个）
 
-> **history 解决“连贯性”**
-> **summary 解决“长期记忆”**
-> **observationDigest 解决“可复用的已交付事实”**
+1. history 解决“连贯性”
+2. summary 解决“长期记忆”
+3. observationDigest 解决“可复用的已交付事实”
+4. Plan AI 的“意图与规划” 
+5. Results：程序的“执行事实与轨迹 
+6. Outputs：系统“交付给用户的结果” 
 
-你复述的方向已经完全对了 ✅
 
 ---
 

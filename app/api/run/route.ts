@@ -4,6 +4,8 @@ import { runPlan } from '@/core/executor/runPlan';
 import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { inputGuard } from '@/core/security/inputGuard';
+import { runPlugins } from '@/core/plugins/runPlugins';
+import { wbsPlugin } from '@/core/plugins';
 
 export async function POST(req: Request) {
   initLLMOnce();
@@ -42,6 +44,7 @@ export async function POST(req: Request) {
     }
   }
   const execution = await runPlan(plan, state);
+  const pluginResults = await runPlugins([wbsPlugin], input, state);
   saveSession(state)
   // 存储
   return NextResponse.json({
@@ -49,6 +52,8 @@ export async function POST(req: Request) {
     observation:state.observation ?? null,
     results: execution.results, // 系统看的
     outputs: execution.outputs, // 用户看的
+    wbs: state.wbs ?? null,
+    plugins: pluginResults,
     sessionId:state.sessionId
   });
 }
