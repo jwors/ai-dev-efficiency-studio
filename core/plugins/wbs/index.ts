@@ -13,7 +13,10 @@ export async function runWbsPlugin(
   input: string,
   state: SessionState,
 ): Promise<PluginResult<WbsGraph>> {
+  // wbs 的 prompt
   let context = wbsPrompt(input, state);
+
+  // 上下文内容摘要
   context = clampMessagesToBudget(context, MAX_PROMPT_TOKENS - RESERVED_OUTPUT);
 
   const rawText = await callLLM(context);
@@ -28,6 +31,7 @@ export async function runWbsPlugin(
     };
   }
 
+  // zod 验证
   const parsed = WbsSchema.safeParse(json);
   if (!parsed.success) {
     return {

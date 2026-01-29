@@ -1,59 +1,50 @@
 import { NextResponse } from 'next/server';
-import { planner } from '@/core/planner';
-import { runPlan } from '@/core/executor/runPlan';
 import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { inputGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
-import { wbsPlugin } from '@/core/plugins';
+import { planExecutePlugin, wbsPlugin } from '@/core/plugins';
 
 export async function POST(req: Request) {
   initLLMOnce();
 
-  const { input,uuid }: { input: string,uuid:string} =
-  await req.json();
-  const blocked = inputGuard(input)
+  const { input, uuid }: { input: string; uuid: string } = await req.json();
+  const blocked = inputGuard(input);
   if (blocked) {
     return NextResponse.json(
       {
-        error: blocked.payload.content as string
+        error: blocked.payload.content as string,
       },
       {
-        status: 400
-      }
-    )
+        status: 400,
+      },
+    );
   }
-  const state = getSession(uuid)
 
-  const plan = await planner(input,state);
-  console.log(plan)
-  state.history.push({
-    role:'user',
-    content:input
-  })
+  const state = getSession(uuid);
 
-  // 存储当前用户的input 以及 llm 的 callback content
-  for (let i = 0; i < plan.steps.length; i++){
-    let item = plan.steps[i]
-    if(item.action === 'emit') {
-      state.history.push({
-        role:"assistant",
-        content:item.params?.data.content 
-      })
-      break;
-    }
+  const pluginResults = await runPlugins(
+    [planExecutePlugin, wbsPlugin],
+    input,
+    state,
+  );
+  const planPlugin = pluginResults.find((p) => p.name === 'plan-execute');
+  if (!planPlugin || !planPlugin.ok || !planPlugin.data) {
+    return NextResponse.json(
+      { error: planPlugin?.error ?? 'Plan plugin failed' },
+      { status: 500 },
+    );
   }
-  const execution = await runPlan(plan, state);
-  const pluginResults = await runPlugins([wbsPlugin], input, state);
-  saveSession(state)
-  // 存储
+
+  saveSession(state);
+
   return NextResponse.json({
-    plan,
-    observation:state.observation ?? null,
-    results: execution.results, // 系统看的
-    outputs: execution.outputs, // 用户看的
+    plan: planPlugin.data.plan,
+    observation: state.observation ?? null,
+    results: planPlugin.data.results, // 绯荤粺鐪嬬殑
+    outputs: planPlugin.data.outputs, // 鐢ㄦ埛鐪嬬殑
     wbs: state.wbs ?? null,
     plugins: pluginResults,
-    sessionId:state.sessionId
+    sessionId: state.sessionId,
   });
 }
