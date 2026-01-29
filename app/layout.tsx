@@ -48,7 +48,7 @@ export default function RootLayout({
                     fill="currentColor"
                   />
                 </svg>
-                <span>插件</span>
+                <span>Wbs</span>
               </Link>
             </aside>
             <div className="route">{children}</div>
