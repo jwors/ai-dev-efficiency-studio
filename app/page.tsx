@@ -46,7 +46,7 @@ export default function Page() {
   const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
   useEffect(()=>{
     
-    const id = getOrCreateSessionId()
+    const id = getOrCreateSessionId('home')
     setUuid(id)
   },[])
 

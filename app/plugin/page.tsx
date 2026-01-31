@@ -18,7 +18,7 @@ export default function PluginPage() {
   const [uuid, setUuid] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = getOrCreateSessionId();
+    const id = getOrCreateSessionId('plugin');
     setUuid(id);
   }, []);
 
