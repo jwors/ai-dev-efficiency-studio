@@ -23,11 +23,13 @@ export async function POST(req: Request) {
 
   const state = getSession(uuid);
 
+  // 运行插件
   const pluginResults = await runPlugins(
     [planExecutePlugin, wbsPlugin],
     input,
     state,
   );
+  
   const planPlugin = pluginResults.find((p) => p.name === 'plan-execute');
   if (!planPlugin || !planPlugin.ok || !planPlugin.data) {
     return NextResponse.json(

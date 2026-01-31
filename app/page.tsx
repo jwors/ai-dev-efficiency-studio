@@ -4,7 +4,6 @@ import { mergePlanAndResults } from '@/lib/merge';
 import { getOrCreateSessionId } from '@/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 type ExecutionResult = {

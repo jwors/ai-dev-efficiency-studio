@@ -39,7 +39,7 @@ export default function RootLayout({
                     fill="currentColor"
                   />
                 </svg>
-                <span>主页</span>
+                <span>PlanExecutor</span>
               </Link>
               <Link className="nav-item" href="/plugin">
                 <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
