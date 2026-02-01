@@ -1,5 +1,6 @@
 'use client';
 
+import { getSession } from '@/core/storage/storageMap/map';
 import { mergePlanAndResults } from '@/lib/merge';
 import { getOrCreateSessionId } from '@/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -48,7 +49,13 @@ export default function Page() {
     
     const id = getOrCreateSessionId('home')
     setUuid(id)
-  },[])
+  }, [])
+  
+  useEffect(() => {
+    if(!uuid) return
+    const data = getSession(uuid)
+    console.log('data', data)
+  }, [uuid])
 
   useEffect(() => {
     if (!isFlowOpen) {

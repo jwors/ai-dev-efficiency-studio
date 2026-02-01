@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const state = getSession(uuid);
+  const state = await getSession(uuid);
 
   // 运行插件
   const pluginResults = await runPlugins(
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     );
   }
 
-  saveSession(state);
+  await saveSession(state);
 
   return NextResponse.json({
     plan: planPlugin.data.plan,
