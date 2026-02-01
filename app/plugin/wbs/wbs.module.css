@@ -1,0 +1,33 @@
+.wbsRoot :global(.flow-wrap .react-flow) {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(198, 124, 78, 0.12), transparent 55%),
+    linear-gradient(140deg, rgba(252, 248, 243, 0.7), rgba(245, 236, 225, 0.8));
+}
+
+.wbsRoot :global(.react-flow__node) {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  box-shadow: 0 10px 22px rgba(31, 43, 35, 0.12);
+}
+
+.wbsRoot :global(.react-flow__edge-path),
+.wbsRoot :global(.react-flow__connection-path) {
+  stroke: rgba(67, 40, 24, 0.35);
+}
+
+.wbsRoot :global(.react-flow__controls button) {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(67, 40, 24, 0.2);
+  color: var(--text);
+}
+
+.wbsRoot :global(.react-flow__minimap) {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(67, 40, 24, 0.12);
+}
