@@ -1,6 +1,10 @@
 import { SessionState } from '@/core/types/type';
 import { loadSessionFromFile, saveSessiontoFile } from '@/core/storage/fileStorage/fileSave';
-import { loadSessionFromKv, saveSessionToKv } from '@/core/storage/kvStorage/kvStore';
+import {
+  addSessionIndex,
+  loadSessionFromKv,
+  saveSessionToKv,
+} from '@/core/storage/kvStorage/kvStore';
 
 const memStore = new Map<string, SessionState>();
 
@@ -9,6 +13,23 @@ function isKvConfigured() {
 }
 
 export async function getSession(sessionId: string): Promise<SessionState> {
+  const loaded = await loadSession(sessionId);
+  if (loaded) return loaded;
+
+  const init: SessionState = {
+    sessionId,
+    summary: '',
+    history: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  memStore.set(sessionId, init);
+  return init;
+}
+
+export async function loadSession(
+  sessionId: string,
+): Promise<SessionState | null> {
   const s = memStore.get(sessionId);
   if (s) return s;
 
@@ -22,23 +43,17 @@ export async function getSession(sessionId: string): Promise<SessionState> {
     memStore.set(sessionId, loaded);
     return loaded;
   }
-
-  const init: SessionState = {
-    sessionId,
-    summary: '',
-    history: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  memStore.set(sessionId, init);
-  return init;
+  return null;
 }
-
 
 export async function saveSession(state: SessionState) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
   if (isKvConfigured()) {
+    const [userId, scope] = state.sessionId.split(':');
+    if (userId && scope) {
+      await addSessionIndex(userId, scope, state.sessionId);
+    }
     await saveSessionToKv(state);
   } else {
     saveSessiontoFile(state);

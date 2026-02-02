@@ -6,6 +6,10 @@ function kvKey(sessionId: string) {
   return `session:${sessionId}`;
 }
 
+function userIndexKey(userId: string, scope?: string) {
+  return scope ? `user:${userId}:scope:${scope}:sessions` : `user:${userId}:sessions`;
+}
+
 export async function loadSessionFromKv(
   sessionId: string,
 ): Promise<SessionState | null> {
@@ -15,4 +19,22 @@ export async function loadSessionFromKv(
 
 export async function saveSessionToKv(state: SessionState): Promise<void> {
   await kv.set(kvKey(state.sessionId), state);
+}
+
+export async function addSessionIndex(
+  userId: string,
+  scope: string,
+  sessionId: string,
+): Promise<void> {
+  await kv.sadd(userIndexKey(userId), sessionId);
+  await kv.sadd(userIndexKey(userId, scope), sessionId);
+}
+
+export async function listSessionIdsFromKv(
+  userId: string,
+  scope?: string,
+): Promise<string[]> {
+  const key = userIndexKey(userId, scope);
+  const ids = await kv.smembers<string[]>(key);
+  return Array.isArray(ids) ? ids : [];
 }
