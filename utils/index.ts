@@ -34,15 +34,69 @@ export function getOrCreateSessionId(scope?: string) {
 }
 
 
-
-// 获取 缓存
-export function getCache(key: string) { 
-  const value = localStorage.getItem(key);
-  return value;
+/**
+ * Cookie 写入配置项类型定义
+ * 包含 maxAge/secure 等常用属性，贴合浏览器原生规范
+ */
+export interface CookieOptions {
+  maxAge?: number; // 有效期（秒），优先级高于 expires
+  path?: string; // 生效路径，默认 '/'
+  domain?: string; // 生效域名
+  secure?: boolean; // 仅 HTTPS 生效，生产环境建议开启
+  sameSite?: 'strict' | 'lax' | 'none'; // 防 CSRF 配置
 }
 
+/**
+ * 客户端读取 Cookie
+ * @param key Cookie 键名
+ * @returns 解码后的 Cookie 值（不存在返回 null）
+ */
+export const getCookie = (key: string): string | null => {
+  if (typeof document === 'undefined') return null; // 兜底：防止服务端意外执行
+  const cookieStr = document.cookie;
+  const cookies = cookieStr.split('; ').reduce<Record<string, string>>((acc, item) => {
+    const [k, v] = item.split('=');
+    acc[k] = decodeURIComponent(v); // 解码特殊字符（如中文、&等）
+    return acc;
+  }, {});
+  return cookies[key] || null;
+};
 
-// 设置 缓存
-export function setCache(key: string, value: string) {
-  localStorage.setItem(key, value);
-}
+/**
+ * 客户端写入 Cookie
+ * @param key Cookie 键名
+ * @param value Cookie 键值
+ * @param options 可选配置项
+ */
+export const setCookie = (
+  key: string,
+  value: string,
+  options: CookieOptions = {}
+): void => {
+  if (typeof document === 'undefined') return; // 兜底：防止服务端意外执行
+  // 编码键值，避免特殊字符导致的 Cookie 解析错误
+  const encodedKey = encodeURIComponent(key);
+  const encodedValue = encodeURIComponent(value);
+  let cookie = `${encodedKey}=${encodedValue}`;
+
+  // 拼接配置项，按浏览器规范处理
+  if (options.maxAge) cookie += `; max-age=${options.maxAge}`;
+  if (options.path) cookie += `; path=${options.path}`;
+  else cookie += `; path=/`; // 默认全站生效
+  if (options.domain) cookie += `; domain=${options.domain}`;
+  if (options.secure) cookie += `; secure`;
+  if (options.sameSite) cookie += `; SameSite=${options.sameSite}`;
+
+  // 写入 Cookie
+  document.cookie = cookie;
+};
+
+/**
+ * 客户端删除 Cookie
+ * @param key Cookie 键名
+ * @param options 可选配置（需与写入时的 path/domain 一致，否则删除失败）
+ */
+export const removeCookie = (key: string, options: Pick<CookieOptions, 'path' | 'domain'> = {}): void => {
+  // 通过设置 maxAge=0 实现删除，需保证配置与写入时一致
+  setCookie(key, '', { ...options, maxAge: 0 });
+};

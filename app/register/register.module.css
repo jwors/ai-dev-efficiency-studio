@@ -1,16 +1,18 @@
-.loginRoot {
+.registerRoot {
   display: grid;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  grid-template-rows: auto;
 }
 
-.loginPanel {
-  width: min(460px, 92vw);
+.registerPanel {
+  width: min(520px, 92vw);
   padding: 28px;
   position: relative;
   overflow: hidden;
 }
 
-.loginPanel::before {
+.registerPanel::before {
   content: "";
   position: absolute;
   inset: -40% -20% auto -20%;

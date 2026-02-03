@@ -1,29 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import styles from './login.module.css';
+import styles from './register.module.css';
 
-export default function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      // TODO: wire to real auth endpoint
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setError('登录接口未接入');
-    } finally {
-      setLoading(false);
-    }
-  }
-
+export default function RegisterPage() {
   return (
-    <main className={`main route-single ${styles.loginRoot}`}>
-      <section className={`panel ${styles.loginPanel}`}>
+    <main className={`main route-single ${styles.registerRoot}`}>
+      <section className={`panel ${styles.registerPanel}`}>
         <div className={styles.brand}>
           <div className={styles.logo}>
             <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -44,10 +26,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className={styles.title}>欢迎回来</div>
-        <div className={styles.subtitle}>请登录以继续使用控制台</div>
+        <div className={styles.title}>创建账户</div>
+        <div className={styles.subtitle}>填写信息以注册新用户</div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form className={styles.form}>
           <label className={styles.label}>
             用户名
             <input
@@ -56,7 +38,16 @@ export default function LoginPage() {
               className={`input ${styles.input}`}
               placeholder="输入用户ID"
               autoComplete="username"
-              disabled={loading}
+            />
+          </label>
+          <label className={styles.label}>
+            邮箱
+            <input
+              type="email"
+              name="email"
+              className={`input ${styles.input}`}
+              placeholder="name@domain.com"
+              autoComplete="email"
             />
           </label>
           <label className={styles.label}>
@@ -65,18 +56,26 @@ export default function LoginPage() {
               type="password"
               name="password"
               className={`input ${styles.input}`}
-              placeholder="输入密码"
-              autoComplete="current-password"
-              disabled={loading}
+              placeholder="设置密码"
+              autoComplete="new-password"
             />
           </label>
-          <button className={`button button-primary ${styles.submit}`} type="submit" disabled={loading}>
-            {loading ? '正在登录...' : '登录'}
+          <label className={styles.label}>
+            确认密码
+            <input
+              type="password"
+              name="confirmPassword"
+              className={`input ${styles.input}`}
+              placeholder="再次输入密码"
+              autoComplete="new-password"
+            />
+          </label>
+          <button className={`button button-primary ${styles.submit}`} type="submit">
+            注册
           </button>
-          <a href="/register" className={styles.link}>
-            没有账号？去注册
+          <a href="/login" className={styles.link}>
+            已有账号？去登录
           </a>
-          {error && <div className="status errmsg">Error: {error}</div>}
         </form>
       </section>
     </main>
