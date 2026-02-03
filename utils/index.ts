@@ -32,3 +32,17 @@ export function getOrCreateSessionId(scope?: string) {
   }
   return id;
 }
+
+
+
+// 获取 缓存
+export function getCache(key: string) { 
+  const value = localStorage.getItem(key);
+  return value;
+}
+
+
+// 设置 缓存
+export function setCache(key: string, value: string) {
+  localStorage.setItem(key, value);
+}

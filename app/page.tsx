@@ -50,9 +50,6 @@ export default function Page() {
     setUuid(id)
   }, [])
   
-  useEffect(() => {
-    if(!uuid) return
-  }, [uuid])
 
   useEffect(() => {
     if (!isFlowOpen) {

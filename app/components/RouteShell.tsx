@@ -1,20 +1,24 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { getCache } from '@/utils';
 import Link from 'next/link';
+import { redirect, usePathname } from 'next/navigation';
 
 type RouteShellProps = {
   children: React.ReactNode;
 };
 
-export default function RouteShell({ children }: RouteShellProps) {
+export default  function  RouteShell({ children }: RouteShellProps) {
+
+  const token = getCache('token');
   const pathname = usePathname();
-  const isLogin = pathname === '/login';
-
-  if (isLogin) {
-    return <div className="route route-single">{children}</div>;
+  if(pathname !== '/login') {
+    if (!token) {
+      return <div className="route route-single">{children}</div>
+    }
+    return <div className="route route-single">{children}</div>
   }
-
+ 
   return (
     <div className="layout">
       <aside className="nav">
