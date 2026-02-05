@@ -32,7 +32,11 @@ export default function RouteShell({ children }: RouteShellProps) {
       // 没有登陆的
       if (!token) {
         console.log(pathname)
-        router.push(pathname)
+        if (pathname === '/register') {
+          router.push(pathname)
+        } else {
+          router.push(pathname)
+        }
         router.refresh()
         setIsChecking(false)
         return
