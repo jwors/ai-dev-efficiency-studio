@@ -35,7 +35,7 @@ export default function RouteShell({ children }: RouteShellProps) {
         if (pathname === '/register') {
           router.push(pathname)
         } else {
-          router.push(pathname)
+          router.push('/login')
         }
         router.refresh()
         setIsChecking(false)

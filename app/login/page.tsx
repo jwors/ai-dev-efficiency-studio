@@ -49,13 +49,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <label className={styles.label}>
-            用户名
+            邮箱地址
             <input
               type="text"
-              name="userId"
+              name="email"
               className={`input ${styles.input}`}
-              placeholder="输入用户ID"
-              autoComplete="username"
+              placeholder="输入登陆邮箱"
+              autoComplete="email"
               disabled={loading}
             />
           </label>

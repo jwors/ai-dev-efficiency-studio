@@ -1,8 +1,30 @@
 'use client';
 
 import styles from './register.module.css';
+interface FormDadaType  {
+  email: string,
+  password:string
+}
 
 export default function RegisterPage() {
+
+  const  registerAction = async (formData:FormDadaType) => { 
+    console.log(formData)
+    let username = 'niaho', password = '123';
+    try {
+      const res = await fetch('/api/user/register',
+        {
+          method: 'POST',
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username, password }),
+        }
+      )
+
+    } catch (err) {
+      return { success: false, msg: "接口请求失败" };
+    }
+  }
+
   return (
     <main className={`main route-single ${styles.registerRoot}`}>
       <section className={`panel ${styles.registerPanel}`}>
@@ -29,17 +51,7 @@ export default function RegisterPage() {
         <div className={styles.title}>创建账户</div>
         <div className={styles.subtitle}>填写信息以注册新用户</div>
 
-        <form className={styles.form}>
-          <label className={styles.label}>
-            用户名
-            <input
-              type="text"
-              name="userId"
-              className={`input ${styles.input}`}
-              placeholder="输入用户ID"
-              autoComplete="username"
-            />
-          </label>
+        <form className={styles.form} method='post' action={registerAction}>
           <label className={styles.label}>
             邮箱
             <input
