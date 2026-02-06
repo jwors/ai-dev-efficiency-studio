@@ -1,25 +1,28 @@
 'use client';
 
 import styles from './register.module.css';
-interface FormDadaType  {
-  email: string,
-  password:string
-}
+
 
 export default function RegisterPage() {
 
-  const  registerAction = async (formData:FormDadaType) => { 
-    console.log(formData)
-    let username = 'niaho', password = '123';
+  const  registerAction = async (formData:any) => { 
+    console.log(formData.get('email'))
+    const email = formData.get('email')
+    const password = formData.get('password')
+    const confirmPassword = formData.get('confirmPassword')
+    if (password !== confirmPassword) {
+      return alert('请输入相同的密码')
+    }
     try {
       const res = await fetch('/api/user/register',
         {
           method: 'POST',
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ username, password }),
+          body: new URLSearchParams({ email, password }),
         }
       )
-
+      const data = await res.json();
+      console.log(data)
     } catch (err) {
       return { success: false, msg: "接口请求失败" };
     }

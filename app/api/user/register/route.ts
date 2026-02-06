@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma';
+import { edgeServerAppPaths } from 'next/dist/build/webpack/plugins/pages-manifest-plugin';
 
 export async function POST(req: Request) {
 	try {
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
 
 		const email = String(emailRaw || "").toLowerCase().trim();
 		const password = String(passwordRaw || "");
+		console.log(body.password)
 		//邮箱必填
 		if (!email) {
 			return NextResponse.json({
@@ -58,6 +60,7 @@ export async function POST(req: Request) {
 				status:201
 			})
 	} catch (e) { 
+		console.log(e)
 		return NextResponse.json({
 			error:"服务器错误",
 		},
