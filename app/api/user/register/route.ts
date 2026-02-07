@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma';
-import { edgeServerAppPaths } from 'next/dist/build/webpack/plugins/pages-manifest-plugin';
 
 export async function POST(req: Request) {
 	try {
-		const body = await req.json().catch(() => null);
-		const emailRaw = body?.email;
-		const passwordRaw = body?.password;
+		const body = await req.formData().catch(() => null);
+		console.log(body)
+		const emailRaw = body?.get('email');
+		const passwordRaw = body?.get("password");
 
 		const email = String(emailRaw || "").toLowerCase().trim();
 		const password = String(passwordRaw || "");
-		console.log(body.password)
 		//邮箱必填
 		if (!email) {
 			return NextResponse.json({
@@ -54,7 +53,8 @@ export async function POST(req: Request) {
 			select: { id: true, email: true, name: true, createdAt: true },
 		})
 		return NextResponse.json({
-			ok:true,user
+			ok: true,
+			user
 		},
 			{
 				status:201

@@ -2,17 +2,38 @@
 
 import { useState } from 'react';
 import styles from './login.module.css';
+import { isValidEmail } from '@/lib/validators';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setLoading(true);
 
+    if (!isValidEmail(email)) {
+      setError('请输入正确的邮箱地址');
+      return;
+    }
+    if (!password) {
+      setError('请输入密码');
+      return;
+    }
+
+    setLoading(true);
     try {
+      const result = await fetch('/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          email: String(email),
+          password: String(password),
+        }),
+      });
+      await result.json();
       // TODO: wire to real auth endpoint
       await new Promise((resolve) => setTimeout(resolve, 300));
       setError('登录接口未接入');
@@ -54,9 +75,11 @@ export default function LoginPage() {
               type="text"
               name="email"
               className={`input ${styles.input}`}
-              placeholder="输入登陆邮箱"
+              placeholder="输入登录邮箱"
               autoComplete="email"
               disabled={loading}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
             />
           </label>
           <label className={styles.label}>
@@ -68,6 +91,8 @@ export default function LoginPage() {
               placeholder="输入密码"
               autoComplete="current-password"
               disabled={loading}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
             />
           </label>
           <button className={`button button-primary ${styles.submit}`} type="submit" disabled={loading}>

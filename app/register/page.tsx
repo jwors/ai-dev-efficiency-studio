@@ -1,32 +1,52 @@
 'use client';
 
+import { useState } from 'react';
 import styles from './register.module.css';
-
+import { message } from 'antd';
+import { isValidEmail } from '@/lib/validators';
 
 export default function RegisterPage() {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const  registerAction = async (formData:any) => { 
-    console.log(formData.get('email'))
-    const email = formData.get('email')
-    const password = formData.get('password')
-    const confirmPassword = formData.get('confirmPassword')
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!isValidEmail(email)) {
+      message.error({ content: '请输入正确的邮箱地址' });
+      return;
+    }
+    if (!password) {
+      message.error({ content: '请输入密码' });
+      return;
+    }
     if (password !== confirmPassword) {
-      return alert('请输入相同的密码')
+      message.error({ content: '请输入相同的密码' });
+      return;
     }
+
+    setLoading(true);
     try {
-      const res = await fetch('/api/user/register',
-        {
-          method: 'POST',
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ email, password }),
-        }
-      )
+      const res = await fetch('/api/user/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          email: String(email),
+          password: String(password),
+        }),
+      });
       const data = await res.json();
-      console.log(data)
+      if (data.ok) {
+        message.success({ content: '注册成功' });
+      }
     } catch (err) {
-      return { success: false, msg: "接口请求失败" };
+      message.error({ content: '接口请求失败' });
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <main className={`main route-single ${styles.registerRoot}`}>
@@ -54,7 +74,7 @@ export default function RegisterPage() {
         <div className={styles.title}>创建账户</div>
         <div className={styles.subtitle}>填写信息以注册新用户</div>
 
-        <form className={styles.form} method='post' action={registerAction}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.label}>
             邮箱
             <input
@@ -63,6 +83,9 @@ export default function RegisterPage() {
               className={`input ${styles.input}`}
               placeholder="name@domain.com"
               autoComplete="email"
+              disabled={loading}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
             />
           </label>
           <label className={styles.label}>
@@ -73,6 +96,9 @@ export default function RegisterPage() {
               className={`input ${styles.input}`}
               placeholder="设置密码"
               autoComplete="new-password"
+              disabled={loading}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
             />
           </label>
           <label className={styles.label}>
@@ -83,10 +109,13 @@ export default function RegisterPage() {
               className={`input ${styles.input}`}
               placeholder="再次输入密码"
               autoComplete="new-password"
+              disabled={loading}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
             />
           </label>
-          <button className={`button button-primary ${styles.submit}`} type="submit">
-            注册
+          <button className={`button button-primary ${styles.submit}`} type="submit" disabled={loading}>
+            {loading ? '正在注册...' : '注册'}
           </button>
           <a href="/login" className={styles.link}>
             已有账号？去登录
