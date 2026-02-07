@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import styles from './register.module.css';
 import { message } from 'antd';
 import { isValidEmail } from '@/lib/validators';
@@ -40,6 +41,14 @@ export default function RegisterPage() {
       const data = await res.json();
       if (data.ok) {
         message.success({ content: '注册成功' });
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        });
+        if (result?.ok) {
+          window.location.href = '/';
+        }
       }
     } catch (err) {
       message.error({ content: '接口请求失败' });

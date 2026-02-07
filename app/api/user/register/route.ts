@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: Request) {
 	try {
 		const body = await req.formData().catch(() => null);
-		console.log(body)
 		const emailRaw = body?.get('email');
 		const passwordRaw = body?.get("password");
 

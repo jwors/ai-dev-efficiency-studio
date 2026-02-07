@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import styles from './login.module.css';
 import { isValidEmail } from '@/lib/validators';
 
@@ -25,18 +26,17 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result = await fetch('/api/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          email: String(email),
-          password: String(password),
-        }),
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
       });
-      await result.json();
-      // TODO: wire to real auth endpoint
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setError('登录接口未接入');
+      if (!result?.ok) {
+        setError('邮箱或密码错误');
+        return;
+      }
+      
+      window.location.href = '/';
     } finally {
       setLoading(false);
     }

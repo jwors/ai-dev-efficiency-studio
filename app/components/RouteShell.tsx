@@ -1,66 +1,46 @@
 'use client';
-import { getCookie } from '@/utils';
+
 import Link from 'next/link';
-import { usePathname,useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 type RouteShellProps = {
   children: React.ReactNode;
 };
 
-import { ReactNode, useEffect, useState } from 'react';
-
-
+const AUTH_ROUTES = new Set(['/login', '/register']);
 
 export default function RouteShell({ children }: RouteShellProps) {
-  const pathname = usePathname(); // Next.js 客户端路由路径
-  const router = useRouter(); // Next.js 客户端路由实例
-  const [isChecking, setIsChecking] = useState<boolean>(true); // 鉴权加载状态，防止页面闪屏
-  const token = getCookie('token'); // 客户端读取 token Cookie
+  const pathname = usePathname();
+  const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
+    if (!pathname) return;
+    if (status === 'loading') return;
 
-    const handleAuth = () => { 
-      // 有登陆 但是来到登陆界面的 直接来到 /
-      if (pathname === 'login') {
-        if (token) {
-          router.push('/')
-          router.refresh()
-        }
-        setIsChecking(false)
-        return
-      }
-      // 没有登陆的
-      if (!token) {
-        console.log(pathname)
-        if (pathname === '/register') {
-          router.push(pathname)
-        } else {
-          router.push('/login')
-        }
-        router.refresh()
-        setIsChecking(false)
-        return
-      }
+    const isAuthed = status === 'authenticated';
+    const isAuthRoute = AUTH_ROUTES.has(pathname);
+
+    if (isAuthRoute && isAuthed) {
+      router.replace('/');
+      return;
     }
-    handleAuth();
 
-   }, [
-    pathname,
-    token,
-    router
-  ])
+    if (!isAuthRoute && !isAuthed) {
+      router.replace('/login');
+    }
+  }, [pathname, router, status]);
 
-  // 校验中 就return
-  if (isChecking) {
-    return
+  if (status === 'loading') {
+    return null;
   }
 
-  // 登录页布局：无侧边导航，仅渲染子组件（与你原始逻辑一致）
   if (pathname === '/login' || pathname === '/register') {
     return <div className="route route-single">{children}</div>;
   }
 
-  // 已登录非登录页布局：保留原有侧边导航+主内容区（与你原始样式/结构一致）
   return (
     <div className="layout">
       <aside className="nav">
