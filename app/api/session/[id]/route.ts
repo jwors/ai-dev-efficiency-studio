@@ -1,14 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { loadSession, saveSession } from '@/core/storage/storageMap/map';
 import type { SessionState } from '@/core/types/type';
 
 type Params = { id: string };
+type RouteContext = { params: Promise<Params> };
 
 export async function GET(
-  _req: Request,
-  { params }: { params: Params },
+  _req: NextRequest,
+  { params }: RouteContext,
 ) {
-  const sessionId = params.id;
+  const { id: sessionId } = await params;
   const session = await loadSession(sessionId);
   if (!session) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
@@ -17,10 +18,10 @@ export async function GET(
 }
 
 export async function PUT(
-  req: Request,
-  { params }: { params: Params },
+  req: NextRequest,
+  { params }: RouteContext,
 ) {
-  const sessionId = params.id;
+  const { id: sessionId } = await params;
   const body = (await req.json()) as SessionState;
   if (!body || body.sessionId !== sessionId) {
     return NextResponse.json(
