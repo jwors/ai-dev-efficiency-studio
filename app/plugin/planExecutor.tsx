@@ -1,7 +1,7 @@
 'use client';
 
 import { mergePlanAndResults } from '@/lib/merge';
-import { getOrCreateSessionId } from '@/utils';
+import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import 'reactflow/dist/style.css';
@@ -41,14 +41,10 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [uuid,setUuid] = useState<string | null>(null)
+  const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
   const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
-  useEffect(()=>{
-    
-    const id = getOrCreateSessionId('home')
-    setUuid(id)
-  },[])
+
 
   useEffect(() => {
     if (!isFlowOpen) {
@@ -80,7 +76,7 @@ export default function Page() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input,uuid }),
+        body: JSON.stringify({ input,uuid:userId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
