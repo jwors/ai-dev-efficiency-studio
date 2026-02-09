@@ -21,17 +21,6 @@ export function isJson(str: string): boolean{
   }
 }
 
-// 前端：拿 sessionId
-export function getOrCreateSessionId(scope?: string) {
-  const key = scope ? `agent_session_id:${scope}` : "agent_session_id";
-  let id = sessionStorage.getItem(key);
-  if (!id) {
-    const newId = crypto.randomUUID();
-    sessionStorage.setItem(key, newId);
-    id = newId;
-  }
-  return id;
-}
 
 
 /**

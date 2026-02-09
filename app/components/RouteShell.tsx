@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 type RouteShellProps = {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ const AUTH_ROUTES = new Set(['/login', '/register']);
 export default function RouteShell({ children }: RouteShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
 
   useEffect(() => {
     if (!pathname) return;
@@ -41,10 +41,15 @@ export default function RouteShell({ children }: RouteShellProps) {
     return <div className="route route-single">{children}</div>;
   }
 
+  const userName = session?.user?.name || session?.user?.email || '用户';
+
   return (
     <div className="layout">
       <aside className="nav">
         <div className="nav-title">Navigation</div>
+        <div className="nav-item" style={{ cursor: 'default' }}>
+          <span>你好，{userName}</span>
+        </div>
         <Link className="nav-item" href="/">
           <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -63,6 +68,13 @@ export default function RouteShell({ children }: RouteShellProps) {
           </svg>
           <span>插件</span>
         </Link>
+        <button
+          className="nav-item"
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/login' })}
+        >
+          <span>退出登录</span>
+        </button>
       </aside>
       <div className="route">{children}</div>
     </div>

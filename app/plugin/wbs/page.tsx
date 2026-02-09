@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import TaskFlow from '@/app/components/taskFlow';
-import { getOrCreateSessionId } from '@/utils';
+import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import styles from './wbs.module.css';
 
 type PluginResult = {
@@ -16,12 +16,9 @@ export default function WbsPluginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [uuid, setUuid] = useState<string | null>(null);
+  const { userId } = useAuthUserId();
 
-  useEffect(() => {
-    const id = getOrCreateSessionId('plugin-wbs');
-    setUuid(id);
-  }, []);
+
 
   async function handleRun() {
     const input = inputRef.current?.value;
@@ -40,7 +37,7 @@ export default function WbsPluginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input, uuid }),
+        body: JSON.stringify({ input, uuid:userId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
