@@ -4,6 +4,13 @@ import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { inputGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
 import { planExecutePlugin, wbsPlugin } from '@/core/plugins';
+import type { PluginResult } from '@/core/plugins/types';
+
+type PlanExecuteData = {
+  plan: any;
+  results: any[];
+  outputs: any[];
+};
 
 export async function POST(req: Request) {
   initLLMOnce();
@@ -30,7 +37,9 @@ export async function POST(req: Request) {
     state,
   );
   
-  const planPlugin = pluginResults.find((p) => p.name === 'plan-execute');
+  const planPlugin = pluginResults.find(
+    (p) => p.name === 'plan-execute',
+  ) as PluginResult<PlanExecuteData> | undefined;
   if (!planPlugin || !planPlugin.ok || !planPlugin.data) {
     return NextResponse.json(
       { error: planPlugin?.error ?? 'Plan plugin failed' },
