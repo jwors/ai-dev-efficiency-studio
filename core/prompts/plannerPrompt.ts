@@ -1,8 +1,7 @@
 import 'server-only';
 import type { Message, SessionState } from '../types/type';
 import { buildObservationDigest } from '../agent/digest';
-import { sanitizeHistoryForPlanner } from './sanitize';
-
+import { sanitizeHistoryForPlanner } from '../planner/sanitize';
 
 export function plannerPrompt(input: string, opts: SessionState): Message[] {
   const messages: Message[] = [
@@ -37,27 +36,30 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
               { "action": "emit", "params": { "data": { "content": "# 标题\\n- 列表项\\n" } } }
             ]
           }
-      `
-    }
-  ]
+      `,
+    },
+  ];
 
   if (opts.summary) {
-    messages.push({ role: "system", content: `SESSION_SUMMARY:\n${opts.summary}` });
+    messages.push({
+      role: 'system',
+      content: `SESSION_SUMMARY:\n${opts.summary}`,
+    });
   }
-  const digest = buildObservationDigest(opts)
+  const digest = buildObservationDigest(opts);
 
   if (digest) {
     messages.push({
-      role: "system",
+      role: 'system',
       content: `SYSTEM_OBSERVATION_DIGEST:\n${digest}`,
     });
   }
-  const safeHistory = sanitizeHistoryForPlanner(opts.history ?? [])
+  const safeHistory = sanitizeHistoryForPlanner(opts.history ?? []);
   messages.push(...safeHistory);
 
   messages.push({
     role: 'user',
-    content: input
-  })
-  return messages
+    content: input,
+  });
+  return messages;
 }

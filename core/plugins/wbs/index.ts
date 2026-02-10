@@ -4,7 +4,7 @@ import { clampMessagesToBudget } from '../../llm/estimateToken';
 import type { SessionState } from '../../types/type';
 import type { PluginResult } from '../types';
 import { WbsSchema, type WbsGraph } from './schema';
-import { wbsPrompt } from './prompt';
+import { wbsPrompt } from '../../prompts/wbsPrompt';
 
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 1200;

@@ -16,10 +16,6 @@ export async function runPlanExecutePlugin(
 ): Promise<PluginResult<PlanExecuteData>> {
   const plan = await planner(input, state);
 
-  state.history.push({
-    role: 'user',
-    content: input,
-  });
 
   for (let i = 0; i < plan.steps.length; i++) {
     const item = plan.steps[i];

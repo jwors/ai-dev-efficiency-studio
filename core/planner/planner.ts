@@ -6,7 +6,7 @@ import 'server-only';
  */
 
 import { PlanSchema } from './schema';
-import { plannerPrompt } from './prompt';
+import { plannerPrompt } from '../prompts/plannerPrompt';
 import { callLLM,callLLmSummary } from '../llm';
 import { Message, SessionState } from '../types/type';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
@@ -44,7 +44,6 @@ export async function planner(input: string, state:SessionState ) {
     model: parsed.data.meta?.model ?? rawText.meta.model ?? "unknown",
     created: parsed.data.meta?.created ?? rawText.meta.created ?? Date.now(),
   };
-  console.log(planWithMeta)
   return planWithMeta;
   // 返回内容
 }

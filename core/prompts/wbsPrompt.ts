@@ -1,7 +1,7 @@
 import 'server-only';
-import type { Message, SessionState } from '../../types/type';
-import { buildObservationDigest } from '../../agent/digest';
-import { sanitizeHistoryForPlanner } from '../../planner/sanitize';
+import type { Message, SessionState } from '../types/type';
+import { buildObservationDigest } from '../agent/digest';
+import { sanitizeHistoryForPlanner } from '../planner/sanitize';
 
 export function wbsPrompt(input: string, state: SessionState): Message[] {
   const messages: Message[] = [
@@ -9,7 +9,6 @@ export function wbsPrompt(input: string, state: SessionState): Message[] {
       role: 'system',
       content: `
 你是任务拆解/WBS 结构化输出器。你只能输出 JSON，禁止解释、注释或 Markdown。
-
 硬性要求（必须遵守）：
 1) 只输出 JSON，必须能被 JSON.parse 解析
 2) 输出必须符合 Schema
