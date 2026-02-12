@@ -44,7 +44,38 @@ export default function Page() {
   const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
   const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
+  const sessionId = userId ? `${userId}_planExecutor` : '';
   
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const flushSession = () => {
+      const payload = JSON.stringify({ sessionId });
+      const ok = navigator.sendBeacon?.('/api/session/save', payload);
+      if (!ok) {
+        void fetch('/api/session/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        });
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSession();
+      }
+    };
+
+    window.addEventListener('pagehide', flushSession);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flushSession);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [sessionId]);
+
 
   useEffect(() => {
     if (!isFlowOpen) {
@@ -76,7 +107,7 @@ export default function Page() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input, uuid: userId }),
+        body: JSON.stringify({ input, uuid: sessionId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -107,9 +138,6 @@ export default function Page() {
     }
   }
 
-  function saveLog() { 
-
-  }
 
   const stepsCount = result?.plan?.steps?.length ?? 0;
   const outputsCount = result?.outputs?.length ?? 0;
@@ -394,9 +422,6 @@ export default function Page() {
             </button>
             <button className="button button-ghost" onClick={handleClear}>
               Clear
-            </button>
-            <button className="button button-ghost" onClick={saveLog}>
-              Save Log
             </button>
           </div>
           <div className="status">

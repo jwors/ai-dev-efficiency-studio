@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import TaskFlow from '@/app/components/taskFlow';
@@ -17,7 +17,37 @@ export default function WbsPluginPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const { userId } = useAuthUserId();
+  const sessionId = userId ? `${userId}_wbs` : '';
 
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const flushSession = () => {
+      const payload = JSON.stringify({ sessionId });
+      const ok = navigator.sendBeacon?.('/api/session/save', payload);
+      if (!ok) {
+        void fetch('/api/session/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        });
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSession();
+      }
+    };
+
+    window.addEventListener('pagehide', flushSession);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flushSession);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [sessionId]);
 
 
   async function handleRun() {
@@ -32,12 +62,12 @@ export default function WbsPluginPage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/run', {
+      const response = await fetch('/api/wbs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input, uuid:userId }),
+        body: JSON.stringify({ input, uuid: sessionId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
