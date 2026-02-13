@@ -44,7 +44,7 @@ export default function Page() {
   const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
   const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
-  const sessionId = userId ? `${userId}_planExecutor` : '';
+  const sessionId = userId ? `${userId}:planExecutor` : '';
   
   useEffect(() => {
     if (!sessionId) return;
@@ -70,6 +70,8 @@ export default function Page() {
 
     window.addEventListener('pagehide', flushSession);
     document.addEventListener('visibilitychange', onVisibilityChange);
+
+    getSessionList()
     return () => {
       window.removeEventListener('pagehide', flushSession);
       document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -121,6 +123,23 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function getSessionList() {
+    if (!userId) return
+    const params = new URLSearchParams({
+      userId,
+      scope:'planExecutor'
+    })
+    const res = await fetch(`api/session?${params.toString()}`, {
+      method:'GET'
+    })
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    console.log(data.sessions); 
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {

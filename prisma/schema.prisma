@@ -58,7 +58,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model PluginSession  {
+model PluginSession {
   sessionId   String   @id
   userId      String
   pluginScope String

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { loadSession, saveSession } from '@/core/storage/storageMap/map';
+import { listSessions, saveSession } from '@/core/storage/storageMap/map';
 import type { SessionState } from '@/core/types/type';
-import { listSessionIdsFromKv } from '@/core/storage/kvStorage/kvStore';
 
 type CreateSessionBody = {
   userId: string;
@@ -50,18 +49,9 @@ export async function GET(req: Request) {
     );
   }
 
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-    return NextResponse.json(
-      { error: 'KV not configured' },
-      { status: 501 },
-    );
-  }
-
-  const ids = await listSessionIdsFromKv(userId, scope);
-  const sessions = await Promise.all(ids.map((id) => loadSession(id)));
-  const filtered = sessions.filter((s): s is SessionState => Boolean(s));
+  const sessions = await listSessions(userId, scope);
 
   return NextResponse.json({
-    sessions: filtered,
+    sessions,
   });
 }

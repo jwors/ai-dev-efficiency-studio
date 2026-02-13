@@ -17,7 +17,7 @@ export default function WbsPluginPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const { userId } = useAuthUserId();
-  const sessionId = userId ? `${userId}_wbs` : '';
+  const sessionId = userId ? `${userId}:wbs` : '';
 
   useEffect(() => {
     if (!sessionId) return;

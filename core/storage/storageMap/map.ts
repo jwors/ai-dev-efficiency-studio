@@ -1,15 +1,15 @@
 import { SessionState } from '@/core/types/type';
-import { loadSessionFromFile, saveSessiontoFile } from '@/core/storage/fileStorage/fileSave';
-import {
-  addSessionIndex,
-  loadSessionFromKv,
-  saveSessionToKv,
-} from '@/core/storage/kvStorage/kvStore';
+import { getPrisma } from '@/lib/prisma';
 
 const memStore = new Map<string, SessionState>();
+const prisma = getPrisma();
 
-function isKvConfigured() {
-  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+function parseSessionId(sessionId: string) {
+  const parts = sessionId.split(':');
+  if (parts.length >= 2) {
+    return { userId: parts[0], pluginScope: parts[1] };
+  }
+  return { userId: sessionId, pluginScope: 'default' };
 }
 
 export async function getSession(sessionId: string): Promise<SessionState> {
@@ -33,29 +33,64 @@ export async function loadSession(
   const s = memStore.get(sessionId);
   if (s) return s;
 
-  let loaded: SessionState | null = null;
-  if (isKvConfigured()) {
-    loaded = await loadSessionFromKv(sessionId);
-  } else {
-    loaded = loadSessionFromFile(sessionId);
+  const row = await prisma.pluginSession.findUnique({
+    where: { sessionId },
+  });
+  if (!row) return null;
+
+  const data = row.data as SessionState;
+  if (data && data.sessionId === sessionId) {
+    memStore.set(sessionId, data);
+    return data;
   }
-  if (loaded) {
-    memStore.set(sessionId, loaded);
-    return loaded;
-  }
-  return null;
+
+  const fallback: SessionState = {
+    sessionId,
+    summary: '',
+    history: [],
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
+  };
+  memStore.set(sessionId, fallback);
+  return fallback;
 }
 
 export async function saveSession(state: SessionState) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
-  if (isKvConfigured()) {
-    const [userId, scope] = state.sessionId.split(':');
-    if (userId && scope) {
-      await addSessionIndex(userId, scope, state.sessionId);
-    }
-    await saveSessionToKv(state);
-  } else {
-    saveSessiontoFile(state);
-  }
+  const { userId, pluginScope } = parseSessionId(state.sessionId);
+
+  await prisma.pluginSession.upsert({
+    where: { sessionId: state.sessionId },
+    create: {
+      sessionId: state.sessionId,
+      userId,
+      pluginScope,
+      data: state,
+    },
+    update: {
+      userId,
+      pluginScope,
+      data: state,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function listSessions(
+  userId: string,
+  pluginScope?: string,
+): Promise<SessionState[]> {
+  const rows = await prisma.pluginSession.findMany({
+    where: {
+      userId,
+      ...(pluginScope ? { pluginScope } : {}),
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 100,
+  });
+  console.log(rows)
+  return rows
+    .map((row) => row.data as SessionState)
+    .filter((item): item is SessionState => Boolean(item?.sessionId));
 }

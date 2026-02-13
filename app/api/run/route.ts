@@ -13,10 +13,16 @@ type PlanExecuteData = {
   outputs: any[];
 };
 
+type RunBody = {
+  input: string;
+  uuid: string;
+  plugins?: string[];
+};
+
 export async function POST(req: Request) {
   initLLMOnce();
 
-  const { input, uuid,plugins, }: { input: string; uuid: string,plugins:string[] } = await req.json();
+  const { input, uuid, plugins } = (await req.json()) as RunBody;
   const blocked = inputGuard(input);
   if (blocked) {
     return NextResponse.json(
@@ -30,25 +36,23 @@ export async function POST(req: Request) {
   }
 
   const state = await getSession(uuid);
-  await updateSession(input,state)
-  // 如果没有插件 就添加默认插件
-  const requested = Array.isArray(plugins) ? plugins : ['plan-execute']
-  // 使用的插件
+  await updateSession(input, state);
+
+  const requested = Array.isArray(plugins) ? plugins : ['plan-execute'];
   const pluginList = [
     requested.includes('plan-execute') ? planExecutePlugin : null,
     requested.includes('wbs') ? wbsPlugin : null,
   ].filter(Boolean) as typeof planExecutePlugin[];
 
-  const pluginResults = await runPlugins(
-    pluginList,
-    input,
-    state,
-  );
-  
+  const pluginResults = await runPlugins(pluginList, input, state);
+
   const planPlugin = pluginResults.find(
     (p) => p.name === 'plan-execute',
   ) as PluginResult<PlanExecuteData> | undefined;
-  if (requested.includes('plan-execute') && (!planPlugin || !planPlugin.ok || !planPlugin.data)) {
+  if (
+    requested.includes('plan-execute') &&
+    (!planPlugin || !planPlugin.ok || !planPlugin.data)
+  ) {
     return NextResponse.json(
       { error: planPlugin?.error ?? 'Plan plugin failed' },
       { status: 500 },
