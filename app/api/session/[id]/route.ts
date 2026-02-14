@@ -14,6 +14,7 @@ export async function GET(
   if (!session) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 });
   }
+  console.log(session)
   return NextResponse.json(session);
 }
 

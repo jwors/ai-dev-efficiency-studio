@@ -47,6 +47,12 @@ export default function Page() {
   const sessionId = userId ? `${userId}:planExecutor` : '';
   
   useEffect(() => {
+    if (userId) {
+      getSessionList()
+    }
+  },[userId])
+  
+  useEffect(() => {
     if (!sessionId) return;
 
     const flushSession = () => {
@@ -71,7 +77,6 @@ export default function Page() {
     window.addEventListener('pagehide', flushSession);
     document.addEventListener('visibilitychange', onVisibilityChange);
 
-    getSessionList()
     return () => {
       window.removeEventListener('pagehide', flushSession);
       document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -139,7 +144,10 @@ export default function Page() {
       throw new Error(err.error || `HTTP ${res.status}`);
     }
     const data = await res.json();
-    console.log(data.sessions); 
+    if (data) {
+      console.log(data.sessions[0]); 
+      setResult(data.sessions[0])
+    }
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
