@@ -23,6 +23,7 @@ export async function POST(req: Request) {
   initLLMOnce();
 
   const { input, uuid, plugins } = (await req.json()) as RunBody;
+  // 安全词
   const blocked = inputGuard(input);
   if (blocked) {
     return NextResponse.json(
@@ -35,7 +36,9 @@ export async function POST(req: Request) {
     );
   }
 
+  // 获取对话信息
   const state = await getSession(uuid);
+  // 更新对话信息
   await updateSession(input, state);
 
   const requested = Array.isArray(plugins) ? plugins : ['plan-execute'];
@@ -59,7 +62,14 @@ export async function POST(req: Request) {
     );
   }
 
-  await saveSession(state);
+  await saveSession({
+    plan: planPlugin?.data?.plan ?? null,
+    observation: state.observation ?? null,
+    results: planPlugin?.data?.results ?? [],
+    outputs: planPlugin?.data?.outputs ?? [],
+    plugins: pluginResults,
+    sessionId: state.sessionId,
+  });
 
   return NextResponse.json({
     plan: planPlugin?.data?.plan ?? null,

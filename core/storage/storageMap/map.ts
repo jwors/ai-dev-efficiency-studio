@@ -1,5 +1,6 @@
 import { SessionState } from '@/core/types/type';
 import { getPrisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 const memStore = new Map<string, SessionState>();
 const prisma = getPrisma();
@@ -38,7 +39,7 @@ export async function loadSession(
   });
   if (!row) return null;
 
-  const data = row.data as SessionState;
+  const data = row.data as unknown as SessionState;
   if (data && data.sessionId === sessionId) {
     memStore.set(sessionId, data);
     return data;
@@ -55,7 +56,7 @@ export async function loadSession(
   return fallback;
 }
 
-export async function saveSession(state: SessionState) {
+export async function saveSession(state: any) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
   const { userId, pluginScope } = parseSessionId(state.sessionId);
@@ -66,12 +67,12 @@ export async function saveSession(state: SessionState) {
       sessionId: state.sessionId,
       userId,
       pluginScope,
-      data: state,
+      data: state as unknown as Prisma.InputJsonValue,
     },
     update: {
       userId,
       pluginScope,
-      data: state,
+      data: state as unknown as Prisma.InputJsonValue,
       updatedAt: new Date(),
     },
   });
@@ -91,6 +92,6 @@ export async function listSessions(
   });
   console.log(rows)
   return rows
-    .map((row) => row.data as SessionState)
+    .map((row) => row.data as unknown as SessionState)
     .filter((item): item is SessionState => Boolean(item?.sessionId));
 }
