@@ -130,6 +130,7 @@ export default function Page() {
     }
   }
 
+  // 查询上次对话记录
   async function getSessionList() {
     if (!userId) return
     const params = new URLSearchParams({
@@ -145,7 +146,6 @@ export default function Page() {
     }
     const data = await res.json();
     if (data) {
-      console.log(data.sessions[0]); 
       setResult(data.sessions[0])
     }
   }

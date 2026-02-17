@@ -59,7 +59,6 @@ export async function POST(req: Request) {
 				status:201
 			})
 	} catch (e) { 
-		console.log(e)
 		return NextResponse.json({
 			error:"服务器错误",
 		},

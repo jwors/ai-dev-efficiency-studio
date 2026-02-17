@@ -62,14 +62,7 @@ export async function POST(req: Request) {
     );
   }
 
-  await saveSession({
-    plan: planPlugin?.data?.plan ?? null,
-    observation: state.observation ?? null,
-    results: planPlugin?.data?.results ?? [],
-    outputs: planPlugin?.data?.outputs ?? [],
-    plugins: pluginResults,
-    sessionId: state.sessionId,
-  });
+  await saveSession(state);
 
   return NextResponse.json({
     plan: planPlugin?.data?.plan ?? null,

@@ -90,7 +90,6 @@ export async function listSessions(
     orderBy: { updatedAt: 'desc' },
     take: 100,
   });
-  console.log(rows)
   return rows
     .map((row) => row.data as unknown as SessionState)
     .filter((item): item is SessionState => Boolean(item?.sessionId));
