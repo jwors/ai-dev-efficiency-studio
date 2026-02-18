@@ -16,6 +16,19 @@ const plugins = [
       </svg>
     ),
   },
+  {
+    slug: 'taskFlow',
+    name: '任务流程图',
+    description: '根据多轮对话生成任务流程图',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4 5h6v4H4V5zm10 0h6v4h-6V5zM9 15h6v4H9v-4zM7 9h2v3H7V9zm8 0h2v3h-2V9zM8 12h8v2H8v-2z"
+          fill="currentColor"
+        />
+      </svg>
+    ),
+  },
 ];
 
 export default function PluginListPage() {

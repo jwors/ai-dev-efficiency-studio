@@ -33,7 +33,7 @@ export default function TaskFlowPluginPage() {
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">
         <section className="panel flow-panel">
-          <div className="panel-title">WBS 任务拆解图</div>
+          <div className="panel-title">任务流程图</div>
           <TaskFlow wbs={result?.wbs ?? null} />
         </section>
       </div>
