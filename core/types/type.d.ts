@@ -29,6 +29,7 @@ export type SessionState = {
     emits: Array<{ content: string; at: string }>;
   };
   wbs?: WbsGraph;
+  flowchart?: FlowchartJson;
   updatedAt: number,
   createdAt: number;
 };
@@ -84,6 +85,36 @@ export type WbsGraph = {
     removedNodeIds: string[];
   };
 };
+
+export type FlowchartJson = {
+  version: 'flowchart.v1';
+  title: string;
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  updates: {
+    addedNodeIds: string[];
+    updatedNodeIds: string[];
+    removedNodeIds: string[];
+    addedEdgeIds: string[];
+    removedEdgeIds: string[];
+  };
+};
+
+export type FlowNode = {
+  id: string;
+  label: string;
+  type: 'start' | 'end' | 'task' | 'decision' | 'parallel' | 'subprocess' | 'io';
+  status: 'todo' | 'doing' | 'done' | 'blocked';
+  metadata?: Record<string, any>;
+};
+
+export type FlowEdge = {
+  from: string;
+  to: string;
+  label?: string;
+  type: 'sequence' | 'condition' | 'parallel';
+};
+
 
 export interface Observation {
   outputs: OutputItem[];
