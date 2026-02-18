@@ -97,8 +97,8 @@ export default function Page() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFlowOpen]);
 
-  async function handleRun() {
-    const input = inputRef.current?.value;
+  async function handleRun(value:any = null) {
+    const input = inputRef.current?.value || value;
     if (!input) {
       setError('Please enter a task description.');
       return;
@@ -146,7 +146,13 @@ export default function Page() {
     }
     const data = await res.json();
     if (data) {
-      setResult(data.sessions[0])
+      try {
+        const history:any[] = data.sessions[0]?.history;
+        const value = history.filter(item => item.role === 'user').at(-1)
+        handleRun(value.content)
+      } catch(err) {
+        throw(err)
+      }
     }
   }
 

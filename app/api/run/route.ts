@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     );
   }
 
-  await saveSession(state);
+  await saveSession(state)
 
   return NextResponse.json({
     plan: planPlugin?.data?.plan ?? null,
