@@ -3,7 +3,7 @@ import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { inputGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
-import { taskFlowPlugin, wbsPlugin } from '@/core/plugins';
+import { taskFlowPlugin } from '@/core/plugins';
 import { updateSession } from '@/core/basic/updateSession';
 
 export async function POST(req: Request) {

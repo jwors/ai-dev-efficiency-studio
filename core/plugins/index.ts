@@ -14,6 +14,6 @@ export const planExecutePlugin: Plugin = {
 };
 
 export const taskFlowPlugin: Plugin = {
-  name: 'TF',
+  name: 'tf',
   run: runTaskFlowPlugin
 }

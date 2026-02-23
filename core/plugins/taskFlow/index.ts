@@ -25,18 +25,18 @@ export async function runTaskFlowPlugin(
 		json = JSON.parse(rawText.content)
 	} catch {
 		return {
-      name: 'TF',
+      name: 'tf',
       ok: false,
-      error: 'TF plugin must return valid JSON',
+      error: 'tf plugin must return valid JSON',
     };
 	}
 	  // zod 验证
 		const parsed = FlowchartSchema.safeParse(json);
 		if (!parsed.success) {
 			return {
-				name: 'TF',
+				name: 'tf',
 				ok: false,
-				error: 'Invalid TF output (schema mismatch)',
+				error: 'Invalid tf output (schema mismatch)',
 			};
 		}
 	

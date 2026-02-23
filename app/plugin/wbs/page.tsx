@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import TaskFlow from '@/app/components/taskFlow';
+import WbsFlow from '@/app/components/Wbs';
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import styles from './wbs.module.css';
 
@@ -99,7 +99,7 @@ export default function WbsPluginPage() {
       <div className="main-top">
         <section className="panel flow-panel">
           <div className="panel-title">WBS 任务拆解图</div>
-          <TaskFlow wbs={result?.wbs ?? null} />
+          <WbsFlow wbs={result?.wbs ?? null} />
         </section>
       </div>
 

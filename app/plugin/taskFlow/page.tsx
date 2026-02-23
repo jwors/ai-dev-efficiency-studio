@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import TaskFlow from '@/app/components/taskFlow';
 import styles from './taskFlow.module.css'
-
+import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
+import { TaskFlow } from '@/app/components/taskFlow';
 
 type PluginResult = {
   name: string;
@@ -12,29 +12,58 @@ type PluginResult = {
 };
 
 export default function TaskFlowPluginPage() {
-	const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-	const [result, setResult] = useState<any>(null);
-	
-	const handleInputKeyDown = () => {
-		
-	}
+  const [result, setResult] = useState<any>(null);
+  const { userId } = useAuthUserId();
+  const sessionId = userId ? `${userId}:tf` : '';
 
-	const handleRun = () => {
+  const handleInputKeyDown = () => {
 
-	}
+  }
 
-	const wbsPlugin = (result?.plugins as PluginResult[] | undefined)?.find(
-    (p) => p.name === 'wbs',
+  async function handleRun() {
+    const input = inputRef.current?.value;
+    if (!input) {
+      setError('Please enter a task description.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const response = await fetch('/api/taskFlow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ input, uuid: sessionId }),
+      })
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const tf = (result?.plugins as PluginResult[] | undefined)?.find(
+    (p) => p.name === 'tf',
   );
 
-	return (
+  return (
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">
         <section className="panel flow-panel">
           <div className="panel-title">Task Flow任务流程图</div>
-          <TaskFlow wbs={result?.wbs ?? null} />
+          <TaskFlow tf={result?.tf ?? null} />
         </section>
       </div>
 
@@ -58,12 +87,12 @@ export default function TaskFlowPluginPage() {
           </button>
         </div>
         <div className="status">
-          {loading ? 'Generating WBS...' : 'Ready to build a WBS.'}
+          {loading ? 'Generating tf...' : 'Ready to build a tf.'}
         </div>
         {error && <div className="status errmsg">Error: {error}</div>}
-        {wbsPlugin && !wbsPlugin.ok && (
+        {tf && !tf.ok && (
           <div className="status errmsg">
-            WBS plugin failed: {wbsPlugin.error ?? 'Unknown error'}
+            tf plugin failed: {tf.error ?? 'Unknown error'}
           </div>
         )}
       </section>
