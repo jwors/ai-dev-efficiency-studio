@@ -4,7 +4,6 @@ import { mergePlanAndResults } from '@/lib/merge';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import ReactMarkdown from 'react-markdown';
-import 'reactflow/dist/style.css';
 
 type ExecutionResult = {
   stepIndex: number;

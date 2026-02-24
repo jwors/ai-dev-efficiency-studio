@@ -57,7 +57,7 @@ export default function TaskFlowPluginPage() {
   const tf = (result?.plugins as PluginResult[] | undefined)?.find(
     (p) => p.name === 'tf',
   );
-
+  console.log(result)
   return (
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">

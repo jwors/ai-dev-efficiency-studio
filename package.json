@@ -13,6 +13,7 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@xyflow/react": "^12.10.1",
     "antd": "^6.2.3",
     "bcrypt": "^6.0.0",
     "crypto-js": "^4.2.0",
@@ -24,8 +25,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
-    "reactflow": "^11.11.4",
     "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
     "zod": "^4.3.5"
   },
   "devDependencies": {

@@ -8,36 +8,49 @@ export function flowchartToMermaid(tf: FlowchartGraph): string {
   lines.push(`%% ${title}`);
   lines.push('graph TD');
 
-  // 节点映射：Mermaid 要求 ID 不能有特殊字符，我们用安全 ID
-  const safeId = (id: string) => `"${id.replace(/[^a-zA-Z0-9_-]/g, '_')}"`;
+  // 节点 ID 只允许字母、数字、下划线、连字符
+  const safeId = (id: string) => {
+    return id.replace(/[^a-zA-Z0-9_-]/g, '_');
+  };
+
+  // ✅ 标签中有特殊字符时，用引号包裹
+  const safeLabel = (label: string) => {
+    // 如果标签包含特殊字符，用双引号包裹并转义内部引号
+    const hasSpecialChars = /[()[\]{}]/.test(label);
+    if (hasSpecialChars) {
+      return `"${label.replace(/"/g, '\\"')}"`;
+    }
+    return label;
+  };
 
   // 定义节点
   for (const node of nodes) {
-    const label = node.label.replace(/"/g, "'");
-    let shape = '([label])'; // 默认矩形
+    const label = safeLabel(node.label);
+    
+    let shape = `[${label}]`; // 默认矩形
 
     switch (node.type) {
       case 'start':
-        shape = '((Start))';
-        break;
       case 'end':
-        shape = '((End))';
+        shape = `(${label})`; // 圆形
         break;
       case 'decision':
-        shape = '{label}';
-        break;
-      case 'parallel':
-        shape = '[/label\\]';
+        shape = `{${label}}`; // 菱形
         break;
       case 'io':
-        shape = '[(label)]';
+        shape = `[( ${label} )]`; // 平行四边形/IO
+        break;
+      case 'parallel':
+        shape = `[${label}]`; 
+        break;
+      case 'subprocess':
+        shape = `[[${label}]]`; // 双矩形
         break;
       default:
-        shape = '[label]';
+        shape = `[${label}]`;
     }
 
-    const mermaidLabel = shape.replace('label', label);
-    lines.push(`  ${safeId(node.id)}${mermaidLabel}`);
+    lines.push(`  ${safeId(node.id)}${shape}`);
   }
 
   // 定义边

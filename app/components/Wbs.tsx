@@ -1,8 +1,13 @@
  'use client';
 
 import { useMemo } from 'react';
-import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
-import 'reactflow/dist/style.css';
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import type { WbsGraph } from '@/core/types/type';
 
 type WBSProps = {
