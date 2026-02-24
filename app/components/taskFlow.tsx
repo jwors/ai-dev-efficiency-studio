@@ -1,82 +1,107 @@
 // components/TaskFlow.tsx
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
+  Edge,
+  Node,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css'; // 引入基础样式
+import '@xyflow/react/dist/style.css';
 
 import { FlowchartGraph } from '@/core/plugins/taskFlow/schema';
+import { getLayoutedElements } from '@/lib/flowchart/layout'; // 引入布局函数
 
 interface TaskFlowProps {
   tf: FlowchartGraph | null;
 }
 
-// 自定义节点样式映射 (可选)
+// 颜色映射
 const nodeColorMap: Record<string, string> = {
-  start: '#4ade80',   // 绿色
-  end: '#f87171',     // 红色
-  task: '#60a5fa',    // 蓝色
-  decision: '#fbbf24',// 黄色
-  io: '#c084fc',      // 紫色
-  parallel: '#94a3b8',// 灰色
-  subprocess: '#fb923c',// 橙色
+  start: '#4ade80',   
+  end: '#f87171',     
+  task: '#60a5fa',    
+  decision: '#fbbf24',
+  io: '#c084fc',      
+  parallel: '#94a3b8',
+  subprocess: '#fb923c',
 };
 
 export function TaskFlow({ tf }: TaskFlowProps) {
-  // 将 FlowchartGraph 转换为 React Flow 数据
-  const { initialNodes, initialEdges } = useMemo(() => {
+  // 转换数据并计算布局
+  const { initialNodes, initialEdges } = useMemo<{
+    initialNodes: Node[];
+    initialEdges: Edge[];
+  }>(() => {
     if (!tf) return { initialNodes: [], initialEdges: [] };
 
-    const nodes = tf.nodes.map((node:any) => ({
+    // 1. 使用业务节点/边做布局计算
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      tf.nodes,
+      tf.edges,
+      'TB' // 从上到下
+    );
+
+    // 2. 将布局后的业务节点映射为 React Flow 节点
+    const reactNodes: Node[] = layoutedNodes.map((node) => ({
       id: node.id,
-      type: 'default', // 使用默认节点类型，也可以自定义
-      position: { x: 0, y: 0 }, // React Flow 会自动布局，这里先给个默认值
-      data: { 
-        label: node.label,
-        description: node.metadata?.description,
+      type: 'default',
+      position: node.position,
+      sourcePosition: node.sourcePosition,
+      targetPosition: node.targetPosition,
+      data: {
+        label: (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span style={{ fontWeight: 'bold' }}>{node.label}</span>
+            {node.metadata?.description && (
+              <span style={{ fontSize: '10px', opacity: 0.8 }}>{node.metadata.description}</span>
+            )}
+          </div>
+        ),
         status: node.status,
       },
       style: {
         background: nodeColorMap[node.type] || '#fff',
         color: '#fff',
-        border: '1px solid #ccc',
+        border: '1px solid rgba(255,255,255,0.3)',
         borderRadius: '8px',
-        padding: '10px',
-        minWidth: '150px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        fontWeight: 'bold',
+        padding: '12px',
+        minWidth: '160px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        textAlign: 'center',
+        fontSize: '14px',
       },
     }));
 
-    const edges = tf.edges.map((edge:any) => ({
+    // 3. 将业务边映射为 React Flow 边
+    const reactEdges: Edge[] = layoutedEdges.map((edge) => ({
       id: `${edge.from}-${edge.to}`,
       source: edge.from,
       target: edge.to,
       label: edge.label,
-      type: 'smoothstep', // 平滑折线，比直线好看
-      animated: true,     // 添加流动动画
-      style: { stroke: '#555', strokeWidth: 2 },
-      labelStyle: { fill: '#555', fontWeight: 700, fontSize: 12 },
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#94a3b8', strokeWidth: 2 },
+      labelStyle: { fill: '#64748b', fontWeight: 700, fontSize: 12 },
       labelBgStyle: { fill: '#fff' },
       labelBgPadding: [4, 4],
       labelBgBorderRadius: 4,
     }));
 
-    return { initialNodes: nodes, initialEdges: edges };
+    return { initialNodes: reactNodes, initialEdges: reactEdges };
   }, [tf]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // 当数据变化时，更新节点和边
-  React.useEffect(() => {
+  // 数据变化时更新
+  useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
@@ -90,19 +115,23 @@ export function TaskFlow({ tf }: TaskFlowProps) {
   }
 
   return (
-    <div style={{ width: '100%', height: '500px', border: '1px solid #eee', borderRadius: '8px' }}>
+    <div style={{ width: '100%', height: '500px', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         fitView
+        fitViewOptions={{ padding: 0.2 }}
         attributionPosition="bottom-left"
+        defaultEdgeOptions={{ type: 'smoothstep' }}
       >
-        <Background variant="dots" gap={12} size={1} />
-        <Controls />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
+        <Controls showInteractive={false} />
         <MiniMap 
           nodeStrokeColor={(n) => nodeColorMap[n.data?.status as string] || '#555'} 
+          nodeColor={(n) => nodeColorMap[n.data?.status as string] || '#eee'}
+          maskColor="rgba(240, 240, 240, 0.6)"
           zoomable 
           pannable 
         />

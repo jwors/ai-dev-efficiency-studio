@@ -16,6 +16,13 @@ export function flowchartPrompt(input: string, state: SessionState): Message[] {
 4) 每个节点必须有唯一、稳定、可复用的 id（如 "step-login", "task-validate-email"）
 5) 显式建模顺序、分支、并行、依赖等逻辑关系
 6) 用户描述中的“先...再...”、“如果...就...”、“同时...”等必须转化为 edges
+7) 【重要】所有节点的 label（显示名称）和 metadata.description（描述）必须使用【简体中文】输出，不要使用英文。
+8) 【重要简化原则】：
+   - 禁止为简单的函数参数（如 input, uuid, id, data 等）创建独立的节点。
+   - 参数信息应作为【边 (Edge) 的 label】或者【目标节点的 description】来体现。
+   - 例如：不要画 "input 参数" -> "handleRun"，而应该画 "page.tsx" --[携带 input]--> "handleRun"。
+   - 只有当某个步骤是独立的逻辑单元（如 "校验中间件", "日志服务", "数据库连接池"）时，才创建新节点。
+   - 保持图表扁平化，核心链路（User -> UI -> Logic -> API）应清晰直观，避免过度拆解。
 
 Schema:
 {
