@@ -46,10 +46,13 @@ export default function Page() {
   const sessionId = userId ? `${userId}:planExecutor` : '';
   
   useEffect(() => {
-    if (userId) {
-      getSessionList()
-    }
-  },[userId])
+    if (!userId) return;
+
+    void getSessionList().catch((err) => {
+      console.error('getSessionList failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load last session');
+    });
+  }, [userId])
   
   useEffect(() => {
     if (!sessionId) return;
@@ -136,7 +139,7 @@ export default function Page() {
       userId,
       scope:'planExecutor'
     })
-    const res = await fetch(`api/session?${params.toString()}`, {
+    const res = await fetch(`/api/session?${params.toString()}`, {
       method:'GET'
     })
     if (!res.ok) {
@@ -146,9 +149,14 @@ export default function Page() {
     const data = await res.json();
     if (data) {
       try {
-        const history:any[] = data.sessions[0]?.history;
-        const value = history.filter(item => item.role === 'user').at(-1)
-        handleRun(value.content)
+        const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+        const history: any[] = Array.isArray(sessions[0]?.history) ? sessions[0].history : [];
+        const value = history
+          .filter((item: any) => item?.role === 'user' && typeof item?.content === 'string')
+          .at(-1);
+        if (value?.content) {
+          handleRun(value.content)
+        }
       } catch(err) {
         throw(err)
       }

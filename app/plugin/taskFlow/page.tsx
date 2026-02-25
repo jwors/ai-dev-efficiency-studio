@@ -1,9 +1,10 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import styles from './taskFlow.module.css'
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import { TaskFlow } from '@/app/components/taskFlow';
+import type { FlowchartGraph } from '@/core/plugins/taskFlow/schema';
 
 type PluginResult = {
   name: string;
@@ -11,16 +12,25 @@ type PluginResult = {
   error?: string;
 };
 
+type TaskFlowApiResponse = {
+  tf: FlowchartGraph | null;
+  plugins?: PluginResult[];
+  sessionId?: string;
+};
+
 export default function TaskFlowPluginPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<TaskFlowApiResponse | null>(null);
   const { userId } = useAuthUserId();
   const sessionId = userId ? `${userId}:tf` : '';
 
-  const handleInputKeyDown = () => {
-
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void handleRun();
+    }
   }
 
   async function handleRun() {
@@ -47,7 +57,7 @@ export default function TaskFlowPluginPage() {
 
       const data = await response.json();
       setResult(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
       setLoading(false);
@@ -57,12 +67,12 @@ export default function TaskFlowPluginPage() {
   const tf = (result?.plugins as PluginResult[] | undefined)?.find(
     (p) => p.name === 'tf',
   );
-  console.log(result)
+
   return (
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">
         <section className="panel flow-panel">
-          <div className="panel-title">Task Flow任务流程图</div>
+          <div className="panel-title">Task Flow</div>
           <TaskFlow tf={result?.tf ?? null} />
         </section>
       </div>
