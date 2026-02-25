@@ -197,14 +197,22 @@ export function TaskFlow({ tf }: TaskFlowProps) {
   const handleExportMermaid = useCallback(() => {
     if (!tf) return;
     
-    import('@/lib/flowchart/mermaid').then(({ flowchartToMermaid }) => {
-      const code = flowchartToMermaid(tf);
-      navigator.clipboard.writeText(code).then(() => {
-        alert('✅ Mermaid 代码已复制！');
+    // 这里假设你有一个 flowchartToMermaid 工具函数
+    // 如果没有，你可以暂时注释掉这部分或实现一个简单的转换器
+    try {
+      // 动态导入以避免 SSR 问题，或者直接引入你的工具函数
+      import('@/lib/flowchart/mermaid').then(({ flowchartToMermaid }) => {
+        const code = flowchartToMermaid(tf);
+        navigator.clipboard.writeText(code).then(() => {
+          alert('✅ Mermaid 代码已复制！\n可粘贴至 Notion / GitHub / Obsidian');
+        });
+      }).catch(() => {
+        // 如果找不到文件，给个提示
+        alert('Mermaid 转换工具未找到，请检查路径。');
       });
-    }).catch(() => {
-      alert('Mermaid 转换工具未找到。');
-    });
+    } catch (e) {
+      console.error(e);
+    }
   }, [tf]);
 
   // 🔒 渲染前的最终检查

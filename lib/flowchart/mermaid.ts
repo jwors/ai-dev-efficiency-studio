@@ -1,4 +1,3 @@
-// lib/flowchart/mermaid.ts
 import type { FlowchartGraph } from '@/core/plugins/taskFlow/schema';
 
 export function flowchartToMermaid(tf: FlowchartGraph): string {
@@ -8,43 +7,38 @@ export function flowchartToMermaid(tf: FlowchartGraph): string {
   lines.push(`%% ${title}`);
   lines.push('graph TD');
 
-  // 节点 ID 只允许字母、数字、下划线、连字符
-  const safeId = (id: string) => {
-    return id.replace(/[^a-zA-Z0-9_-]/g, '_');
-  };
+  const safeId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-  // ✅ 标签中有特殊字符时，用引号包裹
+  // Mermaid node labels break on quotes/brackets; normalize instead of quoting.
   const safeLabel = (label: string) => {
-    // 如果标签包含特殊字符，用双引号包裹并转义内部引号
-    const hasSpecialChars = /[()[\]{}]/.test(label);
-    if (hasSpecialChars) {
-      return `"${label.replace(/"/g, '\\"')}"`;
-    }
-    return label;
+    return label
+      .replace(/"/g, '＂')
+      .replace(/\[/g, '【')
+      .replace(/\]/g, '】')
+      .replace(/\(/g, '（')
+      .replace(/\)/g, '）')
+      .replace(/\{/g, '｛')
+      .replace(/\}/g, '｝')
+      .replace(/\|/g, '¦');
   };
 
-  // 定义节点
   for (const node of nodes) {
     const label = safeLabel(node.label);
-    
-    let shape = `[${label}]`; // 默认矩形
 
+    let shape = `[${label}]`;
     switch (node.type) {
       case 'start':
       case 'end':
-        shape = `(${label})`; // 圆形
+        shape = `(${label})`;
         break;
       case 'decision':
-        shape = `{${label}}`; // 菱形
+        shape = `{${label}}`;
         break;
       case 'io':
-        shape = `[( ${label} )]`; // 平行四边形/IO
-        break;
-      case 'parallel':
-        shape = `[${label}]`; 
+        shape = `[/${label}/]`;
         break;
       case 'subprocess':
-        shape = `[[${label}]]`; // 双矩形
+        shape = `[[${label}]]`;
         break;
       default:
         shape = `[${label}]`;
@@ -53,11 +47,10 @@ export function flowchartToMermaid(tf: FlowchartGraph): string {
     lines.push(`  ${safeId(node.id)}${shape}`);
   }
 
-  // 定义边
   for (const edge of edges) {
     const from = safeId(edge.from);
     const to = safeId(edge.to);
-    const label = edge.label ? `|"${edge.label}"|` : '';
+    const label = edge.label ? `|${safeLabel(edge.label)}|` : '';
     lines.push(`  ${from} -->${label} ${to}`);
   }
 
