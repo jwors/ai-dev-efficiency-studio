@@ -5,6 +5,15 @@ import type { Prisma } from '@prisma/client';
 const memStore = new Map<string, SessionState>();
 const prisma = getPrisma();
 
+// db 是否连接
+let dbDisabled = false;
+
+function disableDb() {
+  dbDisabled = true;
+}
+
+
+
 function parseSessionId(sessionId: string) {
   const parts = sessionId.split(':');
   if (parts.length >= 2) {
@@ -28,8 +37,10 @@ export async function getSession(sessionId: string): Promise<SessionState> {
   return init;
 }
 
+
+
 export async function loadSession(sessionId: string): Promise<SessionState | null> {
-  console.log(memStore)
+  if (dbDisabled) return memStore.get(sessionId) ?? null;
   const s = memStore.get(sessionId);
   if (s) return s;
 
@@ -53,6 +64,7 @@ export async function loadSession(sessionId: string): Promise<SessionState | nul
     memStore.set(sessionId, fallback);
     return fallback;
   } catch {
+    disableDb()
     return null;
   }
 }
@@ -60,6 +72,7 @@ export async function loadSession(sessionId: string): Promise<SessionState | nul
 export async function saveSession(state: any) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
+  if (dbDisabled) return;
 
   try {
     const { userId, pluginScope } = parseSessionId(state.sessionId);
@@ -80,6 +93,8 @@ export async function saveSession(state: any) {
     });
   } catch {
     // db 不可用时只保留 memStore
+    disableDb();
+
   }
 }
 
