@@ -8,50 +8,60 @@ type CreateSessionBody = {
 };
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as CreateSessionBody;
-  const userId = body?.userId?.trim();
-  const scope = body?.scope?.trim();
+  try {
+    const body = (await req.json()) as CreateSessionBody;
+    const userId = body?.userId?.trim();
+    const scope = body?.scope?.trim();
 
-  if (!userId || !scope) {
-    return NextResponse.json(
-      { error: 'userId and scope are required' },
-      { status: 400 },
-    );
+    if (!userId || !scope) {
+      return NextResponse.json(
+        { error: 'userId and scope are required' },
+        { status: 400 },
+      );
+    }
+
+    const sessionId = `${userId}:${scope}:${crypto.randomUUID()}`;
+    const now = Date.now();
+    const state: SessionState = {
+      sessionId,
+      summary: '',
+      history: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await saveSession(state);
+
+    return NextResponse.json({
+      sessionId,
+      createdAt: now,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to create session';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const sessionId = `${userId}:${scope}:${crypto.randomUUID()}`;
-  const now = Date.now();
-  const state: SessionState = {
-    sessionId,
-    summary: '',
-    history: [],
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  await saveSession(state);
-
-  return NextResponse.json({
-    sessionId,
-    createdAt: now,
-  });
 }
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId')?.trim();
-  const scope = searchParams.get('scope')?.trim() ?? undefined;
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId')?.trim();
+    const scope = searchParams.get('scope')?.trim() ?? undefined;
 
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'userId is required' },
-      { status: 400 },
-    );
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 },
+      );
+    }
+
+    const sessions = await listSessions(userId, scope);
+
+    return NextResponse.json({
+      sessions,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to list sessions';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const sessions = await listSessions(userId, scope);
-
-  return NextResponse.json({
-    sessions,
-  });
 }

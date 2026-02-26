@@ -32,6 +32,9 @@ export type SessionState = {
   flowchart?: FlowchartJson;
   updatedAt: number,
   createdAt: number;
+  plan?: Plan | null;
+  results?: ExecutionResult[];
+  outputs?:OutputItem[]
 };
 
 export interface Plan {

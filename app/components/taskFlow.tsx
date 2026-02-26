@@ -134,7 +134,6 @@ export function TaskFlow({ tf }: TaskFlowProps) {
 
       return { initialNodes, initialEdges };
     } catch (error) {
-      console.error('Flowchart layout error:', error);
       return { initialNodes: [], initialEdges: [] };
     }
   }, [tf]);
@@ -188,7 +187,6 @@ export function TaskFlow({ tf }: TaskFlowProps) {
       link.href = dataUrl;
       link.click();
     } catch (err) {
-      console.error('导出失败:', err);
       alert('导出图片失败，请重试');
     }
   }, [rfInstance]);

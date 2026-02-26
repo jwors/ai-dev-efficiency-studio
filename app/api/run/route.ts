@@ -61,7 +61,9 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-
+  state.plan = planPlugin?.data?.plan ?? null;
+  state.results = planPlugin?.data?.results ?? [];
+  state.outputs = planPlugin?.data?.outputs ?? [];
   await saveSession(state)
 
   return NextResponse.json({

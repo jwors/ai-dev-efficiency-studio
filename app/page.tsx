@@ -49,7 +49,6 @@ export default function Page() {
     if (!userId) return;
 
     void getSessionList().catch((err) => {
-      console.error('getSessionList failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to load last session');
     });
   }, [userId])
@@ -109,7 +108,6 @@ export default function Page() {
     setLoading(true);
     setError(null);
     setResult(null);
-
     try {
       const response = await fetch('/api/run', {
         method: 'POST',
@@ -140,23 +138,42 @@ export default function Page() {
       scope:'planExecutor'
     })
     const res = await fetch(`/api/session?${params.toString()}`, {
-      method:'GET'
-    })
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || `HTTP ${res.status}`);
+      method: 'GET',
+    });
+    const text = await res.text();
+    let data: any = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = null;
+      }
     }
-    const data = await res.json();
+    if (!res.ok) {
+      const message =
+        data?.error || text || res.statusText || `HTTP ${res.status}`;
+      throw new Error(message);
+    }
+    console.log(data)
     if (data) {
       try {
         const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
         const history: any[] = Array.isArray(sessions[0]?.history) ? sessions[0].history : [];
-        const value = history
-          .filter((item: any) => item?.role === 'user' && typeof item?.content === 'string')
-          .at(-1);
-        if (value?.content) {
-          handleRun(value.content)
+        const last = sessions[0]
+        if (last?.plan || last?.results || last?.outputs) {
+          setResult({
+            plan: last.plan ?? null,
+            results: last.results ?? [],
+            outputs: last.outputs ?? [],
+          });
+          return;
         }
+        const value = history
+        .filter((item: any) => item?.role === 'user' && typeof item?.content === 'string')
+        .at(-1);
+      if (value?.content) {
+        handleRun(value.content);
+      }
       } catch(err) {
         throw(err)
       }
