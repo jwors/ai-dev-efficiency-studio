@@ -53,6 +53,70 @@ export async function executeTask(task: Task, state: SessionState) {
         ok: true,
         payload:task.params.data
       };
+    case 'web.search': {
+      const { query, limit = 5 } = task.params;
+      try {
+        const url = `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const html = await res.text();
+  
+        const items: Array<{ title: string; url: string; snippet?: string }> = [];
+        const linkRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g;
+        let m: RegExpExecArray | null;
+        while ((m = linkRe.exec(html)) && items.length < limit) {
+          const url = m[1];
+          const title = m[2].replace(/<[^>]+>/g, '');
+          items.push({ title, url });
+        }
+  
+        return {
+          type: 'web.search',
+          ok: res.ok,
+          status: res.status,
+          data: { items },
+        };
+      } catch (e: any) {
+        return { type: 'web.search', ok: false, error: e?.message ?? 'fetch failed' };
+      }
+    }
+    case 'web.fetch': {
+      const { url } = task.params;
+      try {
+        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const text = await res.text();
+        return { type: 'web.fetch', ok: res.ok, status: res.status, data: { url, content: text.slice(0, 20000) } };
+      } catch (e: any) {
+        return { type: 'web.fetch', ok: false, error: e?.message ?? 'fetch failed' };
+      }
+    }
+    case 'file.write': {
+      const { path: relPath, content } = task.params;
+      const fullPath = ensureWorkspacePath(relPath);
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, content, 'utf8');
+      return {
+        type: 'file.write',
+        ok: true,
+        data: { path: relPath },
+      };
+    }
+    case 'artifact.export': {
+      const { path: relPath, filename } = task.params;
+      const fullPath = ensureWorkspacePath(relPath);
+      // 要求文件放在 public/ 下，才可直接下载
+      if (!fullPath.includes(`${path.sep}public${path.sep}`)) {
+        throw new Error('artifact.export only supports files under public/');
+      }
+      const urlPath = relPath.replace(/^public[\\/]/, '/').replace(/\\/g, '/');
+      return {
+        type: 'artifact.export',
+        ok: true,
+        output: {
+          type: 'artifact',
+          payload: { url: urlPath, filename },
+        },
+      };
+    }
     case 'http': {
       const { url, method = 'GET', headers = {}, body } = task.params;
       const finalHeaders: Record<string, string> = { ...headers };

@@ -13,5 +13,9 @@ export const Action = z.enum([
   'log',
   'emit',
   'http',
-  'export_flow'
+  'export_flow',
+  'web.search',
+  'web.fetch',
+  'file.write',
+  'artifact.export'
 ]);

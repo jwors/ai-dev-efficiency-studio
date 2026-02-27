@@ -72,6 +72,7 @@ export async function loadSession(sessionId: string): Promise<SessionState | nul
 export async function saveSession(state: any) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
+
   if (dbDisabled) return;
 
   try {
@@ -103,12 +104,16 @@ export async function listSessions(
   userId: string,
   pluginScope?: string,
 ): Promise<SessionState[]> {
-  // 1️⃣ 基础判空
   if (!userId) return [];
 
-  if (!prisma || !prisma.pluginSession) {
-    console.warn('pluginSession model not available');
-    return [];
+  if (dbDisabled || !prisma?.pluginSession) {
+    return Array.from(memStore.values())
+      .filter((s) => {
+        const { userId: uid, pluginScope: scope } = parseSessionId(s.sessionId);
+        return uid === userId && (!pluginScope || scope === pluginScope);
+      })
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, 100);
   }
 
   try {
@@ -121,18 +126,11 @@ export async function listSessions(
       take: 100,
     });
 
-    if (!rows || rows.length === 0) return [];
-
     return rows
-      .map((row) => {
-        if (!row || !row.data) return null;
-        return row.data as unknown as SessionState;
-      })
-      .filter(
-        (item): item is SessionState =>
-          Boolean(item && item.sessionId)
-      );
-  } catch (error) {
+      .map((row) => row.data as unknown as SessionState)
+      .filter((item): item is SessionState => Boolean(item?.sessionId));
+  } catch {
+    disableDb();
     return Array.from(memStore.values())
       .filter((s) => {
         const { userId: uid, pluginScope: scope } = parseSessionId(s.sessionId);
@@ -141,5 +139,4 @@ export async function listSessions(
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, 100);
   }
-
 }

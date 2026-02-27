@@ -42,9 +42,9 @@ export default function Page() {
   const [result, setResult] = useState<any>(null);
   const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
-  const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
+  const [selectedStepIndex, setSelectedStepIndex] = useState<null | number>(null)
   const sessionId = userId ? `${userId}:planExecutor` : '';
-  
+
   useEffect(() => {
     if (!userId) return;
 
@@ -52,7 +52,7 @@ export default function Page() {
       setError(err instanceof Error ? err.message : 'Failed to load last session');
     });
   }, [userId])
-  
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -98,7 +98,7 @@ export default function Page() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFlowOpen]);
 
-  async function handleRun(value:any = null) {
+  async function handleRun(value: any = null) {
     const input = inputRef.current?.value || value;
     if (!input) {
       setError('Please enter a task description.');
@@ -135,7 +135,7 @@ export default function Page() {
     if (!userId) return
     const params = new URLSearchParams({
       userId,
-      scope:'planExecutor'
+      scope: 'planExecutor'
     })
     const res = await fetch(`/api/session?${params.toString()}`, {
       method: 'GET',
@@ -169,13 +169,13 @@ export default function Page() {
           return;
         }
         const value = history
-        .filter((item: any) => item?.role === 'user' && typeof item?.content === 'string')
-        .at(-1);
-      if (value?.content) {
-        handleRun(value.content);
-      }
-      } catch(err) {
-        throw(err)
+          .filter((item: any) => item?.role === 'user' && typeof item?.content === 'string')
+          .at(-1);
+        if (value?.content) {
+          handleRun(value.content);
+        }
+      } catch (err) {
+        throw (err)
       }
     }
   }
@@ -204,41 +204,41 @@ export default function Page() {
   const errorCount = results.filter((item) => !item.ok).length;
   const emitContents = Array.isArray(result?.outputs)
     ? result.outputs
-        .map((item: any) => {
-          if (item?.type === 'emit' && item?.payload?.content) {
-            return { content: item.payload.content as string, type: 'emit' };
-          }
-          if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
-            return {
-              content: item.output.payload.content as string,
-              type: 'emit',
-            };
-          }
-          return null;
-        })
-        .filter(
-          (item: { content: string; type: string } | null) =>
-            item && typeof item.content === 'string',
-        )
+      .map((item: any) => {
+        if (item?.type === 'emit' && item?.payload?.content) {
+          return { content: item.payload.content as string, type: 'emit' };
+        }
+        if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
+          return {
+            content: item.output.payload.content as string,
+            type: 'emit',
+          };
+        }
+        return null;
+      })
+      .filter(
+        (item: { content: string; type: string } | null) =>
+          item && typeof item.content === 'string',
+      )
     : [];
   const outlineEmitContents = Array.isArray(result?.results)
     ? result.results
-        .map((item: any) => {
-          if (item?.type === 'emit' && item?.payload?.content) {
-            return { content: item.payload.content as string, type: 'emit' };
-          }
-          if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
-            return {
-              content: item.output.payload.content as string,
-              type: 'emit',
-            };
-          }
-          return null;
-        })
-        .filter(
-          (item: { content: string; type: string } | null) =>
-            item && typeof item.content === 'string',
-        )
+      .map((item: any) => {
+        if (item?.type === 'emit' && item?.payload?.content) {
+          return { content: item.payload.content as string, type: 'emit' };
+        }
+        if (item?.output?.type === 'emit' && item?.output?.payload?.content) {
+          return {
+            content: item.output.payload.content as string,
+            type: 'emit',
+          };
+        }
+        return null;
+      })
+      .filter(
+        (item: { content: string; type: string } | null) =>
+          item && typeof item.content === 'string',
+      )
     : [];
   const outlineData = useMemo<OutlineData[]>(
     () =>
@@ -251,7 +251,7 @@ export default function Page() {
         let listCounter = 0;
         let currentHeadingLevel = 0;
 
-        item.content.split('\n').forEach((line:any) => {
+        item.content.split('\n').forEach((line: any) => {
           const trimmed = line.trim();
           const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
           if (headingMatch) {
@@ -373,6 +373,10 @@ export default function Page() {
       ))}
     </ul>
   );
+
+  const artifacts = Array.isArray(result?.outputs)
+    ? result.outputs.filter((o: any) => o?.type === 'artifact' && o?.payload?.url)
+    : [];
   return (
     <>
       <main className="main">
@@ -480,6 +484,20 @@ export default function Page() {
             <button className="button button-ghost" onClick={handleClear}>
               Clear
             </button>
+            {artifacts.length ? (
+              <div className="emit-card">
+                <div className="emit-body">
+                  <div className="panel-title">Downloads</div>
+                  {artifacts.map((a: any, i: number) => (
+                    <div key={`artifact-${i}`}>
+                      <a href={a.payload.url} download>
+                        {a.payload.filename ?? a.payload.url}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
           <div className="status">
             {loading
@@ -523,96 +541,95 @@ export default function Page() {
               </button>
             </div>
             <div className="modal-body">
-  {stepViews.length ? (
-    <div className="flow-modal-grid">
-      {/* 左侧：步骤列表 */}
-      <div className="flow-steps">
-        {stepViews.map((s: any) => {
-          const isActive = s.stepIndex === selectedStepIndex;
-          const statusClass =
-            s.status === "ok"
-              ? "step-ok"
-              : s.status === "failed"
-              ? "step-failed"
-              : "step-skipped";
+              {stepViews.length ? (
+                <div className="flow-modal-grid">
+                  {/* 左侧：步骤列表 */}
+                  <div className="flow-steps">
+                    {stepViews.map((s: any) => {
+                      const isActive = s.stepIndex === selectedStepIndex;
+                      const statusClass =
+                        s.status === "ok"
+                          ? "step-ok"
+                          : s.status === "failed"
+                            ? "step-failed"
+                            : "step-skipped";
 
-          return (
-            <button
-              key={s.stepIndex}
-              type="button"
-              className={`flow-step ${statusClass} ${isActive ? "active" : ""}`}
-              onClick={() => setSelectedStepIndex(s.stepIndex)}
-            >
-              <div className="flow-step-title">
-                <span className="flow-step-idx">#{s.stepIndex + 1}</span>
-                <span className="flow-step-action">{s.action}</span>
-              </div>
-              <div className="flow-step-sub">
-                <span className="flow-step-status">{s.status}</span>
-                {s.fatal ? <span className="flow-step-fatal">fatal</span> : null}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                      return (
+                        <button
+                          key={s.stepIndex}
+                          type="button"
+                          className={`flow-step ${statusClass} ${isActive ? "active" : ""}`}
+                          onClick={() => setSelectedStepIndex(s.stepIndex)}
+                        >
+                          <div className="flow-step-title">
+                            <span className="flow-step-idx">#{s.stepIndex + 1}</span>
+                            <span className="flow-step-action">{s.action}</span>
+                          </div>
+                          <div className="flow-step-sub">
+                            <span className="flow-step-status">{s.status}</span>
+                            {s.fatal ? <span className="flow-step-fatal">fatal</span> : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-      {/* 右侧：详情面板 */}
-      <div className="flow-detail">
-        {(() => {
-          const s = stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ?? stepViews[0];
+                  {/* 右侧：详情面板 */}
+                  <div className="flow-detail">
+                    {(() => {
+                      const s = stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ?? stepViews[0];
 
-          return (
-            <>
-              <div className="flow-detail-header">
-                <div className="flow-detail-title">
-                  Step {s.stepIndex + 1}: {s.action}
-                </div>
-                <div className={`flow-chip ${
-                  s.status === "ok" ? "chip-ok" : s.status === "failed" ? "chip-failed" : "chip-skipped"
-                }`}>
-                  {s.status}
-                </div>
-              </div>
+                      return (
+                        <>
+                          <div className="flow-detail-header">
+                            <div className="flow-detail-title">
+                              Step {s.stepIndex + 1}: {s.action}
+                            </div>
+                            <div className={`flow-chip ${s.status === "ok" ? "chip-ok" : s.status === "failed" ? "chip-failed" : "chip-skipped"
+                              }`}>
+                              {s.status}
+                            </div>
+                          </div>
 
-              {s.error ? (
-                <div className="flow-detail-error">
-                  <strong>Error:</strong> {s.error}
-                </div>
-              ) : null}
+                          {s.error ? (
+                            <div className="flow-detail-error">
+                              <strong>Error:</strong> {s.error}
+                            </div>
+                          ) : null}
 
-              {s.outputContent ? (
-                <div className="flow-detail-output">
-                  <div className="flow-detail-section-title">Output</div>
-                  <div className="markdown">
-                    <ReactMarkdown>{s.outputContent}</ReactMarkdown>
+                          {s.outputContent ? (
+                            <div className="flow-detail-output">
+                              <div className="flow-detail-section-title">Output</div>
+                              <div className="markdown">
+                                <ReactMarkdown>{s.outputContent}</ReactMarkdown>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {s.emitContent ? (
+                            <div className="flow-detail-output">
+                              <div className="flow-detail-section-title">Emit</div>
+                              <div className="markdown">
+                                <ReactMarkdown>{s.emitContent}</ReactMarkdown>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="flow-detail-section">
+                            <div className="flow-detail-section-title">Params</div>
+                            <pre className="flow-detail-pre">
+                              {JSON.stringify(s.params ?? {}, null, 2)}
+                            </pre>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
-              ) : null}
-
-              {s.emitContent ? (
-                <div className="flow-detail-output">
-                  <div className="flow-detail-section-title">Emit</div>
-                  <div className="markdown">
-                    <ReactMarkdown>{s.emitContent}</ReactMarkdown>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="flow-detail-section">
-                <div className="flow-detail-section-title">Params</div>
-                <pre className="flow-detail-pre">
-                  {JSON.stringify(s.params ?? {}, null, 2)}
-                </pre>
-              </div>
-            </>
-          );
-        })()}
-      </div>
-    </div>
-  ) : (
-    <div className="empty">No executor flow yet.</div>
-  )}
-</div>
+              ) : (
+                <div className="empty">No executor flow yet.</div>
+              )}
+            </div>
 
           </div>
         </div>

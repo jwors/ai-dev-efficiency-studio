@@ -16,6 +16,10 @@ export async function runPlan(plan: Plan, state: SessionState) {
       const result = await executeTask(task, state);
       results.push({ stepIndex: index, ...result });
 
+      if (result.output?.type && result.output?.payload) {
+        outputs.push(result.output);
+      }
+
       if (result.type === "emit" && result.payload?.content) {
         outputs.push({ type: "emit", payload: result.payload }); // payload={content}
       }
@@ -34,7 +38,7 @@ export async function runPlan(plan: Plan, state: SessionState) {
         type: task.type,
         error: error instanceof Error ? error.message : "Unknown error",
       });
-      break;
+      continue;
     }
   }
 

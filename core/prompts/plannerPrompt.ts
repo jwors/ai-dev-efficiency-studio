@@ -14,11 +14,15 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
           1) 只输出 JSON：禁止解释/注释/Markdown 包裹/多余文本
           2) 输出必须可被 JSON.parse 解析
           3) 必须符合下方 Schema
-          4) steps[].action 只能取：log | http | emit | export_flow
+          4) steps[].action 只能取：log | http | emit | export_flow | web.search | web.fetch | file.write | artifact.export
           5) 所有面向用户的最终内容必须通过 emit 输出
           6) emit.params.data 只能是：{ "content": string }
           7) emit.params.data.content 必须是 Markdown（可用标题/列表/加粗/代码块/表格）
           8) 禁止复用历史对话中的 URL/headers/body 等工具参数；只有当用户在本轮输入明确给出 URL 时，才允许生成 http 步骤。
+          9) web.search / web.fetch 只能访问白名单域名
+          10) file.write 只能写入 public/artifacts/ 目录
+          11) artifact.export 只能导出 public/ 目录下文件
+
           【Schema】
           {
             "goal": "string",

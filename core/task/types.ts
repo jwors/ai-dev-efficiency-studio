@@ -5,7 +5,11 @@ export const Action = z.enum([
   'log',
   'emit',
   'http',
-  'export_flow'
+  'export_flow',
+  'web.search',
+  'web.fetch',
+  'file.write',
+  'artifact.export',
 ]);
 
 export type LogTask = {
@@ -40,8 +44,44 @@ export type ExportFlowTask = {
   };
 }
 
+export type WebSearchTask = {
+  type: 'web.search';
+  params: {
+    query: string;
+    domains?: string[];
+    limit?: number;
+  };
+};
+
+export type WebFetchTask = {
+  type: 'web.fetch';
+  params: {
+    url: string;
+  };
+};
+
+export type FileWriteTask = {
+  type: 'file.write';
+  params: {
+    path: string;
+    content: string;
+  };
+};
+
+export type ArtifactExportTask = {
+  type: 'artifact.export';
+  params: {
+    path: string;
+    filename: string;
+  };
+};
+
 export type Task =
   | LogTask
   | EmitTask
   | HttpTask
-  | ExportFlowTask;
+  | ExportFlowTask
+  | WebFetchTask
+  | WebSearchTask
+  | FileWriteTask
+  | ArtifactExportTask

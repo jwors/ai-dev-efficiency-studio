@@ -15,10 +15,6 @@ export interface Message {
   mate?:{ tag?: string };
 }
 
-export interface Observation  { 
-  emits: Array<{ context: string, at: string }>
-  facts?:Record<string,unknown>
-}
 
 
 export type SessionState = {
