@@ -19,15 +19,15 @@ type TaskFlowApiResponse = {
 };
 
 export default function TaskFlowPluginPage() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TaskFlowApiResponse | null>(null);
   const { userId } = useAuthUserId();
   const sessionId = userId ? `${userId}:tf` : '';
 
-  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') {
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void handleRun();
     }
@@ -79,13 +79,13 @@ export default function TaskFlowPluginPage() {
 
       <section className="panel input-panel">
         <div className="panel-title">Input Container</div>
-        <input
-          type="text"
+        <textarea
           ref={inputRef}
           className="input"
           placeholder="Describe the task you want to execute"
           disabled={loading}
           onKeyDown={handleInputKeyDown}
+          rows={4}
         />
         <div className="actions">
           <button

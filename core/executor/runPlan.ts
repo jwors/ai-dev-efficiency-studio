@@ -5,7 +5,7 @@ import { executeTask } from './index';
 import { SessionState } from '../types/type';
 
 
-export async function lrunPlan(plan: Plan, state: SessionState) {
+export async function runPlan(plan: Plan, state: SessionState) {
   const results: any[] = [];
   const outputs: any[] = [];
 

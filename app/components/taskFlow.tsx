@@ -12,6 +12,8 @@ import {
   BackgroundVariant,
   Node,
   Edge,
+  getNodesBounds,
+  getViewportForBounds,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { toPng } from 'html-to-image';
@@ -59,7 +61,7 @@ export function TaskFlow({ tf }: TaskFlowProps) {
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         tf.nodes,
         safeEdges,
-        'TB',
+        'LR',
       );
 
       // 2. 将布局后的业务节点映射为 React Flow 节点
@@ -132,7 +134,41 @@ export function TaskFlow({ tf }: TaskFlowProps) {
         labelBgBorderRadius: 4,
       }));
 
-      return { initialNodes, initialEdges };
+      const nodeIdCounts = new Map<string, number>();
+      const nodeIdMap = new Map<string, string>();
+      const uniqueNodes = initialNodes.map((node, index) => {
+        const baseId = String(node.id ?? `node-${index}`);
+        const count = (nodeIdCounts.get(baseId) ?? 0) + 1;
+        nodeIdCounts.set(baseId, count);
+        const uniqueId = count === 1 ? baseId : `${baseId}--${count}`;
+        if (!nodeIdMap.has(baseId)) {
+          nodeIdMap.set(baseId, uniqueId);
+        }
+        return {
+          ...node,
+          id: uniqueId,
+          data: { ...(node.data as Record<string, unknown>), originalId: baseId },
+        };
+      });
+
+      const edgeIdCounts = new Map<string, number>();
+      const uniqueEdges = initialEdges.map((edge, index) => {
+        const source = nodeIdMap.get(String(edge.source)) ?? String(edge.source);
+        const target = nodeIdMap.get(String(edge.target)) ?? String(edge.target);
+        const baseEdgeId = `${edge.source}-${edge.target}`;
+        const edgeCount = (edgeIdCounts.get(baseEdgeId) ?? 0) + 1;
+        edgeIdCounts.set(baseEdgeId, edgeCount);
+        const uniqueEdgeId =
+          edgeCount === 1 ? baseEdgeId : `${baseEdgeId}--${edgeCount}-${index}`;
+        return {
+          ...edge,
+          id: uniqueEdgeId,
+          source,
+          target,
+        };
+      });
+
+      return { initialNodes: uniqueNodes, initialEdges: uniqueEdges };
     } catch (error) {
       return { initialNodes: [], initialEdges: [] };
     }
@@ -162,14 +198,44 @@ export function TaskFlow({ tf }: TaskFlowProps) {
     }
 
     try {
-      rfInstance.fitView({ padding: 0.1 });
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const nodesForBounds = rfInstance.getNodes();
+      if (!nodesForBounds.length) {
+        alert('没有可导出的节点');
+        return;
+      }
 
-      const dataUrl = await toPng(reactFlowWrapper.current, {
+      const nodesBounds = getNodesBounds(nodesForBounds);
+      const padding = 0.2;
+      const imageWidth = Math.max(nodesBounds.width * (1 + padding * 2), 800);
+      const imageHeight = Math.max(nodesBounds.height * (1 + padding * 2), 600);
+      const viewport = getViewportForBounds(
+        nodesBounds,
+        imageWidth,
+        imageHeight,
+        0.1,
+        2,
+        padding,
+      );
+
+      const viewportEl = reactFlowWrapper.current.querySelector(
+        '.react-flow__viewport',
+      ) as HTMLElement | null;
+      if (!viewportEl) {
+        throw new Error('找不到流程图视图节点');
+      }
+
+      const dataUrl = await toPng(viewportEl, {
         backgroundColor: '#ffffff',
         quality: 1.0,
-        pixelRatio: 3,
+        pixelRatio: 2,
         cacheBust: true,
+        width: imageWidth,
+        height: imageHeight,
+        style: {
+          width: `${imageWidth}px`,
+          height: `${imageHeight}px`,
+          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+        },
         filter: (node: HTMLElement) => {
           if (node.classList?.contains('react-flow__controls')) return false;
           if (node.classList?.contains('react-flow__minimap')) return false;
