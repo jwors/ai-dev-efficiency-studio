@@ -112,7 +112,15 @@ export default function wbsFlow({ wbs }: WBSProps) {
   }, [wbs]);
 
   if (!wbs) {
-    return <div className="flow-empty">No WBS yet.</div>;
+    return (
+      <div className="flow-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+        </svg>
+        <span>暂无 WBS 拆解图</span>
+        <span style={{ fontSize: '12px', opacity: 0.7 }}>输入任务描述生成任务拆解结构</span>
+      </div>
+    );
   }
 
   return (

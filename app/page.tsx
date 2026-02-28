@@ -42,7 +42,7 @@ export default function Page() {
   const [result, setResult] = useState<any>(null);
   const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
-  const [selectedStepIndex, setSelectedStepIndex] = useState<null | number>(null)
+  const [selectedStepIndex, setSelectedStepIndex] = useState<null | number>(null);
   const sessionId = userId ? `${userId}:planExecutor` : '';
 
   useEffect(() => {
@@ -154,7 +154,6 @@ export default function Page() {
         data?.error || text || res.statusText || `HTTP ${res.status}`;
       throw new Error(message);
     }
-    console.log(data)
     if (data) {
       try {
         const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
@@ -329,7 +328,7 @@ export default function Page() {
       }
       roots.push({
         id: `outline-emit-${index}`,
-        text: `Emit ${index + 1}`,
+        text: `输出 ${index + 1}`,
         level: 1,
         children: data.roots,
       });
@@ -381,8 +380,13 @@ export default function Page() {
     <>
       <main className="main">
         <div className="main-top">
-          <section className="panel content-panel">
-            <div className="panel-title">内容</div>
+          <section className="panel content-panel" style={{ animationDelay: '0ms' }}>
+            <div className="panel-title">
+              <span>内容输出</span>
+              {emitContents.length > 0 && (
+                <span style={{ fontSize: '11px', opacity: 0.6 }}>{emitContents.length} 个输出</span>
+              )}
+            </div>
             {emitContents.length ? (
               <div className="emit-list">
                 {emitContents.map((item: any, index: number) => {
@@ -430,6 +434,9 @@ export default function Page() {
 
                   return (
                     <div key={`emit-${index}`} className="emit-card">
+                      <div className="emit-header">
+                        <span className="emit-index">输出 #{index + 1}</span>
+                      </div>
                       <div className="emit-body markdown">
                         <ReactMarkdown components={components}>
                           {item.content}
@@ -440,29 +447,48 @@ export default function Page() {
                 })}
               </div>
             ) : (
-              <div className="empty">No emit content yet.</div>
+              <div className="flow-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>暂无内容输出</span>
+                <span style={{ fontSize: '12px', opacity: 0.7 }}>输入任务描述开始生成内容</span>
+              </div>
             )}
           </section>
 
-          <section className="panel flow-panel">
-            <div className="panel-title">内容地图</div>
+          <section className="panel flow-panel" style={{ animationDelay: '50ms' }}>
+            <div className="panel-title">
+              <span>内容地图</span>
+              {outlineTree.length > 0 && (
+                <span style={{ fontSize: '11px', opacity: 0.6 }}>{outlineTree.length} 个章节</span>
+              )}
+            </div>
             <div className="flow-wrap">
               {outlineTree.length ? (
                 <div className="outline-tree">{renderOutline(outlineTree)}</div>
               ) : (
-                <div className="flow-empty">No outline yet.</div>
+                <div className="flow-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                  </svg>
+                  <span>暂无目录结构</span>
+                </div>
               )}
             </div>
           </section>
         </div>
 
-        <section className="panel input-panel">
-          <div className="panel-title">Input Container</div>
+        <section className="panel input-panel" style={{ animationDelay: '100ms' }}>
+          <div className="panel-title">
+            <span>任务输入</span>
+            {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>处理中...</span>}
+          </div>
           <input
             type="text"
             ref={inputRef}
             className="input"
-            placeholder="Describe the task you want to execute"
+            placeholder="描述您想要执行的任务..."
             disabled={loading}
             onKeyDown={handleInputKeyDown}
           />
@@ -472,47 +498,47 @@ export default function Page() {
               onClick={handleRun}
               disabled={loading}
             >
-              {loading ? 'Running...' : 'Run Task'}
+              {loading ? '执行中...' : '运行任务'}
             </button>
             <button
               className="button button-ghost"
               onClick={() => setIsFlowOpen(true)}
               disabled={!result}
             >
-              View Executor Flow
+              查看执行流程
             </button>
             <button className="button button-ghost" onClick={handleClear}>
-              Clear
+              清空
             </button>
             {artifacts.length ? (
-              <div className="emit-card">
-                <div className="emit-body">
-                  <div className="panel-title">Downloads</div>
-                  {artifacts.map((a: any, i: number) => (
-                    <div key={`artifact-${i}`}>
-                      <a href={a.payload.url} download>
-                        {a.payload.filename ?? a.payload.url}
-                      </a>
-                    </div>
-                  ))}
+              <div className="emit-card" style={{ padding: '12px 16px', marginBottom: 0 }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--accent)' }}>
+                  下载文件 ({artifacts.length})
                 </div>
+                {artifacts.map((a: any, i: number) => (
+                  <div key={`artifact-${i}`} style={{ marginBottom: i < artifacts.length - 1 ? '6px' : 0 }}>
+                    <a href={a.payload.url} download style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'underline' }}>
+                      {a.payload.filename ?? a.payload.url}
+                    </a>
+                  </div>
+                ))}
               </div>
             ) : null}
           </div>
           <div className="status">
             {loading
-              ? 'Planner and executor are working...'
-              : 'Ready to build a plan.'}
+              ? 'AI 正在规划和执行您的任务...'
+              : '准备好构建执行计划'}
           </div>
-          {error && <div className="status errmsg">Error: {error}</div>}
-          <div className="badges">
-            <div className="badge">Steps: {stepsCount}</div>
-            <div className="badge">Outputs: {outputsCount}</div>
-            <div className="badge badge-ok">
-              Success: {results.length - errorCount}
+          {error && <div className="status errmsg">{error}</div>}
+          {result && (
+            <div className="badges">
+              <div className="badge">步骤: {stepsCount}</div>
+              <div className="badge">输出: {outputsCount}</div>
+              <div className="badge badge-ok">成功: {results.length - errorCount}</div>
+              {errorCount > 0 && <div className="badge badge-fail">错误: {errorCount}</div>}
             </div>
-            <div className="badge badge-fail">Errors: {errorCount}</div>
-          </div>
+          )}
         </section>
       </main>
       {isFlowOpen && (
@@ -530,20 +556,19 @@ export default function Page() {
           >
             <div className="modal-header">
               <h2 className="modal-title" id="executor-flow-title">
-                Executor Flow
+                执行流程详情
               </h2>
               <button
                 className="button button-ghost modal-close"
                 type="button"
                 onClick={() => setIsFlowOpen(false)}
               >
-                Close
+                关闭
               </button>
             </div>
             <div className="modal-body">
               {stepViews.length ? (
                 <div className="flow-modal-grid">
-                  {/* 左侧：步骤列表 */}
                   <div className="flow-steps">
                     {stepViews.map((s: any) => {
                       const isActive = s.stepIndex === selectedStepIndex;
@@ -567,14 +592,13 @@ export default function Page() {
                           </div>
                           <div className="flow-step-sub">
                             <span className="flow-step-status">{s.status}</span>
-                            {s.fatal ? <span className="flow-step-fatal">fatal</span> : null}
+                            {s.fatal ? <span className="flow-step-fatal">致命</span> : null}
                           </div>
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* 右侧：详情面板 */}
                   <div className="flow-detail">
                     {(() => {
                       const s = stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ?? stepViews[0];
@@ -583,7 +607,7 @@ export default function Page() {
                         <>
                           <div className="flow-detail-header">
                             <div className="flow-detail-title">
-                              Step {s.stepIndex + 1}: {s.action}
+                              步骤 {s.stepIndex + 1}: {s.action}
                             </div>
                             <div className={`flow-chip ${s.status === "ok" ? "chip-ok" : s.status === "failed" ? "chip-failed" : "chip-skipped"
                               }`}>
@@ -593,13 +617,13 @@ export default function Page() {
 
                           {s.error ? (
                             <div className="flow-detail-error">
-                              <strong>Error:</strong> {s.error}
+                              <strong>错误:</strong> {s.error}
                             </div>
                           ) : null}
 
                           {s.outputContent ? (
                             <div className="flow-detail-output">
-                              <div className="flow-detail-section-title">Output</div>
+                              <div className="flow-detail-section-title">输出</div>
                               <div className="markdown">
                                 <ReactMarkdown>{s.outputContent}</ReactMarkdown>
                               </div>
@@ -608,7 +632,7 @@ export default function Page() {
 
                           {s.emitContent ? (
                             <div className="flow-detail-output">
-                              <div className="flow-detail-section-title">Emit</div>
+                              <div className="flow-detail-section-title">发送内容</div>
                               <div className="markdown">
                                 <ReactMarkdown>{s.emitContent}</ReactMarkdown>
                               </div>
@@ -616,7 +640,7 @@ export default function Page() {
                           ) : null}
 
                           <div className="flow-detail-section">
-                            <div className="flow-detail-section-title">Params</div>
+                            <div className="flow-detail-section-title">参数</div>
                             <pre className="flow-detail-pre">
                               {JSON.stringify(s.params ?? {}, null, 2)}
                             </pre>
@@ -627,7 +651,12 @@ export default function Page() {
                   </div>
                 </div>
               ) : (
-                <div className="empty">No executor flow yet.</div>
+                <div className="flow-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span>暂无执行流程</span>
+                </div>
               )}
             </div>
 

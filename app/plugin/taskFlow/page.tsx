@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useRef, useState } from 'react'
 import styles from './taskFlow.module.css'
@@ -71,18 +71,30 @@ export default function TaskFlowPluginPage() {
   return (
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">
-        <section className="panel flow-panel">
-          <div className="panel-title">Task Flow</div>
-          <TaskFlow tf={result?.tf ?? null} />
+        <section className="panel flow-panel" style={{ animationDelay: '0ms' }}>
+          <div className="panel-title">
+            <span>任务流程图</span>
+            {result?.tf && (
+              <span style={{ fontSize: '11px', opacity: 0.6 }}>
+                {result.tf.nodes?.length || 0} 个节点
+              </span>
+            )}
+          </div>
+          <div className="flow-wrap">
+            <TaskFlow tf={result?.tf ?? null} />
+          </div>
         </section>
       </div>
 
-      <section className="panel input-panel">
-        <div className="panel-title">Input Container</div>
+      <section className="panel input-panel" style={{ animationDelay: '50ms' }}>
+        <div className="panel-title">
+          <span>任务输入</span>
+          {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>生成中...</span>}
+        </div>
         <textarea
           ref={inputRef}
           className="input"
-          placeholder="Describe the task you want to execute"
+          placeholder="描述您想要执行的任务（Shift+Enter 换行）..."
           disabled={loading}
           onKeyDown={handleInputKeyDown}
           rows={4}
@@ -93,16 +105,16 @@ export default function TaskFlowPluginPage() {
             onClick={handleRun}
             disabled={loading}
           >
-            {loading ? 'Running...' : 'Run Task'}
+            {loading ? '生成中...' : '生成流程图'}
           </button>
         </div>
         <div className="status">
-          {loading ? 'Generating tf...' : 'Ready to build a tf.'}
+          {loading ? 'AI 正在构建任务流程...' : '准备好生成任务流程图'}
         </div>
-        {error && <div className="status errmsg">Error: {error}</div>}
+        {error && <div className="status errmsg">{error}</div>}
         {tf && !tf.ok && (
           <div className="status errmsg">
-            tf plugin failed: {tf.error ?? 'Unknown error'}
+            流程图插件执行失败: {tf.error ?? '未知错误'}
           </div>
         )}
       </section>

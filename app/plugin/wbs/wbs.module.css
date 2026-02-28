@@ -1,33 +1,151 @@
 .wbsRoot :global(.flow-wrap .react-flow) {
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(198, 124, 78, 0.12), transparent 55%),
-    linear-gradient(140deg, rgba(252, 248, 243, 0.7), rgba(245, 236, 225, 0.8));
 }
 
 .wbsRoot :global(.react-flow__node) {
-  background: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(20, 15, 10, 0.95), rgba(28, 20, 14, 0.98));
   color: var(--text);
   border: 1px solid var(--stroke);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: var(--border-radius);
+  padding: 14px 16px;
   font-size: 13px;
-  box-shadow: 0 10px 22px rgba(31, 43, 35, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 200ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.wbsRoot :global(.react-flow__node)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 140, 66, 0.1), transparent 60%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.wbsRoot :global(.react-flow__node:hover) {
+  border-color: var(--accent);
+  box-shadow: 0 8px 30px var(--accent-glow);
+  transform: translateY(-3px);
+}
+
+.wbsRoot :global(.react-flow__node:hover)::before {
+  opacity: 1;
+}
+
+.wbsRoot :global(.flow-node-title) {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.wbsRoot :global(.flow-node-action) {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wbsRoot :global(.status-pending) {
+  border-left: 3px solid var(--accent-2);
+}
+
+.wbsRoot :global(.status-in-progress) {
+  border-left: 3px solid var(--accent);
+  animation: cyber-pulse 2s ease-in-out infinite;
+}
+
+.wbsRoot :global(.status-completed) {
+  border-left: 3px solid var(--success);
+  box-shadow: 0 0 20px var(--success-glow);
+}
+
+.wbsRoot :global(.status-failed) {
+  border-left: 3px solid var(--danger);
+  box-shadow: 0 0 20px var(--danger-glow);
 }
 
 .wbsRoot :global(.react-flow__edge-path),
 .wbsRoot :global(.react-flow__connection-path) {
-  stroke: rgba(67, 40, 24, 0.35);
+  stroke: rgba(255, 140, 66, 0.4);
+  stroke-width: 2;
+}
+
+.wbsRoot :global(.react-flow__edge.animated .react-flow__edge-path) {
+  stroke: var(--accent);
+  stroke-dasharray: 8 4;
+  animation: cyber-dash 1.5s linear infinite;
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+@keyframes cyber-dash {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes cyber-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 140, 66, 0.2);
+  }
+}
+
+.wbsRoot :global(.react-flow__controls) {
+  background: rgba(20, 15, 10, 0.95);
+  border: 1px solid var(--stroke);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .wbsRoot :global(.react-flow__controls button) {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(67, 40, 24, 0.2);
-  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  transition: all 200ms ease;
+}
+
+.wbsRoot :global(.react-flow__controls button:hover) {
+  background: rgba(255, 140, 66, 0.2);
+  color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .wbsRoot :global(.react-flow__minimap) {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(67, 40, 24, 0.12);
+  background: rgba(20, 15, 10, 0.95);
+  border: 1px solid var(--stroke);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.wbsRoot :global(.react-flow__minimap-node) {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+}
+
+.wbsRoot :global(.react-flow__minimap-mask) {
+  fill: rgba(255, 140, 66, 0.2);
+}
+
+.wbsRoot :global(.react-flow__background) {
+  background: transparent;
+}
+
+.wbsRoot :global(.react-flow__attribution) {
+  background: rgba(20, 15, 10, 0.95);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: var(--muted);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }

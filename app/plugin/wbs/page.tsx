@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import WbsFlow from '@/app/components/Wbs';
@@ -97,19 +97,31 @@ export default function WbsPluginPage() {
   return (
     <main className={`main ${styles.wbsRoot}`}>
       <div className="main-top">
-        <section className="panel flow-panel">
-          <div className="panel-title">WBS 任务拆解图</div>
-          <WbsFlow wbs={result?.wbs ?? null} />
+        <section className="panel flow-panel" style={{ animationDelay: '0ms' }}>
+          <div className="panel-title">
+            <span>WBS 任务拆解图</span>
+            {result?.wbs && (
+              <span style={{ fontSize: '11px', opacity: 0.6 }}>
+                {result.wbs.nodes?.length || 0} 个节点
+              </span>
+            )}
+          </div>
+          <div className="flow-wrap">
+            <WbsFlow wbs={result?.wbs ?? null} />
+          </div>
         </section>
       </div>
 
-      <section className="panel input-panel">
-        <div className="panel-title">Input Container</div>
+      <section className="panel input-panel" style={{ animationDelay: '50ms' }}>
+        <div className="panel-title">
+          <span>任务输入</span>
+          {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>生成中...</span>}
+        </div>
         <input
           type="text"
           ref={inputRef}
           className="input"
-          placeholder="Describe the task you want to execute"
+          placeholder="描述您想要拆解的任务..."
           disabled={loading}
           onKeyDown={handleInputKeyDown}
         />
@@ -119,16 +131,16 @@ export default function WbsPluginPage() {
             onClick={handleRun}
             disabled={loading}
           >
-            {loading ? 'Running...' : 'Run Task'}
+            {loading ? '生成中...' : '生成 WBS'}
           </button>
         </div>
         <div className="status">
-          {loading ? 'Generating WBS...' : 'Ready to build a WBS.'}
+          {loading ? 'AI 正在分析任务结构...' : '准备好生成任务拆解图'}
         </div>
-        {error && <div className="status errmsg">Error: {error}</div>}
+        {error && <div className="status errmsg">{error}</div>}
         {wbsPlugin && !wbsPlugin.ok && (
           <div className="status errmsg">
-            WBS plugin failed: {wbsPlugin.error ?? 'Unknown error'}
+            WBS 插件执行失败: {wbsPlugin.error ?? '未知错误'}
           </div>
         )}
       </section>

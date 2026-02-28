@@ -282,19 +282,42 @@ export function TaskFlow({ tf }: TaskFlowProps) {
   // 🔒 渲染前的最终检查
   if (!tf || !tf.nodes || tf.nodes.length === 0) {
     return (
-      <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: '12px' }}>
+      <div style={{
+        height: '400px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--muted)',
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: '12px',
+        border: '1px solid var(--stroke)',
+        gap: '12px'
+      }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: '48px', height: '48px', color: 'var(--accent)', filter: 'drop-shadow(0 0 15px var(--accent-glow))' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+        </svg>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '16px', fontWeight: 'bold' }}>暂无流程图</p>
-          <p style={{ fontSize: '12px' }}>请在下方输入任务描述并点击 "Run Task"</p>
+          <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px' }}>暂无流程图</p>
+          <p style={{ fontSize: '12px', color: 'var(--muted)' }}>输入任务描述生成任务流程</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div 
-      ref={reactFlowWrapper} 
-      style={{ width: '100%', height: '52.3vh', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', position: 'relative', background: '#fff' }}
+    <div
+      ref={reactFlowWrapper}
+      style={{
+        width: '100%',
+        height: '100%',
+        border: '1px solid var(--stroke)',
+        borderRadius: 'var(--border-radius)',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+      }}
     >
       <div className="export-toolbar" style={{
         position: 'absolute',
@@ -303,17 +326,43 @@ export function TaskFlow({ tf }: TaskFlowProps) {
         zIndex: 1000,
         display: 'flex',
         gap: '8px',
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '6px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        border: '1px solid #f1f5f9'
+        background: 'rgba(20, 15, 10, 0.95)',
+        padding: '8px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+        border: '1px solid var(--stroke)',
+        backdropFilter: 'blur(10px)'
       }}>
-        <button onClick={handleExportImage} style={{ padding: '6px 12px', fontSize: '12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-          📷 下载 PNG
+        <button onClick={handleExportImage} style={{
+          padding: '8px 14px',
+          fontSize: '11px',
+          background: 'linear-gradient(135deg, var(--accent), #e67332)',
+          color: 'white',
+          border: '1px solid var(--accent)',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: '700',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          boxShadow: '0 2px 10px var(--accent-glow)',
+          transition: 'all 200ms ease'
+        }}>
+          下载 PNG
         </button>
-        <button onClick={handleExportMermaid} style={{ padding: '6px 12px', fontSize: '12px', background: '#fff', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-          📋 复制 Mermaid
+        <button onClick={handleExportMermaid} style={{
+          padding: '8px 14px',
+          fontSize: '11px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          color: 'var(--text-secondary)',
+          border: '1px solid var(--stroke)',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: '700',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          transition: 'all 200ms ease'
+        }}>
+          复制 Mermaid
         </button>
       </div>
 
@@ -330,7 +379,7 @@ export function TaskFlow({ tf }: TaskFlowProps) {
         nodesConnectable={false}
         elementsSelectable={false}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#f1f5f9" />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="rgba(255, 140, 66, 0.1)" />
         <Controls showInteractive={false} />
         <MiniMap 
           nodeStrokeColor={(n) => nodeColorMap[n.data?.status as string] || '#555'} 

@@ -14,9 +14,7 @@ blocked,blocked 为 true的情况下接口结束。
 
 
 关于updateSummaryIfNeeded 首先是判断state的history是否
-小于 MAX_HISTORY ，是就直接return 结束，大于就继续走
-
-然后取出 OVERFLOW ，最后生成摘要并添加到state上
+小于 MAX_HISTORY ，是就直接return 结束，大于就然后取出 OVERFLOW ，最后生成摘要并添加到state上
 
 然后再执行 const pluginResults = await runPlugins(pluginList, input, state);
 state.plan = planPlugin?.data?.plan ?? null;
