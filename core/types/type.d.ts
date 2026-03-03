@@ -125,6 +125,16 @@ export interface Observation {
   errors?: string[];
 }
 
+export interface ArtifactRecord {
+  id: string;
+  path: string;
+  url: string;
+  filename: string;
+  kind: string;
+  size: number;
+  createdAt: number;
+}
+
 export interface ContextState {
   plan: Plan | null;
   results: ExecutionResult[];
