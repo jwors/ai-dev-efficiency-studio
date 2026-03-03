@@ -68,3 +68,15 @@ model PluginSession {
 
   @@index([userId, pluginScope, updatedAt(sort: Desc)])
 }
+
+model Artifact {
+  id        String   @id @default(cuid())
+  path      String
+  url       String
+  filename  String
+  kind      String
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
