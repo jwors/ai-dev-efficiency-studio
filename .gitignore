@@ -42,3 +42,6 @@ next-env.d.ts
 .agent_sessions
 
 /lib/generated/prisma
+
+.cursor
+.claude

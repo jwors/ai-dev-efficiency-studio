@@ -20,7 +20,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(255, 140, 66, 0.1), transparent 60%);
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 60%);
   opacity: 0;
   transition: opacity 300ms ease;
 }
@@ -70,7 +70,7 @@
 
 .wbsRoot :global(.react-flow__edge-path),
 .wbsRoot :global(.react-flow__connection-path) {
-  stroke: rgba(255, 140, 66, 0.4);
+  stroke: rgba(99, 102, 241, 0.4);
   stroke-width: 2;
 }
 
@@ -92,10 +92,10 @@
 
 @keyframes cyber-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.4);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 140, 66, 0.2);
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.2);
   }
 }
 
@@ -115,7 +115,7 @@
 }
 
 .wbsRoot :global(.react-flow__controls button:hover) {
-  background: rgba(255, 140, 66, 0.2);
+  background: rgba(99, 102, 241, 0.2);
   color: var(--accent);
   box-shadow: 0 0 15px var(--accent-glow);
 }
@@ -133,7 +133,7 @@
 }
 
 .wbsRoot :global(.react-flow__minimap-mask) {
-  fill: rgba(255, 140, 66, 0.2);
+  fill: rgba(99, 102, 241, 0.2);
 }
 
 .wbsRoot :global(.react-flow__background) {
