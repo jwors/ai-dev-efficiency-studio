@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'
-import { getPrisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
 	try {
@@ -29,7 +29,6 @@ export async function POST(req: Request) {
 					status: 400
 				})
 		}
-		const prisma = getPrisma()
 		// 是否已经注册
 		const exist = await prisma.user.findUnique({ where: { email } });
 

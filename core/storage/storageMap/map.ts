@@ -1,9 +1,8 @@
 import { SessionState } from '@/core/types/type';
-import { getPrisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 
 const memStore = new Map<string, SessionState>();
-const prisma = getPrisma();
 
 // db 是否连接
 let dbDisabled = false;

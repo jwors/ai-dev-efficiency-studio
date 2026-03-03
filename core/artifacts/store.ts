@@ -1,14 +1,13 @@
 import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { getPrisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import type { ArtifactRecord } from '@/core/types/type';
 
 const workspaceRoot = path.resolve(process.cwd());
 const artifactsDir = path.resolve(workspaceRoot, 'public', 'artifacts');
 const indexPath = path.join(artifactsDir, 'index.json');
 const MAX_RECORDS = 200;
-const prisma = getPrisma();
 let dbDisabled = false;
 async function readIndex(): Promise<ArtifactRecord[]> {
   try {
