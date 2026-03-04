@@ -18,21 +18,21 @@ function ensureWorkspacePath(filePath: string) {
 
 export async function executeTask(task: Task, state: SessionState) {
   try {
-    policyGuard(task)
-  } catch(e) {
+    policyGuard(task);
+  } catch (e) {
     const msg = e instanceof PolicyError ? e.message : '任务被安全策略拦截。';
     return {
       fatal: true,
-      ok:false,
+      ok: false,
       type: task.type,
-      error:msg,
+      error: msg,
       output: {
-        type:'emit',
+        type: 'emit' as const,
         payload: {
-          content:`⚠️ 安全限制：${msg}`
+          content: `⚠️ 安全限制：${msg}`
         }
       }
-    }
+    };
   }
   switch (task.type) {
     case 'log':
@@ -56,10 +56,10 @@ export async function executeTask(task: Task, state: SessionState) {
     case 'web.search': {
       const { query, limit = 5 } = task.params;
       try {
-        const url = `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        const url = `https://duckduckgo.com/html/?q=${encodeURIComponent(query as string)}`;
         const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const html = await res.text();
-  
+
         const items: Array<{ title: string; url: string; snippet?: string }> = [];
         const linkRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g;
         let m: RegExpExecArray | null;
@@ -68,25 +68,27 @@ export async function executeTask(task: Task, state: SessionState) {
           const title = m[2].replace(/<[^>]+>/g, '');
           items.push({ title, url });
         }
-  
+
         return {
           type: 'web.search',
           ok: res.ok,
           status: res.status,
           data: { items },
         };
-      } catch (e: any) {
-        return { type: 'web.search', ok: false, error: e?.message ?? 'fetch failed' };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return { type: 'web.search' as const, ok: false, error: errorMessage };
       }
     }
     case 'web.fetch': {
       const { url } = task.params;
       try {
-        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const res = await fetch(url as string, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const text = await res.text();
-        return { type: 'web.fetch', ok: res.ok, status: res.status, data: { url, content: text.slice(0, 20000) } };
-      } catch (e: any) {
-        return { type: 'web.fetch', ok: false, error: e?.message ?? 'fetch failed' };
+        return { type: 'web.fetch' as const, ok: res.ok, status: res.status, data: { url, content: text.slice(0, 20000) } };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return { type: 'web.fetch' as const, ok: false, error: errorMessage };
       }
     }
     case 'file.write': {

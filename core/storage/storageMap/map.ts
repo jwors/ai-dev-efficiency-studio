@@ -68,7 +68,7 @@ export async function loadSession(sessionId: string): Promise<SessionState | nul
   }
 }
 
-export async function saveSession(state: any) {
+export async function saveSession(state: SessionState) {
   state.updatedAt = Date.now();
   memStore.set(state.sessionId, state);
 

@@ -14,7 +14,11 @@ async function readIndex(): Promise<ArtifactRecord[]> {
     const raw = await fs.readFile(indexPath, 'utf8');
     const data = JSON.parse(raw);
     return Array.isArray(data?.items) ? (data.items as ArtifactRecord[]) : [];
-  } catch {
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error('Failed to read artifact index');
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code !== 'ENOENT') {
+      console.error('Error reading artifact index:', err.message);
+    }
     return [];
   }
 }

@@ -3,44 +3,58 @@ export type StepViewStatus = "ok" | "failed" | "skipped";
 export type StepView = {
   stepIndex: number;
   action: string;
-  params: any;
+  params: Record<string, unknown>;
 
   status: StepViewStatus;
 
   ok?: boolean;
   fatal?: boolean;
 
-  // 展示用
   message?: string;
   error?: string;
 
-  // emit 的内容（如果这一步是 emit）
   emitContent?: string;
-
-  // policy 拦截产生的 output（可能来自非 emit step）
   outputContent?: string;
 };
 
-export function mergePlanAndResults(plan: any, results: any[]): StepView[] {
-  const map = new Map<number, any>();
+type PlanLike = {
+  steps: Array<{
+    action: string;
+    params?: Record<string, unknown>;
+  }>;
+};
+
+type ResultLike = {
+  stepIndex: number;
+  ok?: boolean;
+  fatal?: boolean;
+  message?: string;
+  error?: string;
+  type?: string;
+  data?: { content?: string };
+  output?: { type?: string; payload?: { content?: string } };
+};
+
+export function mergePlanAndResults(plan: PlanLike, results: ResultLike[]): StepView[] {
+  const map = new Map<number, ResultLike>();
   for (const r of results ?? []) map.set(r.stepIndex, r);
 
-  return (plan?.steps ?? []).map((step: any, idx: number) => {
+  return (plan?.steps ?? []).map((step, idx) => {
     const r = map.get(idx);
 
     if (!r) {
       return {
         stepIndex: idx,
         action: step.action,
-        params: step.params,
-        status: "skipped",
+        params: step.params ?? {},
+        status: "skipped" as const,
       };
     }
 
     return {
       stepIndex: idx,
       action: step.action,
-      params: step.params,
+      params: step.params ?? {},
       status: r.ok ? "ok" : "failed",
       ok: r.ok,
       fatal: r.fatal,

@@ -1,5 +1,13 @@
 import type { Task } from '../task/types';
 
+interface HttpTaskParams {
+  url?: unknown;
+}
+
+interface SearchTaskParams {
+  query?: unknown;
+}
+
 const DEV_AUTO_ALLOW = process.env.NODE_ENV !== 'production';
 const dynamicAllowlist = new Set<string>();
 
@@ -99,18 +107,21 @@ function guardHttpUrl(urlStr: string) {
 export function policyGuard(task: Task) {
     switch (task.type) {
         case 'http': {
-            const url = String((task as any).params?.url ?? "")
+            const params = task.params as HttpTaskParams;
+            const url = String(params.url ?? '');
             if (!url) throw new PolicyError("MISSING_URL", "http task 缺少 url 参数。")
             guardHttpUrl(url);
             return
         }
         case 'web.search': {
-            const q = String((task as any).params?.query ?? "")
+            const params = task.params as SearchTaskParams;
+            const q = String(params.query ?? '');
             if (!q) throw new PolicyError("MISSING_QUERY", "web.search 缺少 query");
             return;
         }
         case 'web.fetch': {
-            const url = String((task as any).params?.url ?? "");
+            const params = task.params as HttpTaskParams;
+            const url = String(params.url ?? "");
             if (!url) throw new PolicyError("MISSING_URL", "web.fetch 缺少 url");
             guardHttpUrl(url);
             return;
@@ -122,7 +133,9 @@ export function policyGuard(task: Task) {
         case 'artifact.export':
             return;
 
-        default:
-            throw new PolicyError("UNKNOWN_TASK", `未知 task: ${(task as any).type}`)
+        default: {
+            const unknownTask = task as { type?: string };
+            throw new PolicyError("UNKNOWN_TASK", `未知 task: ${unknownTask.type ?? 'unknown'}`)
+        }
     }
 }

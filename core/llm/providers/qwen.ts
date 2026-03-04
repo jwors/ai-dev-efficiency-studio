@@ -1,19 +1,34 @@
 import 'server-only';
 import { LLMProvider } from '../types';
-import { Message  } from '@/core/types/type';
+import { Message } from '@/core/types/type';
 
 type LLMRawResponse = {
 	content: string;
 	meta: { id?: string; created?: number; model?: string };
   };
 
-export class QwenProvide implements LLMProvider { 
+interface QwenApiResponse {
+	id?: string;
+	created?: number;
+	model?: string;
+	choices?: Array<{
+		message?: {
+			content?: string;
+		};
+	}>;
+	error?: {
+		message?: string;
+		code?: string;
+	};
+}
+
+export class QwenProvider implements LLMProvider {
 	constructor(
 		private apiKey: string,
 		private model = 'qwen-plus'
 	) { }
 
-	async call(prompt: Message[]):Promise<LLMRawResponse> { 
+	async call(prompt: Message[]): Promise<LLMRawResponse> {
 		const res = await fetch(
 			'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
 			{
@@ -25,23 +40,27 @@ export class QwenProvide implements LLMProvider {
 				body: JSON.stringify({
 					model: this.model,
 					messages: prompt,
-						temperature: 0
+					temperature: 0
 				})
 			}
 		);
-		if (!res.ok) { 
-			const errorData = await res.json();
-			throw new Error(`API Error: ${errorData.message}`);
+
+		if (!res.ok) {
+			const errorData = await res.json() as QwenApiResponse;
+			throw new Error(
+				`Qwen API Error (${res.status}): ${errorData.error?.message ?? 'Unknown error'}`
+			);
 		}
-		const data: any = await res.json();
-		
-		const content = String(data?.choices?.[0]?.message?.content ?? ""); // ✅ 强制 string
+
+		const data = await res.json() as QwenApiResponse;
+
+		const content = data.choices?.[0]?.message?.content ?? '';
 		return {
 		  content,
 		  meta: {
-			id: typeof data?.id === "string" ? data.id : undefined,
-			created: typeof data?.created === "number" ? data.created : undefined,
-			model: typeof data?.model === "string" ? data.model : undefined,
+			id: data.id,
+			created: data.created,
+			model: data.model,
 		  },
 		};
 	}

@@ -29,12 +29,13 @@ export async function planner(input: string, state:SessionState ) {
   let json: unknown;
   try {
     json = JSON.parse(rawText.content);
-  } catch {
-    throw new Error("Planner must return valid JSON");
+  } catch (error) {
+    const parseError = error instanceof Error ? error : new Error('Unknown parsing error');
+    throw new Error(`Planner JSON parse failed: ${parseError.message}. Raw output: ${rawText.content.slice(0, 500)}`);
   }
   const parsed = PlanSchema.safeParse(json);
   if (!parsed.success) {
-    throw new Error("Invalid planner output (PlanSchema mismatch)");
+    throw new Error(`Invalid planner output (PlanSchema mismatch): ${parsed.error.message}`);
   }
 
   // 你如果希望 plan 里也带 meta（保持你现有习惯），可以这样做：

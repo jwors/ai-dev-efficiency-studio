@@ -6,8 +6,8 @@ import { SessionState } from '../types/type';
 
 
 export async function runPlan(plan: Plan, state: SessionState) {
-  const results: any[] = [];
-  const outputs: any[] = [];
+  const results: unknown[] = [];
+  const outputs: unknown[] = [];
 
   for (const [index, step] of plan.steps.entries()) {
     const task = taskFromPlanStep(step);
@@ -29,14 +29,15 @@ export async function runPlan(plan: Plan, state: SessionState) {
         outputs.push(result.output); // output 已是 {type:'emit',payload:{content}}
       }
 
-      if (result.fatal) break;  
+      if (result.fatal) break;
 
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       results.push({
         stepIndex: index,
         ok: false,
         type: task.type,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
       continue;
     }

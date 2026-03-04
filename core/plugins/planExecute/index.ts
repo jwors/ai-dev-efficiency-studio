@@ -3,11 +3,12 @@ import { planner } from '../../planner';
 import { runPlan } from '../../executor/runPlan';
 import type { SessionState } from '../../types/type';
 import type { PluginResult } from '../types';
+import type { Plan } from '@/core/planner/schema';
 
 type PlanExecuteData = {
-  plan: any;
-  results: any[];
-  outputs: any[];
+  plan: Plan;
+  results: unknown[];
+  outputs: unknown[];
 };
 
 export async function runPlanExecutePlugin(

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export function taskFromPlanStep(step: {
   action: z.infer<typeof Action>;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
 }): Task {
   const params = step.params ?? {};
   switch (step.action) {
@@ -12,14 +12,14 @@ export function taskFromPlanStep(step: {
       return {
         type: 'log',
         params: {
-          message: params.message ?? '',
+          message: (params.message as string) ?? '',
         },
       };
     case 'emit':
       return {
         type: 'emit',
         params: {
-          data: params.data ?? null,
+          data: params.data as { content: string } ?? null,
         },
       };
     case 'web.search':
@@ -77,7 +77,7 @@ export function taskFromPlanStep(step: {
           method: typeof params.method === 'string' ? params.method : 'GET',
           headers:
             params.headers && typeof params.headers === 'object'
-              ? params.headers
+              ? params.headers as Record<string, string>
               : undefined,
           body: params.body,
         },
