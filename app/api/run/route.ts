@@ -23,7 +23,8 @@ export async function POST(req: Request) {
   initLLMOnce();
 
   const { input, uuid, plugins } = (await req.json()) as RunBody;
-  // 安全词
+
+  // 安全词检查（在获取 state 之前先做基本检查）
   const blocked = inputGuard(input);
   if (blocked) {
     return NextResponse.json(
@@ -38,6 +39,20 @@ export async function POST(req: Request) {
 
   // 获取对话信息
   const state = await getSession(uuid);
+
+  // 基于完整上下文的二次安全检查
+  const contextBlocked = inputGuard(input, state.history);
+  if (contextBlocked) {
+    return NextResponse.json(
+      {
+        error: contextBlocked.payload.content as string,
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
   // 更新对话信息
   await updateSession(input, state);
 

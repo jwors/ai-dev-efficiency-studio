@@ -23,15 +23,18 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
           10) file.write 只能写入 public/artifacts/ 目录
           11) artifact.export 只能导出 public/ 目录下文件
 
+          【特殊情况处理】
+          - 如果用户问题不适合生成执行步骤（如咨询类、概念类问题），返回空 steps 并添加 directResponse 字段直接回答
+          - 如果用户问题涉及敏感/危险内容，不要生成具体步骤，通过 directResponse 说明原因
+
           【Schema】
           {
             "goal": "string",
-            "steps": [
-              { "action": "string", "params": {} }
-            ]
+            "steps": [{ "action": "string", "params": {} }],
+            "directResponse": "string (可选，当无法生成步骤时直接回答用户)"
           }
 
-          【示例】
+          【示例 1 - 正常 Plan】
           {
             "goal": "示例目标",
             "steps": [
@@ -39,6 +42,13 @@ export function plannerPrompt(input: string, opts: SessionState): Message[] {
               { "action": "export_flow", "params": { "format": "png" } },
               { "action": "emit", "params": { "data": { "content": "# 标题\\n- 列表项\\n" } } }
             ]
+          }
+
+          【示例 2 - 直接回复】
+          {
+            "goal": "用户问题",
+            "steps": [],
+            "directResponse": "这是一个咨询类问题，不需要执行具体步骤。我的回答是..."
           }
       `,
     },

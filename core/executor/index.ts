@@ -3,7 +3,7 @@ import type { Task } from '@/core/task/types';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { SessionState } from '../types/type';
-import { PolicyError, policyGuard } from '../security/policyGuard';
+import { PolicyError, policyGuard, createPolicyContext } from '../security/policyGuard';
 
 const workspaceRoot = path.resolve(process.cwd());
 
@@ -16,9 +16,20 @@ function ensureWorkspacePath(filePath: string) {
   return resolved;
 }
 
+
+/*
+  单句子类型检查可以拦截明显的恶意请求
+  上下文检查就可以补充：拦截伪装的、分步的、累积的恶意请求
+*/
+
 export async function executeTask(task: Task, state: SessionState) {
+  // 确保策略上下文存在（会话级别隔离）
+  if (!state.policyContext) {
+    state.policyContext = createPolicyContext();
+  }
+
   try {
-    policyGuard(task);
+    policyGuard(task, state.policyContext);
   } catch (e) {
     const msg = e instanceof PolicyError ? e.message : '任务被安全策略拦截。';
     return {

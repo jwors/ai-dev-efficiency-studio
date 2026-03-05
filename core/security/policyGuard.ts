@@ -8,8 +8,19 @@ interface SearchTaskParams {
   query?: unknown;
 }
 
+// 会话级别的动态白名单（每次执行重置）
+export interface PolicyContext {
+  dynamicAllowlist: Set<string>;
+}
+
+// 创建新的策略上下文
+export function createPolicyContext(): PolicyContext {
+  return {
+    dynamicAllowlist: new Set<string>(),
+  };
+}
+
 const DEV_AUTO_ALLOW = process.env.NODE_ENV !== 'production';
-const dynamicAllowlist = new Set<string>();
 
 // 允许访问的白名单
 const ALLOWLIST = [
@@ -36,9 +47,9 @@ function normalizeHost(host: string) {
     return host.toLowerCase().replace(/^www\./, '');
 }
 
-function isAllowedHost(host: string) {
+function isAllowedHost(host: string, context: PolicyContext) {
     const h = normalizeHost(host);
-    if (dynamicAllowlist.has(h)) return true;
+    if (context.dynamicAllowlist.has(h)) return true;
     return ALLOWLIST.some((d) => h === d || h.endsWith(`.${d}`));
 }
 
@@ -70,7 +81,7 @@ function isPrivateIP(ip: string) {
     return false;
 }
 
-function guardHttpUrl(urlStr: string) {
+function guardHttpUrl(urlStr: string, context: PolicyContext) {
     let u: URL;
     try {
         u = new URL(urlStr);
@@ -93,24 +104,24 @@ function guardHttpUrl(urlStr: string) {
         }
     }
 
-    if (!isAllowedHost(u.hostname)) {
+    if (!isAllowedHost(u.hostname, context)) {
         const h = normalizeHost(u.hostname);
         if (DEV_AUTO_ALLOW) {
-          dynamicAllowlist.add(h);
+          context.dynamicAllowlist.add(h);
           console.warn(`[policy] auto-allow domain (dev): ${h}`);
           return;
         }
-        throw new PolicyError("DOMAIN_NOT_ALLOWED", `域名不在白名单: ${u.hostname}`);
+        throw new PolicyError("DOMAIN_NOT_ALLOWED", `域名不在白名单：${u.hostname}`);
     }
 }
 
-export function policyGuard(task: Task) {
+export function policyGuard(task: Task, context: PolicyContext) {
     switch (task.type) {
         case 'http': {
             const params = task.params as HttpTaskParams;
             const url = String(params.url ?? '');
             if (!url) throw new PolicyError("MISSING_URL", "http task 缺少 url 参数。")
-            guardHttpUrl(url);
+            guardHttpUrl(url, context);
             return
         }
         case 'web.search': {
@@ -123,7 +134,7 @@ export function policyGuard(task: Task) {
             const params = task.params as HttpTaskParams;
             const url = String(params.url ?? "");
             if (!url) throw new PolicyError("MISSING_URL", "web.fetch 缺少 url");
-            guardHttpUrl(url);
+            guardHttpUrl(url, context);
             return;
         }
         case 'log':

@@ -1,7 +1,5 @@
 // core/types/context.ts
 
-import { emit } from 'process';
-
 export interface PlanStep {
   action: string;
   params: Record<string, unknown>;
@@ -17,6 +15,8 @@ export interface Message {
 
 
 
+import type { PolicyContext } from '../security/policyGuard';
+
 export type SessionState = {
   sessionId: string;
   summary: string;        // 长期摘要（短，稳定携带）
@@ -26,6 +26,7 @@ export type SessionState = {
   };
   wbs?: WbsGraph;
   flowchart?: FlowchartJson;
+  policyContext?: PolicyContext;  // 安全策略上下文（会话级）
   updatedAt: number,
   createdAt: number;
   plan?: Plan | null;
