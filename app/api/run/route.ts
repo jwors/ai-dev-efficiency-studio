@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
-import { inputGuard } from '@/core/security/inputGuard';
+import { contextGuard,baseGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
 import { planExecutePlugin, wbsPlugin } from '@/core/plugins';
 import type { PluginResult } from '@/core/plugins/types';
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const { input, uuid, plugins } = (await req.json()) as RunBody;
 
   // 安全词检查（在获取 state 之前先做基本检查）
-  const blocked = inputGuard(input);
+  const blocked = baseGuard(input);
   if (blocked) {
     return NextResponse.json(
       {
@@ -41,7 +41,8 @@ export async function POST(req: Request) {
   const state = await getSession(uuid);
 
   // 基于完整上下文的二次安全检查
-  const contextBlocked = inputGuard(input, state.history);
+  const contextBlocked = contextGuard(input, state.history);
+  console.log(contextBlocked,'contextBlocked')
   if (contextBlocked) {
     return NextResponse.json(
       {

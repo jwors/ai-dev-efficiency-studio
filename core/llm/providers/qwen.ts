@@ -55,6 +55,7 @@ export class QwenProvider implements LLMProvider {
 		const data = await res.json() as QwenApiResponse;
 
 		const content = data.choices?.[0]?.message?.content ?? '';
+		console.log(content)
 		return {
 		  content,
 		  meta: {
