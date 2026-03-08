@@ -148,6 +148,7 @@ function mayContainRiskByQuickHints(text: string): boolean {
   return false;
 }
 
+// 检测单条文本风险
 function scoreTextRisk(text: string): number {
   const t = text || "";
   if (!t) return 0;
@@ -233,6 +234,7 @@ function recentSafeStreakBonusFromRisks(historyRisks: number[], currentRisk: num
   return streak >= RECOVERY_SAFE_TURNS ? RECOVERY_REDUCE : 0;
 }
 
+// 基础检测
 export function baseGuard(input: string): EmitOutput | null {
   const text = String(input ?? "");
 
@@ -282,6 +284,7 @@ export function baseGuard(input: string): EmitOutput | null {
   return null;
 }
 
+// 多轮对话内容检测
 export function contextGuard(input: string, messageHistory?: Message[]): EmitOutput | null {
   const text = String(input ?? "");
   if (!messageHistory || messageHistory.length === 0) return null;
@@ -305,6 +308,8 @@ function getBlockResponse(category: string): EmitOutput {
     },
   };
 }
+
+// 检测上下文安全性
 
 function checkContextSafety(messageHistory: Message[], currentInput: string): EmitOutput | null {
   // Legacy (kept for reference): old hard-block context strategy.
@@ -338,11 +343,19 @@ function checkContextSafety(messageHistory: Message[], currentInput: string): Em
   // return null;
 
   // point-3: 只做一次 user 过滤和窗口截取，并复用预计算风险分
+  /*
+    过滤出自己 user 内容并拿出最近六条
+  */
   const recentUserMessages = messageHistory.filter((m) => m.role === "user").slice(-CONTEXT_WINDOW);
   if (recentUserMessages.length === 0) return null;
 
+  // 检测历史内容的风险值
   const historyRisks = recentUserMessages.map((m) => scoreTextRisk(m.content));
+
+  // 当轮风险
   const currentRisk = scoreTextRisk(currentInput);
+
+  // 历史风险
   const historyRisk = scoreHistoryWithDecayFromRisks(historyRisks);
   const stepRisk = scoreStepwiseRisk(recentUserMessages, currentInput);
   const recoveryBonus = recentSafeStreakBonusFromRisks(historyRisks, currentRisk);

@@ -46,10 +46,53 @@ export default function RouteShell({ children }: RouteShellProps) {
   return (
     <div className="layout">
       <aside className="nav">
-        <div className="nav-title">Navigation</div>
-        <div className="nav-item" style={{ cursor: 'default' }}>
-          <span>你好，{userName}</span>
+        {/* Logo */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+          paddingBottom: '16px',
+          borderBottom: '0.5px solid #878787'
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            background: '#000000',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <svg viewBox="0 0 64 64" aria-hidden="true" style={{ width: '22px', height: '22px' }}>
+              <path
+                d="M10 44c0-12 8-22 20-22 6 0 10 2 14 6l10-10c-8-8-16-12-24-12C12 6 0 20 0 38c0 11 4 20 12 26l8-8c-6-4-10-8-10-12z"
+                fill="currentColor"
+              />
+              <path
+                d="M54 30c0 12-8 22-20 22-6 0-10-2-14-6L10 56c8 8 16 12 24 12 18 0 30-14 30-32 0-11-4-20-12-26l-8 8c6 4 10 8 10 12z"
+                fill="currentColor"
+                opacity="0.7"
+              />
+            </svg>
+          </div>
+          <span style={{
+            fontFamily: 'var(--font-poppins), Poppins, sans-serif',
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#000000'
+          }}>
+            JWORS
+          </span>
         </div>
+
+        <div className="nav-item" style={{ cursor: 'default', opacity: 0.7 }}>
+          <span>{userName}</span>
+        </div>
+
+        <div style={{ height: '8px' }} />
+
         <Link className="nav-item" href="/">
           <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -68,12 +111,21 @@ export default function RouteShell({ children }: RouteShellProps) {
           </svg>
           <span>插件</span>
         </Link>
+
+        <div style={{ flex: 1 }} />
+
         <button
           className="nav-item"
           type="button"
           onClick={() => signOut({ callbackUrl: '/login' })}
         >
-          <span>退出登录</span>
+          <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>退出</span>
         </button>
       </aside>
       <div className="route">{children}</div>
