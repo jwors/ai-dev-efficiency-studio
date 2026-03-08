@@ -5,12 +5,15 @@ import { signIn } from 'next-auth/react';
 import styles from './register.module.css';
 import { message } from 'antd';
 import { isValidEmail } from '@/lib/validators';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,79 +61,137 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className={`main route-single ${styles.registerRoot}`}>
-      <section className={`panel ${styles.registerPanel}`}>
-        <div className={styles.brand}>
-          <div className={styles.logo}>
-            <svg viewBox="0 0 64 64" aria-hidden="true">
-              <path
-                d="M10 44c0-12 8-22 20-22 6 0 10 2 14 6l10-10c-8-8-16-12-24-12C12 6 0 20 0 38c0 11 4 20 12 26l8-8c-6-4-10-8-10-12z"
-                fill="currentColor"
-              />
-              <path
-                d="M54 30c0 12-8 22-20 22-6 0-10-2-14-6L10 56c8 8 16 12 24 12 18 0 30-14 30-32 0-11-4-20-12-26l-8 8c6 4 10 8 10 12z"
-                fill="currentColor"
-                opacity="0.7"
-              />
-            </svg>
-          </div>
-          <div className={styles.wordmark}>
-            <div className={styles.name}>JWORS</div>
-            <div className={styles.tagline}>Structured Workflows</div>
-          </div>
+    <main className={styles.registerRoot}>
+      {/* Logo in top left */}
+      <div className={styles.logoText}>
+        <div className={styles.logoIcon}>
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path
+              d="M10 44c0-12 8-22 20-22 6 0 10 2 14 6l10-10c-8-8-16-12-24-12C12 6 0 20 0 38c0 11 4 20 12 26l8-8c-6-4-10-8-10-12z"
+              fill="currentColor"
+            />
+            <path
+              d="M54 30c0 12-8 22-20 22-6 0-10-2-14-6L10 56c8 8 16 12 24 12 18 0 30-14 30-32 0-11-4-20-12-26l-8 8c6 4 10 8 10 12z"
+              fill="currentColor"
+              opacity="0.7"
+            />
+          </svg>
         </div>
+        <span className={styles.logoBrand}>JWORS</span>
+      </div>
 
-        <div className={styles.title}>创建账户</div>
-        <div className={styles.subtitle}>填写信息以注册新用户</div>
+      {/* Main container with flex layout */}
+      <div className={styles.mainContainer}>
+        {/* Register card */}
+        <div className={styles.registerCard}>
+          <div className={styles.welcomeText}>Welcome !</div>
+          <div className={styles.title}>Create Account</div>
+          <div className={styles.subtitle}>Lorem Ipsum is simply</div>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <label className={styles.label}>
-            邮箱
-            <input
-              type="email"
-              name="email"
-              className={`input ${styles.input}`}
-              placeholder="name@domain.com"
-              autoComplete="email"
-              disabled={loading}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-          <label className={styles.label}>
-            密码
-            <input
-              type="password"
-              name="password"
-              className={`input ${styles.input}`}
-              placeholder="设置密码"
-              autoComplete="new-password"
-              disabled={loading}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <label className={styles.label}>
-            确认密码
-            <input
-              type="password"
-              name="confirmPassword"
-              className={`input ${styles.input}`}
-              placeholder="再次输入密码"
-              autoComplete="new-password"
-              disabled={loading}
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-            />
-          </label>
-          <button className={`button button-primary ${styles.submit}`} type="submit" disabled={loading}>
-            {loading ? '正在注册...' : '注册'}
-          </button>
-          <a href="/login" className={styles.link}>
-            已有账号？去登录
-          </a>
-        </form>
-      </section>
+          <form className={styles.form} onSubmit={handleSubmit}>
+            <label className={styles.label}>
+              <span className={styles.labelText}>User name</span>
+              <input
+                type="email"
+                name="email"
+                className={styles.input}
+                placeholder="Enter your user name"
+                autoComplete="email"
+                disabled={loading}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+
+            <label className={styles.label}>
+              <span className={styles.labelText}>Password</span>
+              <div className={styles.passwordWrapper}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  className={styles.input}
+                  placeholder="Enter your Password"
+                  autoComplete="new-password"
+                  disabled={loading}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <label className={styles.label}>
+              <span className={styles.labelText}>Confirm Password</span>
+              <div className={styles.passwordWrapper}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  className={styles.input}
+                  placeholder="Enter your Password"
+                  autoComplete="new-password"
+                  disabled={loading}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <button className={styles.submit} type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Register'}
+            </button>
+
+            <a href="/login" className={styles.link}>
+              Already have an Account ?  Login
+            </a>
+          </form>
+        </div>
+      </div>
+
+      {/* Illustration on the right side */}
+      <div className={styles.illustrationWrapper}>
+        <Image
+          src="/images/login-illustration.svg"
+          alt="Team discussing ideas"
+          width={900}
+          height={708}
+          priority
+        />
+      </div>
     </main>
   );
 }
