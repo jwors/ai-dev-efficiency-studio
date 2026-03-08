@@ -1,28 +1,21 @@
 import 'server-only';
 import type { Task } from '@/core/task/types';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { SessionState } from '../types/type';
+import type { SessionState } from '@/core/types';
 import { PolicyError, policyGuard, createPolicyContext } from '../security/policyGuard';
+import {
+  createNodeFileSystemProvider,
+  ensureWorkspacePath,
+  type FileSystemProvider,
+} from './fileSystem';
 
-const workspaceRoot = path.resolve(process.cwd());
+// 默认使用 Node.js 文件系统
+const defaultFsProvider = createNodeFileSystemProvider();
 
-function ensureWorkspacePath(filePath: string) {
-  const resolved = path.resolve(workspaceRoot, filePath);
-  // 防止路径逃逸到仓库之外
-  if (!resolved.startsWith(workspaceRoot)) {
-    throw new Error('路径超出工作目录，不允许访问');
-  }
-  return resolved;
-}
-
-
-/*
-  单句子类型检查可以拦截明显的恶意请求
-  上下文检查就可以补充：拦截伪装的、分步的、累积的恶意请求
-*/
-
-export async function executeTask(task: Task, state: SessionState) {
+export async function executeTask(
+  task: Task,
+  state: SessionState,
+  fsProvider: FileSystemProvider = defaultFsProvider,
+) {
   // 确保策略上下文存在（会话级别隔离）
   if (!state.policyContext) {
     state.policyContext = createPolicyContext();
@@ -40,30 +33,32 @@ export async function executeTask(task: Task, state: SessionState) {
       output: {
         type: 'emit' as const,
         payload: {
-          content: `⚠️ 安全限制：${msg}`
-        }
-      }
+          content: `⚠️ 安全限制：${msg}`,
+        },
+      },
     };
   }
+
   switch (task.type) {
     case 'log':
       return {
         type: 'log',
-        ok:true,
+        ok: true,
         message: task.params.message,
       };
-    case 'emit':
-      const content = String(task.params?.data?.content ?? "");
-      state.observation ??= {emits:[]}
+    case 'emit': {
+      const content = String(task.params?.data?.content ?? '');
+      state.observation ??= { emits: [] };
       state.observation.emits.push({
         content,
-        at:new Date().toISOString()
-      })
+        at: new Date().toISOString(),
+      });
       return {
         type: 'emit',
         ok: true,
-        payload:task.params.data
+        payload: task.params.data,
       };
+    }
     case 'web.search': {
       const { query, limit = 5 } = task.params;
       try {
@@ -104,9 +99,9 @@ export async function executeTask(task: Task, state: SessionState) {
     }
     case 'file.write': {
       const { path: relPath, content } = task.params;
-      const fullPath = ensureWorkspacePath(relPath);
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
-      await fs.writeFile(fullPath, content, 'utf8');
+      const fullPath = ensureWorkspacePath(relPath, fsProvider);
+      await fsProvider.fs.ensureDir(fsProvider.path.dirname(fullPath));
+      await fsProvider.fs.writeFile(fullPath, content);
       return {
         type: 'file.write',
         ok: true,
@@ -115,9 +110,9 @@ export async function executeTask(task: Task, state: SessionState) {
     }
     case 'artifact.export': {
       const { path: relPath, filename } = task.params;
-      const fullPath = ensureWorkspacePath(relPath);
+      const fullPath = ensureWorkspacePath(relPath, fsProvider);
       // 要求文件放在 public/ 下，才可直接下载
-      if (!fullPath.includes(`${path.sep}public${path.sep}`)) {
+      if (!fullPath.includes(`${fsProvider.path.sep}public${fsProvider.path.sep}`)) {
         throw new Error('artifact.export only supports files under public/');
       }
       const urlPath = relPath.replace(/^public[\\/]/, '/').replace(/\\/g, '/');
@@ -156,14 +151,14 @@ export async function executeTask(task: Task, state: SessionState) {
       return {
         type: 'http',
         fatal: !res.ok,
-        ok:res.ok,
+        ok: res.ok,
         status: res.status,
         data: responseBody,
       };
     }
     case 'export_flow':
       return {
-        ok:true,
+        ok: true,
         type: 'export_flow' as const,
         artifact: {
           kind: task.params?.format ?? 'png',

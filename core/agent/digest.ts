@@ -1,4 +1,4 @@
-import type { SessionState } from "../types/type";
+import type { SessionState } from '@/core/types';
 
 export function buildObservationDigest(state: SessionState) {
   const obs = state.observation;

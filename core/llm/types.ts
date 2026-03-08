@@ -1,6 +1,6 @@
 import 'server-only';
 import z from 'zod'
-import type { LLMRawResponse, Message } from '../types/type';
+import type { LLMRawResponse, Message } from '@/core/types';
 
 
 

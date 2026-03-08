@@ -120,7 +120,7 @@ policyGuard 只检查 URL 白名单 → 如果域名在白名单内，放行 ❌
 
 ## 待修复 🔧
 
-### 7. 架构混乱
+### 7. 架构混乱（已修复）
 
 **问题描述**：
 
@@ -133,11 +133,47 @@ policyGuard 只检查 URL 白名单 → 如果域名在白名单内，放行 ❌
 - `core/executor/index.ts` 直接 `import fs from 'node:fs/promises'`
 - 如果以后想支持浏览器端执行，这块必须重构
 
-**建议修复**：
-- 统一类型定义到 `core/types/index.ts` 导出
-- `core/basic/` 改名为 `core/session/` 或 `core/state/`
-- 组件移到 `components/` 目录
-- Executor 使用依赖注入，抽象文件系统接口
+**修复内容**：
+
+**1. 统一类型定义**：
+- 创建 `core/types/index.ts` - 统一导出入口
+- 创建 `core/types/session.ts` - 整理后的 Session 和 Plan 相关类型
+- 删除 `core/types/type.d.ts` - 旧文件已移除
+- 所有类型从 `@/core/types` 统一导入
+
+**2. 重命名目录**：
+- `core/basic/` → `core/session/`
+- 创建 `core/session/manager.ts` - 会话状态管理
+- 创建 `core/session/index.ts` - 模块导出
+
+**3. 移动组件**：
+- `app/plugin/planExecutor.tsx` → `components/PlanExecutor.tsx`
+
+**4. 文件系统依赖注入**：
+- 创建 `core/executor/fileSystem.ts` - 文件系统抽象接口
+  - `FileSystem` 接口 - 文件操作抽象（ensureDir, writeFile, readFile, exists, deleteFile）
+  - `PathResolver` 接口 - 路径工具抽象（resolve, dirname, basename, extname, sep）
+  - `FileSystemProvider` 接口 - 完整提供者
+  - `createNodeFileSystemProvider()` - Node.js 实现
+  - `ensureWorkspacePath()` - 安全路径验证（防止路径逃逸）
+- 更新 `core/executor/index.ts` - `executeTask` 支持依赖注入，默认使用 Node.js 实现
+
+**修复文件**：
+- `core/types/index.ts`: 新建统一导出
+- `core/types/session.ts`: 新建类型定义
+- `core/session/manager.ts`: 新建会话管理
+- `core/session/index.ts`: 新建模块导出
+- `core/executor/fileSystem.ts`: 新建文件系统抽象
+- `core/executor/index.ts`: 重构支持依赖注入
+- `components/PlanExecutor.tsx`: 从 app/plugin 移动
+- 20+ 文件更新导入路径 `@/core/types/type` → `@/core/types`
+- 3 个 API 路由更新 `@/core/basic/updateSession` → `@/core/session`
+
+**收益**：
+- 类型定义统一，导入路径清晰
+- 会话管理模块化，命名更准确
+- 组件目录结构符合 Next.js 规范
+- Executor 支持文件系统依赖注入，方便测试和未来浏览器端支持
 
 ---
 
@@ -353,7 +389,7 @@ interface Budget {
 | 类型安全 | 3/10 | 8/10 | 9/10 |
 | 错误处理 | 2/10 | 7/10 | 9/10 |
 | 安全性 | 4/10 | 8.5/10 | 9/10 |
-| 代码组织 | 4/10 | 4/10 | 8/10 |
+| 代码组织 | 4/10 | 7/10 | 8/10 |
 | 可测试性 | 2/10 | 2/10 | 9/10 |
 | 可观测性 | 2/10 | 2/10 | 8/10 |
 | API 设计 | 3/10 | 3/10 | 8/10 |

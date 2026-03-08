@@ -2,7 +2,7 @@ import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { prisma } from '@/lib/prisma';
-import type { ArtifactRecord } from '@/core/types/type';
+import type { ArtifactRecord } from '@/core/types';
 
 const workspaceRoot = path.resolve(process.cwd());
 const artifactsDir = path.resolve(workspaceRoot, 'public', 'artifacts');

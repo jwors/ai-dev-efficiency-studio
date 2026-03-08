@@ -4,7 +4,7 @@ import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { contextGuard,baseGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
 import { wbsPlugin } from '@/core/plugins';
-import { updateSession } from '@/core/basic/updateSession';
+import { updateSession } from '@/core/session';
 
 export async function POST(req: Request) {
   initLLMOnce();

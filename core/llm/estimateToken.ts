@@ -1,4 +1,4 @@
-import { Message } from '../types/type'
+import type { Message } from '@/core/types';
 
 function estimateTokens(text: string) {
   let tokens = 0;

@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Message, SessionState } from '../types/type';
+import type { Message, SessionState } from '@/core/types';
 import { buildObservationDigest } from '../agent/digest';
 import { sanitizeHistoryForPlanner } from '../planner/sanitize';
 

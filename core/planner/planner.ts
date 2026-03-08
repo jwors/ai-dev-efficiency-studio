@@ -8,7 +8,7 @@ import 'server-only';
 import { PlanSchema } from './schema';
 import { plannerPrompt } from '../prompts/plannerPrompt';
 import { callLLM,callLLmSummary } from '../llm';
-import { Message, SessionState } from '../types/type';
+import type { Message, SessionState } from '@/core/types';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
 import { clampMessagesToBudget } from '../llm/estimateToken';
 

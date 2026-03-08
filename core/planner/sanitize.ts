@@ -1,4 +1,4 @@
-import type { Message } from '../types/type';
+import type { Message } from '@/core/types';
 export function sanitizeHistoryForPlanner(history: Message[]) {
   const blockedPatterns = [
     /127\.0\.0\.1/i,

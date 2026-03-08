@@ -8,7 +8,7 @@ import {
   MiniMap,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import type { WbsGraph } from '@/core/types/type';
+import type { WbsGraph } from '@/core/types';
 
 type WBSProps = {
   wbs: WbsGraph | null;

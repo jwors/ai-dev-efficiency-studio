@@ -1,4 +1,4 @@
-import type { SessionState } from '../types/type';
+import type { SessionState } from '@/core/types';
 
 export type PluginResult<T = unknown> = {
   name: string;

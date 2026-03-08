@@ -1,5 +1,4 @@
-import { SessionState } from '../types/type';	
-import { Message } from '../types/type';
+import type { SessionState, Message } from '@/core/types';
 const MAX_HISTORY =12;
 
 

@@ -1,7 +1,7 @@
 import 'server-only';
 import { planner } from '../../planner';
 import { runPlan } from '../../executor/runPlan';
-import type { SessionState } from '../../types/type';
+import type { SessionState } from '@/core/types';
 import type { PluginResult } from '../types';
 import type { Plan } from '@/core/planner/schema';
 import { checkPlanSafety } from '@/core/security/planGuard';

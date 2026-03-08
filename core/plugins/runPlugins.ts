@@ -1,5 +1,5 @@
 import type { Plugin, PluginResult } from './types';
-import type { SessionState } from '../types/type';
+import type { SessionState } from '@/core/types';
 
 export async function runPlugins(
   plugins: Plugin[],

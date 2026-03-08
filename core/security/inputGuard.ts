@@ -1,4 +1,4 @@
-import type { Message } from "../types/type";
+import type { Message } from '@/core/types';
 
 export type EmitOutput = { type: "emit"; payload: { content: string } };
 

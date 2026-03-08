@@ -1,4 +1,4 @@
-import { SessionState } from '@/core/types/type';
+import type { SessionState } from '@/core/types';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 

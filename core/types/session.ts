@@ -1,4 +1,6 @@
-// core/types/context.ts
+// Session & Plan Types
+
+import type { PolicyContext } from '../security/policyGuard';
 
 export interface PlanStep {
   action: string;
@@ -7,15 +9,11 @@ export interface PlanStep {
   dependsOn?: string[];
 }
 
-export interface Message { 
-  role:'user' | 'assistant' | 'system',
-  content: string,
-  mate?:{ tag?: string };
+export interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  meta?: { tag?: string };
 }
-
-
-
-import type { PolicyContext } from '../security/policyGuard';
 
 export type SessionState = {
   sessionId: string;
@@ -27,11 +25,11 @@ export type SessionState = {
   wbs?: WbsGraph;
   flowchart?: FlowchartJson;
   policyContext?: PolicyContext;  // 安全策略上下文（会话级）
-  updatedAt: number,
+  updatedAt: number;
   createdAt: number;
   plan?: Plan | null;
   results?: ExecutionResult[];
-  outputs?:OutputItem[]
+  outputs?: OutputItem[];
 };
 
 export interface Plan {
@@ -54,6 +52,7 @@ export interface OutputItem {
   payload: unknown;
 }
 
+// WBS Types
 export type WbsNodeType = 'goal' | 'milestone' | 'task' | 'subtask';
 export type WbsNodeStatus = 'todo' | 'doing' | 'done' | 'blocked';
 export type WbsEdgeType = 'parent' | 'dependency';
@@ -86,6 +85,7 @@ export type WbsGraph = {
   };
 };
 
+// Flowchart Types
 export type FlowchartJson = {
   version: 'flowchart.v1';
   title: string;
@@ -115,7 +115,6 @@ export type FlowEdge = {
   type: 'sequence' | 'condition' | 'parallel';
 };
 
-
 export interface Observation {
   outputs: OutputItem[];
   notes?: string[];
@@ -144,7 +143,8 @@ export interface ContextState {
   currentStepIndex: number;
 }
 
-type LLMRawResponse = {
+// LLM Response Types
+export interface LLMRawResponse {
   content: string;
   meta: { id?: string; created?: number; model?: string };
-};
+}

@@ -1,8 +1,8 @@
 import 'server-only';
 import type { Plan } from '@/core/planner/schema';
+import type { SessionState } from '@/core/types';
 import { taskFromPlanStep } from '@/core/task/fromPlan';
 import { executeTask } from './index';
-import { SessionState } from '../types/type';
 
 
 export async function runPlan(plan: Plan, state: SessionState) {

@@ -1,6 +1,6 @@
 import 'server-only';
 import { LLMProvider } from './types';
-import { LLMRawResponse, Message } from '../types/type';
+import type { LLMRawResponse, Message } from '@/core/types';
 
 let provider: LLMProvider;
 

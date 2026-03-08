@@ -1,7 +1,7 @@
 import 'server-only'
 import { callLLM } from '@/core/llm'
 import { clampMessagesToBudget } from '@/core/llm/estimateToken'
-import type { SessionState } from '@/core/types/type'
+import type { SessionState } from '@/core/types';
 import type { PluginResult } from '../types'
 import { FlowchartSchema,type FlowchartGraph } from './schema'
 import { flowchartPrompt } from '@/core/prompts/taskFlowPrompt' 

@@ -5,7 +5,7 @@ import { contextGuard,baseGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
 import { planExecutePlugin, wbsPlugin } from '@/core/plugins';
 import type { PluginResult } from '@/core/plugins/types';
-import { updateSession } from '@/core/basic/updateSession';
+import { updateSession } from '@/core/session';
 
 type PlanExecuteData = {
   plan: any;

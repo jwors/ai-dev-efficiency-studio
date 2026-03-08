@@ -2,7 +2,7 @@ import 'server-only';
 
 // core/llm/providers/mock.ts
 import { LLMProvider } from '../types';
-import { Message } from '@/core/types/type';
+import type { Message } from '@/core/types';
 
 type LLMRawResponse = {
   content: string;

@@ -1,7 +1,7 @@
 import 'server-only';
 import { callLLM } from '../../llm';
 import { clampMessagesToBudget } from '../../llm/estimateToken';
-import type { SessionState } from '../../types/type';
+import type { SessionState } from '@/core/types';
 import type { PluginResult } from '../types';
 import { WbsSchema, type WbsGraph } from './schema';
 import { wbsPrompt } from '../../prompts/wbsPrompt';

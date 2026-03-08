@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listSessions, saveSession } from '@/core/storage/storageMap/map';
-import type { SessionState } from '@/core/types/type';
+import type { SessionState } from '@/core/types';
 
 type CreateSessionBody = {
   userId: string;

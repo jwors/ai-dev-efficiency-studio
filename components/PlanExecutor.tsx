@@ -36,15 +36,14 @@ type MarkdownListItemProps = React.LiHTMLAttributes<HTMLLIElement> & {
   node?: unknown;
 };
 
-export default function Page() {
+export default function PlanExecutor() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const { userId } = useAuthUserId();
   const [isFlowOpen, setIsFlowOpen] = useState(false);
-  const [selectedStepIndex,setSelectedStepIndex] = useState<null|number>(null)
-
+  const [selectedStepIndex, setSelectedStepIndex] = useState<null | number>(null);
 
   useEffect(() => {
     if (!isFlowOpen) {
@@ -76,7 +75,7 @@ export default function Page() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input,uuid:userId }),
+        body: JSON.stringify({ input, uuid: userId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -107,9 +106,7 @@ export default function Page() {
     }
   }
 
-  function saveLog() { 
-
-  }
+  function saveLog() {}
 
   const stepsCount = result?.plan?.steps?.length ?? 0;
   const outputsCount = result?.outputs?.length ?? 0;
@@ -166,7 +163,7 @@ export default function Page() {
         let listCounter = 0;
         let currentHeadingLevel = 0;
 
-        item.content.split('\n').forEach((line:any) => {
+        item.content.split('\n').forEach((line: any) => {
           const trimmed = line.trim();
           const headingMatch = /^(#{1,6})\s+(.*)$/.exec(trimmed);
           if (headingMatch) {
@@ -260,7 +257,6 @@ export default function Page() {
     return mergePlanAndResults(result.plan, result.results ?? []);
   }, [result]);
 
-
   const handleOutlineClick = (targetId?: string) => {
     if (!targetId) {
       return;
@@ -288,6 +284,7 @@ export default function Page() {
       ))}
     </ul>
   );
+
   return (
     <>
       <main className="main">
@@ -441,97 +438,106 @@ export default function Page() {
               </button>
             </div>
             <div className="modal-body">
-  {stepViews.length ? (
-    <div className="flow-modal-grid">
-      {/* 左侧：步骤列表 */}
-      <div className="flow-steps">
-        {stepViews.map((s: any) => {
-          const isActive = s.stepIndex === selectedStepIndex;
-          const statusClass =
-            s.status === "ok"
-              ? "step-ok"
-              : s.status === "failed"
-              ? "step-failed"
-              : "step-skipped";
+              {stepViews.length ? (
+                <div className="flow-modal-grid">
+                  {/* 左侧：步骤列表 */}
+                  <div className="flow-steps">
+                    {stepViews.map((s: any) => {
+                      const isActive = s.stepIndex === selectedStepIndex;
+                      const statusClass =
+                        s.status === 'ok'
+                          ? 'step-ok'
+                          : s.status === 'failed'
+                            ? 'step-failed'
+                            : 'step-skipped';
 
-          return (
-            <button
-              key={s.stepIndex}
-              type="button"
-              className={`flow-step ${statusClass} ${isActive ? "active" : ""}`}
-              onClick={() => setSelectedStepIndex(s.stepIndex)}
-            >
-              <div className="flow-step-title">
-                <span className="flow-step-idx">#{s.stepIndex + 1}</span>
-                <span className="flow-step-action">{s.action}</span>
-              </div>
-              <div className="flow-step-sub">
-                <span className="flow-step-status">{s.status}</span>
-                {s.fatal ? <span className="flow-step-fatal">fatal</span> : null}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                      return (
+                        <button
+                          key={s.stepIndex}
+                          type="button"
+                          className={`flow-step ${statusClass} ${isActive ? 'active' : ''}`}
+                          onClick={() => setSelectedStepIndex(s.stepIndex)}
+                        >
+                          <div className="flow-step-title">
+                            <span className="flow-step-idx">#{s.stepIndex + 1}</span>
+                            <span className="flow-step-action">{s.action}</span>
+                          </div>
+                          <div className="flow-step-sub">
+                            <span className="flow-step-status">{s.status}</span>
+                            {s.fatal ? (
+                              <span className="flow-step-fatal">fatal</span>
+                            ) : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-      {/* 右侧：详情面板 */}
-      <div className="flow-detail">
-        {(() => {
-          const s = stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ?? stepViews[0];
+                  {/* 右侧：详情面板 */}
+                  <div className="flow-detail">
+                    {(() => {
+                      const s =
+                        stepViews.find((x: any) => x.stepIndex === selectedStepIndex) ??
+                        stepViews[0];
 
-          return (
-            <>
-              <div className="flow-detail-header">
-                <div className="flow-detail-title">
-                  Step {s.stepIndex + 1}: {s.action}
-                </div>
-                <div className={`flow-chip ${
-                  s.status === "ok" ? "chip-ok" : s.status === "failed" ? "chip-failed" : "chip-skipped"
-                }`}>
-                  {s.status}
-                </div>
-              </div>
+                      return (
+                        <>
+                          <div className="flow-detail-header">
+                            <div className="flow-detail-title">
+                              Step {s.stepIndex + 1}: {s.action}
+                            </div>
+                            <div
+                              className={`flow-chip ${
+                                s.status === 'ok'
+                                  ? 'chip-ok'
+                                  : s.status === 'failed'
+                                    ? 'chip-failed'
+                                    : 'chip-skipped'
+                              }`}
+                            >
+                              {s.status}
+                            </div>
+                          </div>
 
-              {s.error ? (
-                <div className="flow-detail-error">
-                  <strong>Error:</strong> {s.error}
-                </div>
-              ) : null}
+                          {s.error ? (
+                            <div className="flow-detail-error">
+                              <strong>Error:</strong> {s.error}
+                            </div>
+                          ) : null}
 
-              {s.outputContent ? (
-                <div className="flow-detail-output">
-                  <div className="flow-detail-section-title">Output</div>
-                  <div className="markdown">
-                    <ReactMarkdown>{s.outputContent}</ReactMarkdown>
+                          {s.outputContent ? (
+                            <div className="flow-detail-output">
+                              <div className="flow-detail-section-title">Output</div>
+                              <div className="markdown">
+                                <ReactMarkdown>{s.outputContent}</ReactMarkdown>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {s.emitContent ? (
+                            <div className="flow-detail-output">
+                              <div className="flow-detail-section-title">Emit</div>
+                              <div className="markdown">
+                                <ReactMarkdown>{s.emitContent}</ReactMarkdown>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="flow-detail-section">
+                            <div className="flow-detail-section-title">Params</div>
+                            <pre className="flow-detail-pre">
+                              {JSON.stringify(s.params ?? {}, null, 2)}
+                            </pre>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
-              ) : null}
-
-              {s.emitContent ? (
-                <div className="flow-detail-output">
-                  <div className="flow-detail-section-title">Emit</div>
-                  <div className="markdown">
-                    <ReactMarkdown>{s.emitContent}</ReactMarkdown>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="flow-detail-section">
-                <div className="flow-detail-section-title">Params</div>
-                <pre className="flow-detail-pre">
-                  {JSON.stringify(s.params ?? {}, null, 2)}
-                </pre>
-              </div>
-            </>
-          );
-        })()}
-      </div>
-    </div>
-  ) : (
-    <div className="empty">No executor flow yet.</div>
-  )}
-</div>
-
+              ) : (
+                <div className="empty">No executor flow yet.</div>
+              )}
+            </div>
           </div>
         </div>
       )}

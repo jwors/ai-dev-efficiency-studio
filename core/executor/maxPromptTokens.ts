@@ -1,4 +1,4 @@
-import { Message } from '../types/type';
+import type { Message } from '@/core/types';
 
 
 export function buildPlannerMessages(params: {

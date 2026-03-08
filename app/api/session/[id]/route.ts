@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadSession, saveSession } from '@/core/storage/storageMap/map';
-import type { SessionState } from '@/core/types/type';
+import type { SessionState } from '@/core/types';
 
 type Params = { id: string };
 type RouteContext = { params: Promise<Params> };
