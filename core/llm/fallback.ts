@@ -17,6 +17,13 @@ type ProviderHealth = {
 const providerHealth = new Map<string, ProviderHealth>();
 
 /**
+ * Reset all provider health states (for testing).
+ */
+export function resetProviderHealth(): void {
+  providerHealth.clear();
+}
+
+/**
  * Get or initialize provider health state.
  */
 function getHealth(name: string): ProviderHealth {

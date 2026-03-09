@@ -11,7 +11,10 @@
       "mcp__figma__get_figma_data",
       "mcp__figma__download_figma_images",
       "Bash(npx tsc:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)"
     ]
   }
 }
