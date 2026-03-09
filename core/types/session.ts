@@ -146,5 +146,11 @@ export interface ContextState {
 // LLM Response Types
 export interface LLMRawResponse {
   content: string;
-  meta: { id?: string; created?: number; model?: string };
+  meta: {
+    id?: string;
+    created?: number;
+    model?: string;
+    provider?: string;
+    attemptCount?: number;
+  };
 }

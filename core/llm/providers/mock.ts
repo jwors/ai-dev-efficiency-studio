@@ -2,15 +2,12 @@ import 'server-only';
 
 // core/llm/providers/mock.ts
 import { LLMProvider } from '../types';
-import type { Message } from '@/core/types';
-
-type LLMRawResponse = {
-  content: string;
-  meta: { id?: string; created?: number; model?: string };
-};
+import type { LLMRawResponse, Message } from '@/core/types';
 
 export class MockProvider implements LLMProvider {
-  async call(prompt: Message[]): Promise<LLMRawResponse> {
+  name = 'mock';
+
+  async call(_prompt: Message[]): Promise<LLMRawResponse> {
     const content = JSON.stringify({
       goal: 'mock goal',
       steps: [
@@ -26,7 +23,8 @@ export class MockProvider implements LLMProvider {
       meta: {
         id: 'mock-id',
         created: Date.now(),
-        model: 'mock-model'
+        model: 'mock-model',
+        provider: this.name,
       }
     };
   }
