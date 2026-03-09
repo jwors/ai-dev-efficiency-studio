@@ -78,8 +78,14 @@ export function normalizeLLMError(
     }
 
     if (error.name === 'TypeError') {
-      return new LLMError(error.message || 'LLM network error', {
-        kind: 'network',
+      // Distinguish network errors from code bugs
+      // fetch API network errors typically contain specific messages
+      const networkErrorPatterns = ['fetch', 'network', 'failed to fetch', 'enotfound', 'econnrefused'];
+      const isNetworkError = networkErrorPatterns.some(pattern =>
+        error.message.toLowerCase().includes(pattern)
+      );
+      return new LLMError(error.message || 'LLM error', {
+        kind: isNetworkError ? 'network' : 'unknown',
         provider,
         cause: error,
       });

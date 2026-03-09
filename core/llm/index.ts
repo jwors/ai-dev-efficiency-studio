@@ -64,7 +64,7 @@ export async function callLLM(prompt: Message[]): Promise<LLMRawResponse> {
   });
 }
 
-export async function callLLmSummary(prompt: Message[]): Promise<string> {
+export async function callLLMSummary(prompt: Message[]): Promise<string> {
   const summary = await callLLM(prompt);
   return summary.content.trim();
 }

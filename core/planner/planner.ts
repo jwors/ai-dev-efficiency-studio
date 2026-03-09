@@ -7,7 +7,7 @@ import 'server-only';
 
 import { PlanSchema } from './schema';
 import { plannerPrompt } from '../prompts/plannerPrompt';
-import { callLLM,callLLmSummary } from '../llm';
+import { callLLM,callLLMSummary } from '../llm';
 import type { Message, SessionState } from '@/core/types';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
 import { clampMessagesToBudget } from '../llm/estimateToken';
@@ -17,8 +17,7 @@ const MAX_PROMPT_TOKENS = 8000;   // 你用的 qwen-plus 自己设个上限即�
 const RESERVED_OUTPUT = 1000;     // 给 planner 输出 JSON 留空间
 
 
-export async function planner(input: string, state:SessionState ) {
-  await updateSummaryIfNeeded(state, callLLmSummary)
+export async function planner(input: string, state:SessionState ) {\  await updateSummaryIfNeeded(state, callLLMSummary)
   // 1) 如果 history 太长，先摘要
 
   context = plannerPrompt(input, state);

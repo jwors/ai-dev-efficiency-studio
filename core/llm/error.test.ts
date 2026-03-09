@@ -138,12 +138,38 @@ describe('normalizeLLMError', () => {
     expect(result.cause).toBe(abortError);
   });
 
-  it('should convert TypeError to network LLMError', () => {
+  it('should convert network TypeError to network LLMError', () => {
     const typeError = new TypeError('fetch failed');
     const result = normalizeLLMError(typeError, 'qwen');
 
     expect(result).toBeInstanceOf(LLMError);
     expect(result.kind).toBe('network');
+    expect(result.provider).toBe('qwen');
+    expect(result.cause).toBe(typeError);
+  });
+
+  it('should convert TypeError with network patterns to network LLMError', () => {
+    const patterns = [
+      'Failed to fetch',
+      'Network error',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+    ];
+
+    patterns.forEach(message => {
+      const typeError = new TypeError(message);
+      const result = normalizeLLMError(typeError, 'qwen');
+
+      expect(result.kind).toBe('network');
+    });
+  });
+
+  it('should convert non-network TypeError to unknown LLMError', () => {
+    const typeError = new TypeError("Cannot read property 'x' of undefined");
+    const result = normalizeLLMError(typeError, 'qwen');
+
+    expect(result).toBeInstanceOf(LLMError);
+    expect(result.kind).toBe('unknown');
     expect(result.provider).toBe('qwen');
     expect(result.cause).toBe(typeError);
   });

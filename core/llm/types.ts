@@ -1,7 +1,7 @@
 import z from 'zod'
 import type { LLMRawResponse, Message } from '@/core/types';
 
-export type LLMProviderName = 'qwen' | 'mock' | string;
+export type LLMProviderName = 'qwen' | 'mock';
 
 export interface LLMCallOptions {
 	requestId?: string;

@@ -1,7 +1,8 @@
 import 'server-only';
-import { LLMProvider } from '../types';
+import { LLMProvider, LLMProviderName, LLMCallOptions } from '../types';
 import type { LLMRawResponse, Message } from '@/core/types';
 import { LLMError, mapHttpStatusToKind } from '../error';
+import { config } from '@/core/config';
 
 interface QwenApiResponse {
 	id?: string;
@@ -19,16 +20,28 @@ interface QwenApiResponse {
 }
 
 export class QwenProvider implements LLMProvider {
-	name = 'qwen';
+	name:LLMProviderName = 'qwen';
 
 	constructor(
 		private apiKey: string,
 		private model = 'qwen-plus'
 	) { }
 
-	async call(prompt: Message[], options?: { timeoutMs?: number }): Promise<LLMRawResponse> {
+	async call(prompt: Message[], options?: LLMCallOptions): Promise<LLMRawResponse> {
+		
+		if (!this.apiKey) {
+			throw new LLMError(
+				`Qwen API key cannot be empty`,
+				{
+					kind: 'auth',
+					provider: this.name,
+					statusCode: 401,
+					code: 'EMPTY_API_KEY',
+				},
+			)
+		}
 		const controller = new AbortController();
-		const timeoutMs = options?.timeoutMs ?? 12000;
+		const timeoutMs = options?.timeoutMs ?? config.llmTimeoutMs;
 		const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
 		try {

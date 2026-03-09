@@ -1,11 +1,11 @@
 import 'server-only';
 
 // core/llm/providers/mock.ts
-import { LLMProvider } from '../types';
+import { LLMProvider, LLMProviderName } from '../types';
 import type { LLMRawResponse, Message } from '@/core/types';
 
 export class MockProvider implements LLMProvider {
-  name = 'mock';
+  name:LLMProviderName = 'mock';
 
   async call(_prompt: Message[]): Promise<LLMRawResponse> {
     const content = JSON.stringify({
