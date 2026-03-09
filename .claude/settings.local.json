@@ -9,7 +9,9 @@
       "Bash(node:*)",
       "Bash(npx tsx:*)",
       "mcp__figma__get_figma_data",
-      "mcp__figma__download_figma_images"
+      "mcp__figma__download_figma_images",
+      "Bash(npx tsc:*)",
+      "Bash(git:*)"
     ]
   }
 }
