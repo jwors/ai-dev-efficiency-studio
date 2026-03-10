@@ -1,12 +1,21 @@
 import 'server-only';
 
+/**
+ * 解析环境变量为数字，支持默认值。
+ * @param value - 环境变量字符串
+ * @param defaultValue - 默认值
+ * @returns 解析后的数字
+ */
 function parseEnvNumber(value: string | undefined, defaultValue: number): number {
   if (!value) return defaultValue;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : defaultValue;
 }
 
-// core/config/index.ts
+/**
+ * 全局配置对象。
+ * 从环境变量读取 LLM 提供者、超时、重试策略、熔断器等配置。
+ */
 export const config = {
   llmProvider: process.env.LLM_PROVIDER ?? 'mock',
   llmFallbackProvider: process.env.LLM_FALLBACK_PROVIDER ?? 'mock',

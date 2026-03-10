@@ -7,6 +7,10 @@ import type { LLMProvider } from './types';
 
 let initialized = false;
 
+/**
+ * 初始化 LLM 提供者（单例模式）。
+ * 根据配置创建主提供者和可选的备用提供者。
+ */
 export function initLLMOnce() {
   if (initialized) return;
 

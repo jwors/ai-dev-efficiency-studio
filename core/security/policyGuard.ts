@@ -13,7 +13,10 @@ export interface PolicyContext {
   dynamicAllowlist: Set<string>;
 }
 
-// 创建新的策略上下文
+/**
+ * 创建新的策略上下文。
+ * @returns 初始化的策略上下文对象
+ */
 export function createPolicyContext(): PolicyContext {
   return {
     dynamicAllowlist: new Set<string>(),
@@ -43,10 +46,21 @@ const ALLOWLIST = [
     "duckduckgo.com", // 搜索入口，可删
 ];
 
+/**
+ * 标准化主机名（转小写并移除 www 前缀）。
+ * @param host - 原始主机名
+ * @returns 标准化后的主机名
+ */
 function normalizeHost(host: string) {
     return host.toLowerCase().replace(/^www\./, '');
 }
 
+/**
+ * 检查主机名是否在允许列表或动态白名单中。
+ * @param host - 主机名
+ * @param context - 策略上下文
+ * @returns 如果允许访问返回 true
+ */
 function isAllowedHost(host: string, context: PolicyContext) {
     const h = normalizeHost(host);
     if (context.dynamicAllowlist.has(h)) return true;
@@ -55,17 +69,32 @@ function isAllowedHost(host: string, context: PolicyContext) {
 
 export class PolicyError extends Error {
     code: string;
+    /**
+     * 创建策略错误实例。
+     * @param code - 错误代码
+     * @param message - 错误消息
+     */
     constructor(code: string, message: string) {
         super(message);
         this.code = code;
     }
 }
 
+/**
+ * 检查主机名是否为本地地址（localhost/127.0.0.1/0.0.0.0）。
+ * @param host - 主机名
+ * @returns 如果是本地地址返回 true
+ */
 function isPrivateHostname(host: string) {
     const h = host.toLowerCase();
     return h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0";
 }
 
+/**
+ * 检查 IP 是否为私有地址段（10.x/8, 192.168.x/16, 172.16-31.x/12）。
+ * @param ip - IP 地址字符串
+ * @returns 如果是私有 IP 返回 true
+ */
 function isPrivateIP(ip: string) {
     // 只做最常见私网段判断（MVP 够用）
     // 10.0.0.0/8
@@ -81,6 +110,13 @@ function isPrivateIP(ip: string) {
     return false;
 }
 
+/**
+ * 检查 HTTP URL 的安全性。
+ * 验证协议、主机名、IP 地址是否合规。
+ * @param urlStr - URL 字符串
+ * @param context - 策略上下文
+ * @throws PolicyError 如果 URL 不符合安全策略
+ */
 function guardHttpUrl(urlStr: string, context: PolicyContext) {
     let u: URL;
     try {
@@ -115,6 +151,13 @@ function guardHttpUrl(urlStr: string, context: PolicyContext) {
     }
 }
 
+/**
+ * 任务安全策略守卫。
+ * 根据任务类型检查是否符合安全策略，包括 URL 白名单、内网访问限制等。
+ * @param task - 待检查的任务
+ * @param context - 策略上下文（包含动态白名单）
+ * @throws PolicyError 如果任务违反安全策略
+ */
 export function policyGuard(task: Task, context: PolicyContext) {
     switch (task.type) {
         case 'http': {

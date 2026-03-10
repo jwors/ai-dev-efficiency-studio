@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma';
 
+/**
+ * 用户注册的 POST 端点。
+ * 验证邮箱和密码，创建新用户并返回用户信息。
+ * @param req - 请求对象，FormData 包含 email 和 password
+ * @returns 创建的用户信息或错误响应
+ */
 export async function POST(req: Request) {
 	try {
 		const body = await req.formData().catch(() => null);

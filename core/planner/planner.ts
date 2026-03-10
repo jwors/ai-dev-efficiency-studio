@@ -17,13 +17,25 @@ import {
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 1000;
 
+/**
+ * 规划器主函数。
+ * 根据用户输入生成执行计划，支持 token 预算控制和历史摘要。
+ * @param input - 用户输入
+ * @param state - 会话状态
+ * @returns 生成的计划对象
+ * @throws 如果 token 预算超限或 JSON 解析失败
+ */
 export async function planner(input: string, state: SessionState) {
+  // 检查token预算
   await checkTokenBudget(state.sessionId);
 
+  // 更新摘要
   await updateSummaryIfNeeded(state, callLLMSummary);
 
+  // 获取prompt
   let context = plannerPrompt(input, state);
 
+  
   const remainingBudget = await getRemainingBudget(state.sessionId);
   const effectiveBudget = Math.min(MAX_PROMPT_TOKENS - RESERVED_OUTPUT, remainingBudget - 500);
   context = clampMessagesToBudget(context, Math.max(effectiveBudget, 1000));

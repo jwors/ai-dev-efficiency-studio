@@ -9,6 +9,11 @@ const artifactsDir = path.resolve(workspaceRoot, 'public', 'artifacts');
 const indexPath = path.join(artifactsDir, 'index.json');
 const MAX_RECORDS = 200;
 let dbDisabled = false;
+
+/**
+ * 读取制品索引文件。
+ * @returns 制品记录数组，读取失败时返回空数组
+ */
 async function readIndex(): Promise<ArtifactRecord[]> {
   try {
     const raw = await fs.readFile(indexPath, 'utf8');
@@ -23,6 +28,10 @@ async function readIndex(): Promise<ArtifactRecord[]> {
   }
 }
 
+/**
+ * 写入制品索引文件。
+ * @param items - 制品记录数组
+ */
 async function writeIndex(items: ArtifactRecord[]) {
   await fs.mkdir(artifactsDir, { recursive: true });
   const payload = {
@@ -32,6 +41,11 @@ async function writeIndex(items: ArtifactRecord[]) {
   await fs.writeFile(indexPath, JSON.stringify(payload, null, 2), 'utf8');
 }
 
+/**
+ * 添加制品记录。
+ * 优先写入数据库，失败时降级为文件存储。
+ * @param record - 制品记录
+ */
 export async function addArtifactRecord(record: ArtifactRecord) {
   if (!dbDisabled) {
     try {
@@ -57,6 +71,11 @@ export async function addArtifactRecord(record: ArtifactRecord) {
   await writeIndex(filtered.slice(0, MAX_RECORDS));
 }
 
+/**
+ * 列出所有制品记录。
+ * 优先从数据库读取，失败时降级为文件存储。
+ * @returns 制品记录数组
+ */
 export async function listArtifactRecords(): Promise<ArtifactRecord[]> {
   if (!dbDisabled) {
     try {

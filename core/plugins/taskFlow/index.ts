@@ -9,6 +9,13 @@ import { flowchartPrompt } from '@/core/prompts/taskFlowPrompt'
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 1200;
 
+/**
+ * 运行任务流程图插件。
+ * 根据用户输入生成流程图结构，用于任务执行流程可视化。
+ * @param input - 用户输入
+ * @param state - 会话状态
+ * @returns 插件执行结果，包含流程图数据
+ */
 export async function runTaskFlowPlugin(
 	input: string,
 	state: SessionState

@@ -13,6 +13,14 @@ type LayoutedFlowchartNode = FlowchartNode & {
   targetPosition: Position;
 };
 
+/**
+ * 使用 dagre 算法对流程图元素进行自动布局。
+ * 支持自上而下 (TB) 或从左到右 (LR) 的布局方向。
+ * @param nodes - 流程图节点数组
+ * @param edges - 流程图边数组
+ * @param direction - 布局方向，默认为 'TB'（从上到下）
+ * @returns 包含位置信息的布局后节点和边
+ */
 export function getLayoutedElements(
   nodes: FlowchartNode[],
   edges: FlowchartEdge[],

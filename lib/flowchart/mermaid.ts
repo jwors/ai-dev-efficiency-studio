@@ -1,7 +1,11 @@
 import type { FlowchartGraph } from '@/core/plugins/taskFlow/schema';
 
-// lib/flowchart/mermaid.ts
-
+/**
+ * 将流程图数据转换为 Mermaid 语法字符串。
+ * 支持多种节点类型（start、end、decision、io、subprocess、parallel、task）。
+ * @param tf - 流程图数据对象
+ * @returns Mermaid 语法的流程图字符串
+ */
 export function flowchartToMermaid(tf: FlowchartGraph): string {
   const { nodes, edges, title } = tf;
 

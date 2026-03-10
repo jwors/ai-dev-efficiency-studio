@@ -31,8 +31,10 @@ export interface PlanCheckResult {
 }
 
 /**
- * 检查 Plan 中的任务是否安全
- * 在 Executor 执行前进行最后一道安全检查
+ * 检查 Plan 中的任务是否安全。
+ * 在 Executor 执行前进行最后一道安全检查。
+ * @param plan - 待检查的计划对象
+ * @returns 检查结果，包含是否拦截和原因
  */
 export function checkPlanSafety(plan: Plan): PlanCheckResult {
     for (let i = 0; i < plan.steps.length; i++) {

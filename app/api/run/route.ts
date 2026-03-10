@@ -19,6 +19,12 @@ type RunBody = {
   plugins?: string[];
 };
 
+/**
+ * 处理任务执行请求的 POST 端点。
+ * 执行安全检查、更新会话状态、运行插件并返回结果。
+ * @param req - 请求对象
+ * @returns 包含计划、执行结果和输出的 JSON 响应
+ */
 export async function POST(req: Request) {
   initLLMOnce();
 

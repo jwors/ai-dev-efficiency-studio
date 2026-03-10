@@ -15,6 +15,9 @@ const RECOVERY_REDUCE = 0.22;
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
+/**
+ * 风险模式定义，包含正则表达式、分类和提示词。
+ */
 type RiskPattern = {
   pattern: RegExp;
   category: string;
@@ -133,6 +136,12 @@ const QUICK_RISK_HINTS = new Set(
   [...SUSPICIOUS_KEYWORDS, ...BANNED_PATTERNS.flatMap((p) => p.hints)].map((s) => s.toLowerCase()),
 );
 
+/**
+ * 检查文本是否包含任意提示词。
+ * @param textLower - 小写文本
+ * @param hints - 提示词数组
+ * @returns 如果包含任意提示词返回 true
+ */
 function includesAnyHint(textLower: string, hints: readonly string[]): boolean {
   for (const hint of hints) {
     if (textLower.includes(hint.toLowerCase())) return true;
@@ -140,6 +149,12 @@ function includesAnyHint(textLower: string, hints: readonly string[]): boolean {
   return false;
 }
 
+/**
+ * 快速检查文本是否可能包含风险内容。
+ * 使用预定义的风险提示词集合进行快速短路判断。
+ * @param text - 待检查的文本
+ * @returns 如果可能包含风险返回 true
+ */
 function mayContainRiskByQuickHints(text: string): boolean {
   const textLower = text.toLowerCase();
   for (const hint of QUICK_RISK_HINTS) {
@@ -148,7 +163,12 @@ function mayContainRiskByQuickHints(text: string): boolean {
   return false;
 }
 
-// 检测单条文本风险
+/**
+ * 检测单条文本的风险评分。
+ * 综合可疑关键词和高风险模式的命中情况进行评分。
+ * @param text - 待评分的文本
+ * @returns 0-1 之间的风险评分
+ */
 function scoreTextRisk(text: string): number {
   const t = text || "";
   if (!t) return 0;
@@ -176,6 +196,12 @@ function scoreTextRisk(text: string): number {
   return clamp01(score);
 }
 
+/**
+ * 计算历史风险的加权衰减评分。
+ * 近期风险权重更高，远期风险按指数衰减。
+ * @param risks - 历史风险评分数组
+ * @returns 加权衰减后的综合风险评分
+ */
 function scoreHistoryWithDecayFromRisks(risks: number[]): number {
   if (!risks.length) return 0;
 
@@ -191,6 +217,13 @@ function scoreHistoryWithDecayFromRisks(risks: number[]): number {
   return totalWeight > 0 ? clamp01(weighted / totalWeight) : 0;
 }
 
+/**
+ * 检测逐步式攻击风险。
+ * 分析历史消息和当前输入是否存在攻击步骤组合。
+ * @param history - 历史消息数组
+ * @param currentInput - 当前输入
+ * @returns 逐步风险评分
+ */
 function scoreStepwiseRisk(history: Message[], currentInput: string): number {
   const stepPatterns: Array<[RegExp, RegExp]> = [
     [/权限|提权|管理员/i, /日志|痕迹|记录|清理/i],
@@ -222,6 +255,13 @@ function scoreStepwiseRisk(history: Message[], currentInput: string): number {
   return clamp01(stepHits * 0.28);
 }
 
+/**
+ * 计算连续安全对话的恢复奖励。
+ * 当用户连续多轮安全对话后，给予风险降低奖励。
+ * @param historyRisks - 历史风险评分数组
+ * @param currentRisk - 当前风险评分
+ * @returns 风险降低奖励值
+ */
 function recentSafeStreakBonusFromRisks(historyRisks: number[], currentRisk: number): number {
   if (currentRisk > 0.1) return 0;
 
@@ -234,7 +274,12 @@ function recentSafeStreakBonusFromRisks(historyRisks: number[], currentRisk: num
   return streak >= RECOVERY_SAFE_TURNS ? RECOVERY_REDUCE : 0;
 }
 
-// 基础检测
+/**
+ * 基础输入安全检测。
+ * 检查输入长度、空白内容和高风险模式。
+ * @param input - 用户输入
+ * @returns 如果检测到风险返回拦截响应，否则返回 null
+ */
 export function baseGuard(input: string): EmitOutput | null {
   const text = String(input ?? "");
 
@@ -284,13 +329,24 @@ export function baseGuard(input: string): EmitOutput | null {
   return null;
 }
 
-// 多轮对话内容检测
+/**
+ * 多轮对话上下文安全检测。
+ * 分析历史消息与当前输入的组合风险。
+ * @param input - 当前用户输入
+ * @param messageHistory - 历史消息数组
+ * @returns 如果检测到风险返回拦截响应，否则返回 null
+ */
 export function contextGuard(input: string, messageHistory?: Message[]): EmitOutput | null {
   const text = String(input ?? "");
   if (!messageHistory || messageHistory.length === 0) return null;
   return checkContextSafety(messageHistory, text);
 }
 
+/**
+ * 根据风险分类获取拦截响应消息。
+ * @param category - 风险分类
+ * @returns 对应的拦截响应
+ */
 function getBlockResponse(category: string): EmitOutput {
   const messages: Record<string, string> = {
     system_destroy: "安全限制：我不能协助执行可能破坏系统、删除数据或格式化设备的操作。",
@@ -309,8 +365,13 @@ function getBlockResponse(category: string): EmitOutput {
   };
 }
 
-// 检测上下文安全性
-
+/**
+ * 检测上下文安全性（内部实现）。
+ * 综合当前风险、历史风险、逐步风险和安全连胜奖励计算总风险。
+ * @param messageHistory - 消息历史
+ * @param currentInput - 当前输入
+ * @returns 如果总风险超过阈值返回拦截响应，否则返回 null
+ */
 function checkContextSafety(messageHistory: Message[], currentInput: string): EmitOutput | null {
   // Legacy (kept for reference): old hard-block context strategy.
   // const recentUserMessages = messageHistory

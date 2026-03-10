@@ -7,6 +7,11 @@ type CreateSessionBody = {
   scope: string;
 };
 
+/**
+ * 创建新会话的 POST 端点。
+ * @param req - 请求对象，包含 userId 和 scope
+ * @returns 新创建的会话 ID 和创建时间
+ */
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as CreateSessionBody;
@@ -42,6 +47,11 @@ export async function POST(req: Request) {
   }
 }
 
+/**
+ * 列出用户会话的 GET 端点。
+ * @param req - 请求对象，URL 参数包含 userId 和可选的 scope
+ * @returns 用户的会话列表
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

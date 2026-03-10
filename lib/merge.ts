@@ -35,6 +35,13 @@ type ResultLike = {
   output?: { type?: string; payload?: { content?: string } };
 };
 
+/**
+ * 合并计划和执行结果为步骤视图。
+ * 用于在 UI 中展示每个步骤的执行状态。
+ * @param plan - 计划对象，包含步骤数组
+ * @param results - 执行结果数组
+ * @returns 步骤视图数组，包含每个步骤的状态和输出
+ */
 export function mergePlanAndResults(plan: PlanLike, results: ResultLike[]): StepView[] {
   const map = new Map<number, ResultLike>();
   for (const r of results ?? []) map.set(r.stepIndex, r);

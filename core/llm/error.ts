@@ -18,6 +18,11 @@ export class LLMError extends Error {
   retryAfterMs?: number;
   cause?: unknown;
 
+  /**
+   * 创建 LLM 错误实例。
+   * @param message - 错误消息
+   * @param options - 错误选项，包含错误类型、提供者、状态码等信息
+   */
   constructor(message: string, options: {
     kind: LLMErrorKind;
     provider?: LLMProviderName;
@@ -37,6 +42,11 @@ export class LLMError extends Error {
   }
 }
 
+/**
+ * 将 HTTP 状态码映射为 LLM 错误类型。
+ * @param status - HTTP 状态码
+ * @returns 对应的 LLM 错误类型
+ */
 export function mapHttpStatusToKind(status: number): LLMErrorKind {
   if (status === 429) return 'rate_limit';
   if (status === 401 || status === 403) return 'auth';
@@ -45,6 +55,12 @@ export function mapHttpStatusToKind(status: number): LLMErrorKind {
   return 'unknown';
 }
 
+/**
+ * 判断错误是否可重试。
+ * 可重试的错误类型包括：rate_limit、timeout、network、server。
+ * @param error - 待检查的错误
+ * @returns 如果错误可重试返回 true
+ */
 export function isRetryableError(error: unknown): boolean {
   if (error instanceof LLMError) {
     return (
@@ -57,6 +73,13 @@ export function isRetryableError(error: unknown): boolean {
   return false;
 }
 
+/**
+ * 将各种错误类型标准化为 LLMError。
+ * 处理 LLMError 实例、AbortError、网络错误和其他未知错误。
+ * @param error - 原始错误
+ * @param provider - 提供者名称（可选）
+ * @returns 标准化的 LLMError 实例
+ */
 export function normalizeLLMError(
   error: unknown,
   provider?: LLMProviderName,

@@ -9,6 +9,13 @@ import { wbsPrompt } from '../../prompts/wbsPrompt';
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 1200;
 
+/**
+ * 运行 WBS（工作分解结构）插件。
+ * 根据用户输入生成 WBS 图结构，用于任务分解可视化。
+ * @param input - 用户输入
+ * @param state - 会话状态
+ * @returns 插件执行结果，包含 WBS 图数据
+ */
 export async function runWbsPlugin(
   input: string,
   state: SessionState,

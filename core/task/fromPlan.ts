@@ -2,6 +2,13 @@ import 'server-only';
 import type { Task, Action } from './types';
 import { z } from 'zod';
 
+/**
+ * 将计划步骤转换为可执行的任务对象。
+ * 根据步骤的 action 类型创建对应的任务。
+ * @param step - 计划步骤，包含 action 和 params
+ * @returns 对应的任务对象
+ * @throws 如果缺少必要参数或 action 类型未知
+ */
 export function taskFromPlanStep(step: {
   action: z.infer<typeof Action>;
   params?: Record<string, unknown>;

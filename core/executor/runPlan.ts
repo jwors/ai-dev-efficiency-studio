@@ -4,7 +4,13 @@ import type { SessionState } from '@/core/types';
 import { taskFromPlanStep } from '@/core/task/fromPlan';
 import { executeTask } from './index';
 
-
+/**
+ * 执行计划中的所有步骤。
+ * 按顺序执行计划中的每个步骤，收集执行结果和输出。
+ * @param plan - 待执行的计划
+ * @param state - 会话状态
+ * @returns 包含所有步骤结果和输出的对象
+ */
 export async function runPlan(plan: Plan, state: SessionState) {
   const results: unknown[] = [];
   const outputs: unknown[] = [];

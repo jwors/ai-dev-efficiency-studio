@@ -3,6 +3,13 @@ import type { Message, SessionState } from '@/core/types';
 import { buildObservationDigest } from '../agent/digest'; // 假设你有类似函数，或复用 digest
 import { sanitizeHistoryForPlanner } from '../planner/sanitize';
 
+/**
+ * 构建任务流程图插件的提示消息数组。
+ * 包含系统提示、会话摘要、观察摘要和当前流程图数据。
+ * @param input - 用户输入
+ * @param state - 会话状态
+ * @returns 完整的消息数组
+ */
 export function flowchartPrompt(input: string, state: SessionState): Message[] {
   const messages: Message[] = [
     {

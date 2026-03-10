@@ -12,6 +12,13 @@ type PlanExecuteData = {
   outputs: unknown[];
 };
 
+/**
+ * 运行计划执行插件。
+ * 先生成计划，检查安全性，然后按步骤执行。
+ * @param input - 用户输入
+ * @param state - 会话状态
+ * @returns 插件执行结果，包含计划和执行结果
+ */
 export async function runPlanExecutePlugin(
   input: string,
   state: SessionState,

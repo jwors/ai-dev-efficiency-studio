@@ -11,6 +11,14 @@ import {
 // 默认使用 Node.js 文件系统
 const defaultFsProvider = createNodeFileSystemProvider();
 
+/**
+ * 执行单个任务。
+ * 根据任务类型执行相应操作，支持 log、emit、web.search、web.fetch、file.write、http 等任务类型。
+ * @param task - 待执行的任务
+ * @param state - 会话状态
+ * @param fsProvider - 文件系统提供者（默认使用 Node.js 文件系统）
+ * @returns 任务执行结果
+ */
 export async function executeTask(
   task: Task,
   state: SessionState,

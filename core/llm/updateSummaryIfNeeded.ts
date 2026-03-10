@@ -1,7 +1,12 @@
 import type { SessionState, Message } from '@/core/types';
 const MAX_HISTORY =12;
 
-
+/**
+ * 在需要时更新会话摘要。
+ * 当历史消息超过 MAX_HISTORY 时，将溢出的消息压缩为摘要。
+ * @param state - 会话状态
+ * @param callLLM - LLM 调用函数，用于生成摘要
+ */
 export async function updateSummaryIfNeeded(
   state: SessionState,
   callLLM: (messages: Message[]) => Promise<string>
