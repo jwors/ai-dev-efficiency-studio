@@ -18,4 +18,7 @@ export const config = {
   llmCircuitFailureThreshold: parseEnvNumber(process.env.LLM_CIRCUIT_FAILURE_THRESHOLD ,3),
   llmCircuitOpenMs: parseEnvNumber(process.env.LLM_CIRCUIT_OPEN_MS ,30000),
   qwenApiKey: process.env.QWEN_API_KEY ?? '',
+  // Token 预算控制
+  requestMaxTokens: parseEnvNumber(process.env.REQUEST_MAX_TOKENS, 4000),
+  sessionMaxTokens: parseEnvNumber(process.env.SESSION_MAX_TOKENS, 50000),
 };
