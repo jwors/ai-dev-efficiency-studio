@@ -357,7 +357,10 @@ function checkContextSafety(messageHistory: Message[], currentInput: string): Em
 
   // 历史风险
   const historyRisk = scoreHistoryWithDecayFromRisks(historyRisks);
+  // 逐步风险评分
   const stepRisk = scoreStepwiseRisk(recentUserMessages, currentInput);
+
+  // 来自风险的“安全连胜”奖励近期推出
   const recoveryBonus = recentSafeStreakBonusFromRisks(historyRisks, currentRisk);
 
   const totalRisk = clamp01(
