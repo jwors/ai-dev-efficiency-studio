@@ -38,6 +38,7 @@ flowchart LR
 - 当前输入风险
 - 多轮组合形成的步骤型风险
 - 连续安全对话带来的恢复奖励
+- 历史风险衰减值
 
 最终得到 `totalRisk`，超过阈值后才拦截。
 
@@ -45,75 +46,6 @@ flowchart LR
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
-function recentSafeStreakBonusFromRisks(historyRisks: number[], currentRisk: number): number {
-  if (currentRisk > 0.1) return 0;
-
-  let streak = 0;
-  for (let i = historyRisks.length - 1; i >= 0; i--) {
-    if (historyRisks[i] <= 0.1) streak++;
-    else break;
-  }
-
-  return streak >= RECOVERY_SAFE_TURNS ? RECOVERY_REDUCE : 0;
-}
-
-function scoreHistoryWithDecayFromRisks(risks: number[]): number {
-  if (!risks.length) return 0;
-
-  let weighted = 0;
-  let totalWeight = 0;
-
-  for (let i = risks.length - 1, distance = 0; i >= 0; i--, distance++) {
-    const w = Math.pow(DECAY, distance);
-    weighted += risks[i] * w;
-    totalWeight += w;
-  }
-
-  return totalWeight > 0 ? clamp01(weighted / totalWeight) : 0;
-}
-
-function scoreStepwiseRisk(history: Message[], currentInput: string): number {
-  const stepPatterns: Array<[RegExp, RegExp]> = [
-    [/权限|提权|管理员/i, /日志|痕迹|记录|清理/i],
-    [/入侵|攻击|渗透|hack/i, /方法|步骤|流程|脚本/i],
-    [/绕过|bypass|突破/i, /验证|登录|安全|鉴权/i],
-  ];
-
-  let stepHits = 0;
-  for (const [p1, p2] of stepPatterns) {
-    const historyHasP1 = history.some((m) => {
-      p1.lastIndex = 0;
-      return p1.test(m.content);
-    });
-    const historyHasP2 = history.some((m) => {
-      p2.lastIndex = 0;
-      return p2.test(m.content);
-    });
-
-    p1.lastIndex = 0;
-    p2.lastIndex = 0;
-    const currentHasP1 = p1.test(currentInput);
-    const currentHasP2 = p2.test(currentInput);
-
-    if ((historyHasP1 && currentHasP2) || (historyHasP2 && currentHasP1)) {
-      stepHits++;
-    }
-  }
-
-  return clamp01(stepHits * 0.28);
-}
-
-function recentSafeStreakBonusFromRisks(historyRisks: number[], currentRisk: number): number {
-  if (currentRisk > 0.1) return 0;
-
-  let streak = 0;
-  for (let i = historyRisks.length - 1; i >= 0; i--) {
-    if (historyRisks[i] <= 0.1) streak++;
-    else break;
-  }
-
-  return streak >= RECOVERY_SAFE_TURNS ? RECOVERY_REDUCE : 0;
-}
 
 function checkContextSafety(messageHistory: Message[], 			  currentInput: string): EmitOutput | null {
 
@@ -168,5 +100,118 @@ export function contextGuard(input: string, messageHistory?: Message[]): EmitOut
 
 
 
+# Planner 到 Executor 的安全控制
+
+主要目的是拦截LLM返回不符合要求的json、拦截具有风险的（请求|写入），确认操作边界范围。
+
+## 设计思路
+
+- ```checkPlanSafety```：检查 LLM 生成的 plan 本身是否危险
+- ```policyGuard```：执行具体 task 前再检查一次权限和访问边界
+
+## 计算风险
+
+- web.search 搜索非法内容
+- web.fetch 请求内容可疑
+- file.write 写入路劲以及内容敏感
+- http 访问不可访问网址
+
+```typescript
+
+export function checkPlanSafety(plan: Plan): PlanCheckResult {
+    for (let i = 0; i < plan.steps.length; i++) {
+        const step = plan.steps[i];
+        const stepNum = i + 1;
+        // 检查 web.search 任务
+        if (step.action === 'web.search') {
+            const query = String(step.params?.query ?? '');
+            for (const pattern of DANGEROUS_SEARCH_QUERIES) {
+                if (pattern.test(query)) {
+                    return {
+                        blocked: true,
+                        reason: `步骤 ${stepNum} (web.search): 搜索查询包含危险关键词 "${query}"`,
+                    };
+                }
+            }
+        }
+    }
+
+    return { blocked: false };
+}
+
+export function policyGuard(task: Task, context: PolicyContext) {
+    switch (task.type) {
+        case 'http': {
+            const params = task.params as HttpTaskParams;
+            const url = String(params.url ?? '');
+            if (!url) throw new PolicyError("MISSING_URL", "http task 缺少 url 参数。")
+            guardHttpUrl(url, context);
+            return
+        }
+        case 'web.search': {
+            const params = task.params as SearchTaskParams;
+            const q = String(params.query ?? '');
+            if (!q) throw new PolicyError("MISSING_QUERY", "web.search 缺少 query");
+            return;
+        }
+        case 'web.fetch': {
+            const params = task.params as HttpTaskParams;
+            const url = String(params.url ?? "");
+            if (!url) throw new PolicyError("MISSING_URL", "web.fetch 缺少 url");
+            guardHttpUrl(url, context);
+            return;
+        }
+        case 'log':
+        case 'emit':
+        case 'export_flow':
+        case 'file.write':
+        case 'artifact.export':
+            return;
+
+        default: {
+            const unknownTask = task as { type?: string };
+            throw new PolicyError("UNKNOWN_TASK", `未知 task: ${unknownTask.type ?? 'unknown'}`)
+        }
+    }
+}
+```
 
 
+# token预算
+
+这个模块不仅限制单次请求大小，也尝试控制多轮会话累计消耗，并处理失败场景下的额度回滚。
+
+## 设计思路
+
+1. callLLM前检查预算
+3. 根据剩余额度裁剪上下文
+4. 调用前预留估算 token
+5. 对于callLLM出错请求回滚token用量额度
+
+## 关键点
+
+这个模块不是简单的“先查再加”，而是把 token 使用控制收敛到预留和回滚流程中，减少并发下预算超扣的问题。
+
+```typescript
+export async function planner(input: string, state: SessionState) {
+    // 检查token预算
+  await checkTokenBudget(state.sessionId);
+
+  const remainingBudget = await getRemainingBudget(state.sessionId);
+
+  context = clampMessagesToBudget(context, Math.max(effectiveBudget, 1000));
+    
+  checkRequestBudget(context);
+
+  const reservedTokens = estimateMessagesTokens(context);
+  await recordTokenUsage(state.sessionId, reservedTokens, context);
+  const rawText = await (async () => {
+    try {
+      return await callLLM(context);
+    } catch (error) {
+      await refundTokenUsage(state.sessionId, reservedTokens);
+      throw error;
+    }
+  })();
+}
+```
