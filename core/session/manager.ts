@@ -1,6 +1,6 @@
 // Session State Management
 
-import { callLLmSummary } from '../llm';
+import { callLLMSummary } from '../llm';
 import { updateSummaryIfNeeded } from '../llm/updateSummaryIfNeeded';
 import type { SessionState } from '../types';
 
@@ -9,5 +9,5 @@ export async function updateSession(input: string, state: SessionState) {
     role: 'user',
     content: input,
   });
-  await updateSummaryIfNeeded(state, callLLmSummary);
+  await updateSummaryIfNeeded(state, callLLMSummary);
 }
