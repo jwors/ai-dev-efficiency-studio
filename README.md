@@ -1,6 +1,6 @@
-## instroduce project
+## 项目介绍
 
-what is the definition of this project ?
+这个项目的定义是什么？
 
 ## 这是一个以 AI 为 Planner、以程序为 Executor 的开发效率工具，用于把自然语言需求转化为可重复、可审计的工程执行流程。
 
@@ -38,7 +38,7 @@ core/
 6. 数据持久化 ✅
 7. plugin ✅
 8. 网页关闭后，打开重新渲染 ✅
-9. 改善插件wbs,时期在source node 渲染 ✅
+9. 改善插件 wbs，使其在 source node 渲染 ✅
 
 
 

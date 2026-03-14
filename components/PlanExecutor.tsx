@@ -61,7 +61,7 @@ export default function PlanExecutor() {
   async function handleRun() {
     const input = inputRef.current?.value;
     if (!input) {
-      setError('Please enter a task description.');
+      setError('请输入任务描述');
       return;
     }
 
@@ -85,7 +85,7 @@ export default function PlanExecutor() {
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : '请求失败');
     } finally {
       setLoading(false);
     }
@@ -241,7 +241,7 @@ export default function PlanExecutor() {
       }
       roots.push({
         id: `outline-emit-${index}`,
-        text: `Emit ${index + 1}`,
+        text: `输出 ${index + 1}`,
         level: 1,
         children: data.roots,
       });
@@ -290,7 +290,7 @@ export default function PlanExecutor() {
       <main className="main">
         <div className="main-top">
           <section className="panel content-panel">
-            <div className="panel-title">内容</div>
+            <div className="panel-title">内容输出</div>
             {emitContents.length ? (
               <div className="emit-list">
                 {emitContents.map((item: any, index: number) => {
@@ -348,7 +348,7 @@ export default function PlanExecutor() {
                 })}
               </div>
             ) : (
-              <div className="empty">No emit content yet123.</div>
+              <div className="empty">暂无输出内容</div>
             )}
           </section>
 
@@ -358,19 +358,19 @@ export default function PlanExecutor() {
               {outlineTree.length ? (
                 <div className="outline-tree">{renderOutline(outlineTree)}</div>
               ) : (
-                <div className="flow-empty">No outline yet.</div>
+                <div className="flow-empty">暂无目录结构</div>
               )}
             </div>
           </section>
         </div>
 
         <section className="panel input-panel">
-          <div className="panel-title">Input Container</div>
+          <div className="panel-title">任务输入</div>
           <input
             type="text"
             ref={inputRef}
             className="input"
-            placeholder="Describe the task you want to execute"
+            placeholder="描述您想要执行的任务..."
             disabled={loading}
             onKeyDown={handleInputKeyDown}
           />
@@ -380,35 +380,35 @@ export default function PlanExecutor() {
               onClick={handleRun}
               disabled={loading}
             >
-              {loading ? 'Running...' : 'Run Task'}
+              {loading ? '执行中...' : '运行任务'}
             </button>
             <button
               className="button button-ghost"
               onClick={() => setIsFlowOpen(true)}
               disabled={!result}
             >
-              View Executor Flow
+              查看执行流程
             </button>
             <button className="button button-ghost" onClick={handleClear}>
-              Clear
+              清空
             </button>
             <button className="button button-ghost" onClick={saveLog}>
-              Save Log
+              保存日志
             </button>
           </div>
           <div className="status">
             {loading
-              ? 'Planner and executor are working...'
-              : 'Ready to build a plan.'}
+              ? 'AI 正在规划和执行您的任务...'
+              : '准备好构建执行计划'}
           </div>
-          {error && <div className="status errmsg">Error: {error}</div>}
+          {error && <div className="status errmsg">错误: {error}</div>}
           <div className="badges">
-            <div className="badge">Steps: {stepsCount}</div>
-            <div className="badge">Outputs: {outputsCount}</div>
+            <div className="badge">步骤: {stepsCount}</div>
+            <div className="badge">输出: {outputsCount}</div>
             <div className="badge badge-ok">
-              Success: {results.length - errorCount}
+              成功: {results.length - errorCount}
             </div>
-            <div className="badge badge-fail">Errors: {errorCount}</div>
+            <div className="badge badge-fail">错误: {errorCount}</div>
           </div>
         </section>
       </main>
@@ -427,14 +427,14 @@ export default function PlanExecutor() {
           >
             <div className="modal-header">
               <h2 className="modal-title" id="executor-flow-title">
-                Executor Flow
+                执行流程详情
               </h2>
               <button
                 className="button button-ghost modal-close"
                 type="button"
                 onClick={() => setIsFlowOpen(false)}
               >
-                Close
+                关闭
               </button>
             </div>
             <div className="modal-body">
@@ -465,7 +465,7 @@ export default function PlanExecutor() {
                           <div className="flow-step-sub">
                             <span className="flow-step-status">{s.status}</span>
                             {s.fatal ? (
-                              <span className="flow-step-fatal">fatal</span>
+                              <span className="flow-step-fatal">致命</span>
                             ) : null}
                           </div>
                         </button>
@@ -484,7 +484,7 @@ export default function PlanExecutor() {
                         <>
                           <div className="flow-detail-header">
                             <div className="flow-detail-title">
-                              Step {s.stepIndex + 1}: {s.action}
+                              步骤 {s.stepIndex + 1}: {s.action}
                             </div>
                             <div
                               className={`flow-chip ${
@@ -501,13 +501,13 @@ export default function PlanExecutor() {
 
                           {s.error ? (
                             <div className="flow-detail-error">
-                              <strong>Error:</strong> {s.error}
+                              <strong>错误:</strong> {s.error}
                             </div>
                           ) : null}
 
                           {s.outputContent ? (
                             <div className="flow-detail-output">
-                              <div className="flow-detail-section-title">Output</div>
+                              <div className="flow-detail-section-title">输出</div>
                               <div className="markdown">
                                 <ReactMarkdown>{s.outputContent}</ReactMarkdown>
                               </div>
@@ -516,7 +516,7 @@ export default function PlanExecutor() {
 
                           {s.emitContent ? (
                             <div className="flow-detail-output">
-                              <div className="flow-detail-section-title">Emit</div>
+                              <div className="flow-detail-section-title">发送内容</div>
                               <div className="markdown">
                                 <ReactMarkdown>{s.emitContent}</ReactMarkdown>
                               </div>
@@ -524,7 +524,7 @@ export default function PlanExecutor() {
                           ) : null}
 
                           <div className="flow-detail-section">
-                            <div className="flow-detail-section-title">Params</div>
+                            <div className="flow-detail-section-title">参数</div>
                             <pre className="flow-detail-pre">
                               {JSON.stringify(s.params ?? {}, null, 2)}
                             </pre>
@@ -535,7 +535,7 @@ export default function PlanExecutor() {
                   </div>
                 </div>
               ) : (
-                <div className="empty">No executor flow yet.</div>
+                <div className="empty">暂无执行流程</div>
               )}
             </div>
           </div>

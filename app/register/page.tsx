@@ -84,18 +84,18 @@ export default function RegisterPage() {
       <div className={styles.mainContainer}>
         {/* Register card */}
         <div className={styles.registerCard}>
-          <div className={styles.welcomeText}>Welcome !</div>
-          <div className={styles.title}>Create Account</div>
-          <div className={styles.subtitle}>Lorem Ipsum is simply</div>
+          <div className={styles.welcomeText}>欢迎!</div>
+          <div className={styles.title}>创建账号</div>
+          <div className={styles.subtitle}>AI 驱动的开发效率平台</div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
             <label className={styles.label}>
-              <span className={styles.labelText}>User name</span>
+              <span className={styles.labelText}>邮箱</span>
               <input
                 type="email"
                 name="email"
                 className={styles.input}
-                placeholder="Enter your user name"
+                placeholder="请输入邮箱地址"
                 autoComplete="email"
                 disabled={loading}
                 value={email}
@@ -104,13 +104,13 @@ export default function RegisterPage() {
             </label>
 
             <label className={styles.label}>
-              <span className={styles.labelText}>Password</span>
+              <span className={styles.labelText}>密码</span>
               <div className={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   className={styles.input}
-                  placeholder="Enter your Password"
+                  placeholder="请输入密码"
                   autoComplete="new-password"
                   disabled={loading}
                   value={password}
@@ -138,13 +138,13 @@ export default function RegisterPage() {
             </label>
 
             <label className={styles.label}>
-              <span className={styles.labelText}>Confirm Password</span>
+              <span className={styles.labelText}>确认密码</span>
               <div className={styles.passwordWrapper}>
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   className={styles.input}
-                  placeholder="Enter your Password"
+                  placeholder="请再次输入密码"
                   autoComplete="new-password"
                   disabled={loading}
                   value={confirmPassword}
@@ -172,11 +172,11 @@ export default function RegisterPage() {
             </label>
 
             <button className={styles.submit} type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Register'}
+              {loading ? '加载中...' : '注册'}
             </button>
 
             <a href="/login" className={styles.link}>
-              Already have an Account ?  Login
+              已有账号? 立即登录
             </a>
           </form>
         </div>

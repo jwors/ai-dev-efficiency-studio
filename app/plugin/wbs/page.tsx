@@ -53,7 +53,7 @@ export default function WbsPluginPage() {
   async function handleRun() {
     const input = inputRef.current?.value;
     if (!input) {
-      setError('Please enter a task description.');
+      setError('请输入任务描述');
       return;
     }
 
@@ -77,7 +77,7 @@ export default function WbsPluginPage() {
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : '请求失败');
     } finally {
       setLoading(false);
     }

@@ -49,7 +49,7 @@ export default function Page() {
     if (!userId) return;
 
     void getSessionList().catch((err) => {
-      setError(err instanceof Error ? err.message : 'Failed to load last session');
+      setError(err instanceof Error ? err.message : '加载上次会话失败');
     });
   }, [userId])
 
@@ -101,7 +101,7 @@ export default function Page() {
   async function handleRun(value: any = null) {
     const input = inputRef.current?.value || value;
     if (!input) {
-      setError('Please enter a task description.');
+      setError('请输入任务描述');
       return;
     }
 
@@ -124,7 +124,7 @@ export default function Page() {
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : '请求失败');
     } finally {
       setLoading(false);
     }

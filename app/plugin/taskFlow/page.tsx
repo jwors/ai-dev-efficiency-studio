@@ -36,7 +36,7 @@ export default function TaskFlowPluginPage() {
   async function handleRun() {
     const input = inputRef.current?.value;
     if (!input) {
-      setError('Please enter a task description.');
+      setError('请输入任务描述');
       return;
     }
     setLoading(true);
@@ -58,7 +58,7 @@ export default function TaskFlowPluginPage() {
       const data = await response.json();
       setResult(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : '请求失败');
     } finally {
       setLoading(false);
     }

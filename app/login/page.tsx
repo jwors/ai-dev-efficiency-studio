@@ -69,18 +69,18 @@ export default function LoginPage() {
       <div className={styles.mainContainer}>
         {/* Login card on the left */}
         <div className={styles.loginCard}>
-          <div className={styles.welcomeText}>Welcome !</div>
-          <div className={styles.title}>Sign in to</div>
-          <div className={styles.subtitle}>Lorem Ipsum is simply</div>
+          <div className={styles.welcomeText}>欢迎!</div>
+          <div className={styles.title}>登录</div>
+          <div className={styles.subtitle}>AI 驱动的开发效率平台</div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <label className={styles.label}>
-              <span className={styles.labelText}>User name</span>
+              <span className={styles.labelText}>邮箱</span>
               <input
                 type="text"
                 name="email"
                 className={styles.input}
-                placeholder="Enter your user name"
+                placeholder="请输入邮箱地址"
                 autoComplete="email"
                 disabled={loading}
                 value={email}
@@ -89,13 +89,13 @@ export default function LoginPage() {
             </label>
 
             <label className={styles.label}>
-              <span className={styles.labelText}>Password</span>
+              <span className={styles.labelText}>密码</span>
               <div className={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   className={styles.input}
-                  placeholder="Enter your Password"
+                  placeholder="请输入密码"
                   autoComplete="current-password"
                   disabled={loading}
                   value={password}
@@ -132,22 +132,22 @@ export default function LoginPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <label htmlFor="rememberMe" className={styles.rememberLabel}>
-                  Remember me
+                  记住我
                 </label>
               </div>
               <a href="#" className={styles.forgotLink}>
-                Forgot Password ?
+                忘记密码?
               </a>
             </div>
 
             {error && <div className={styles.error}>{error}</div>}
 
             <button className={styles.submit} type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Login'}
+              {loading ? '加载中...' : '登录'}
             </button>
 
             <a href="/register" className={styles.link}>
-              Don&apos;t have an Account ?  Register
+              没有账号? 立即注册
             </a>
           </form>
         </div>
