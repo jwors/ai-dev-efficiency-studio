@@ -200,7 +200,9 @@ function normalizeWbsOutput(json: unknown): unknown {
   };
 }
 
-function formatZodIssues(error: ReturnType<typeof WbsSchema.safeParse> extends { success: false; error: infer T } ? T : never): string {
+import { ZodError } from 'zod';
+
+function formatZodIssues(error: ZodError): string {
   return error.issues
     .slice(0, 5)
     .map((issue) => {

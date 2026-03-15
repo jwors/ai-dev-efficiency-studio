@@ -14,14 +14,9 @@ function previewRawText(raw: string): string {
   return raw.replace(/\s+/g, ' ').slice(0, 240);
 }
 
-function formatFlowIssues(
-  error: ReturnType<typeof FlowchartSchema.safeParse> extends {
-    success: false;
-    error: infer T;
-  }
-    ? T
-    : never,
-): string {
+import { ZodError } from 'zod';
+
+function formatFlowIssues(error: ZodError): string {
   return error.issues
     .slice(0, 5)
     .map((issue) => {
