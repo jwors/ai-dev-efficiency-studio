@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { mergePlanAndResults } from '@/lib/merge';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -35,8 +35,15 @@ type MarkdownListItemProps = React.LiHTMLAttributes<HTMLLIElement> & {
   node?: unknown;
 };
 
+const QUICK_EXAMPLES = [
+  { label: '项目规划', text: '帮我规划一个电商网站的开发计划，包括前端、后端和数据库设计' },
+  { label: '竞品分析', text: '生成一份在线教育平台的竞品分析报告大纲' },
+  { label: '流程设计', text: '设计一个用户注册登录的完整流程，包括密码找回和第三方登录' },
+  { label: '技术选型', text: '对比 Next.js 和 Nuxt.js 的优缺点，给出选择建议' },
+];
+
 export default function Page() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
@@ -179,8 +186,8 @@ export default function Page() {
     }
   }
 
-  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') {
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void handleRun();
     }
@@ -191,6 +198,13 @@ export default function Page() {
     setError(null);
     if (inputRef.current) {
       inputRef.current.value = '';
+    }
+  }
+
+  function handleExampleClick(text: string) {
+    if (inputRef.current) {
+      inputRef.current.value = text;
+      inputRef.current.focus();
     }
   }
 
@@ -336,6 +350,44 @@ export default function Page() {
     return roots;
   }, [outlineData]);
 
+  const outlineMetrics = useMemo(() => {
+    let totalNodes = 0;
+    let maxDepth = 0;
+
+    const walk = (nodes: OutlineNode[], depth: number) => {
+      maxDepth = Math.max(maxDepth, depth);
+      nodes.forEach((node) => {
+        totalNodes += 1;
+        if (node.children.length) {
+          walk(node.children, depth + 1);
+        }
+      });
+    };
+
+    walk(outlineTree, 1);
+
+    const headingCount = outlineData.reduce((sum, data) => sum + data.headingIds.length, 0);
+    const listCount = outlineData.reduce((sum, data) => sum + data.listIds.length, 0);
+
+    return { totalNodes, maxDepth, headingCount, listCount };
+  }, [outlineData, outlineTree]);
+
+  const shouldShowOutline = useMemo(() => {
+    if (!outlineTree.length) {
+      return false;
+    }
+
+    if (outlineMetrics.headingCount >= 3) {
+      return true;
+    }
+
+    if (outlineMetrics.listCount >= 4) {
+      return true;
+    }
+
+    return outlineMetrics.maxDepth >= 3 || outlineMetrics.totalNodes >= 6;
+  }, [outlineMetrics, outlineTree]);
+
   const stepViews = useMemo(() => {
     if (!result) {
       return [];
@@ -379,13 +431,15 @@ export default function Page() {
   return (
     <>
       <main className="main">
-        <div className="main-top">
+        <div
+          className={`main-top ${shouldShowOutline ? 'has-outline' : ''}`}
+        >
           <section className="panel content-panel" style={{ animationDelay: '0ms' }}>
             <div className="panel-title">
               <span>内容输出</span>
-              {emitContents.length > 0 && (
+              {emitContents.length > 0 ? (
                 <span style={{ fontSize: '11px', opacity: 0.6 }}>{emitContents.length} 个输出</span>
-              )}
+              ) : null}
             </div>
             {emitContents.length ? (
               <div className="emit-list">
@@ -456,27 +510,17 @@ export default function Page() {
               </div>
             )}
           </section>
-
-          <section className="panel flow-panel" style={{ animationDelay: '50ms' }}>
-            <div className="panel-title">
-              <span>内容地图</span>
-              {outlineTree.length > 0 && (
+          {shouldShowOutline ? (
+            <section className="panel flow-panel" style={{ animationDelay: '50ms' }}>
+              <div className="panel-title">
+                <span>内容地图</span>
                 <span style={{ fontSize: '11px', opacity: 0.6 }}>{outlineTree.length} 个章节</span>
-              )}
-            </div>
-            <div className="flow-wrap">
-              {outlineTree.length ? (
+              </div>
+              <div className="flow-wrap">
                 <div className="outline-tree">{renderOutline(outlineTree)}</div>
-              ) : (
-                <div className="flow-empty">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                  </svg>
-                  <span>暂无目录结构</span>
-                </div>
-              )}
-            </div>
-          </section>
+              </div>
+            </section>
+          ) : null}
         </div>
 
         <section className="panel input-panel" style={{ animationDelay: '100ms' }}>
@@ -484,14 +528,30 @@ export default function Page() {
             <span>任务输入</span>
             {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>处理中...</span>}
           </div>
-          <input
-            type="text"
+          <textarea
             ref={inputRef}
             className="input"
-            placeholder="描述您想要执行的任务..."
+            placeholder="描述您想要执行的任务...（Shift+Enter 换行）"
             disabled={loading}
             onKeyDown={handleInputKeyDown}
+            rows={4}
           />
+          <div className="examples">
+            <span className="examples-label">快捷示例：</span>
+            <div className="examples-list">
+              {QUICK_EXAMPLES.map((example) => (
+                <button
+                  key={example.label}
+                  type="button"
+                  className="example-tag"
+                  onClick={() => handleExampleClick(example.text)}
+                  disabled={loading}
+                >
+                  {example.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="actions">
             <button
               className="button button-primary"
@@ -666,3 +726,10 @@ export default function Page() {
     </>
   );
 }
+
+
+
+
+
+
+

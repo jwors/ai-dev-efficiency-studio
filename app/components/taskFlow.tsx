@@ -275,7 +275,7 @@ export function TaskFlow({ tf }: TaskFlowProps) {
         alert('Mermaid 转换工具未找到，请检查路径。');
       });
     } catch (e) {
-      console.error(e);
+      // 忽略错误
     }
   }, [tf]);
 
@@ -283,7 +283,7 @@ export function TaskFlow({ tf }: TaskFlowProps) {
   if (!tf || !tf.nodes || tf.nodes.length === 0) {
     return (
       <div style={{
-        height: '400px',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

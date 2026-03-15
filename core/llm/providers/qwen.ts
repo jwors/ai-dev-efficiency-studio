@@ -28,7 +28,6 @@ export class QwenProvider implements LLMProvider {
 	) { }
 
 	async call(prompt: Message[], options?: LLMCallOptions): Promise<LLMRawResponse> {
-		
 		if (!this.apiKey) {
 			throw new LLMError(
 				`Qwen API key cannot be empty`,
@@ -42,6 +41,7 @@ export class QwenProvider implements LLMProvider {
 		}
 		const controller = new AbortController();
 		const timeoutMs = options?.timeoutMs ?? config.llmTimeoutMs;
+		const requestId = options?.requestId ?? crypto.randomUUID();
 		const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
 		try {
@@ -73,6 +73,9 @@ export class QwenProvider implements LLMProvider {
 				const retryAfter = res.headers.get('retry-after');
 				const retryAfterMs = retryAfter ? Number(retryAfter) * 1000 : undefined;
 				const message = errorData?.error?.message ?? `HTTP ${res.status}`;
+				console.error(
+					`[Qwen] request failed requestId=${requestId} status=${res.status} model=${this.model} timeoutMs=${timeoutMs} message=${message}`,
+				);
 				throw new LLMError(
 					`Qwen API Error (${res.status}): ${message}`,
 					{
@@ -86,7 +89,6 @@ export class QwenProvider implements LLMProvider {
 			}
 
 			const data = await res.json() as QwenApiResponse;
-
 			const content = data.choices?.[0]?.message?.content ?? '';
 			return {
 			  content,
@@ -97,6 +99,17 @@ export class QwenProvider implements LLMProvider {
 				provider: this.name,
 			  },
 			};
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.error(
+					`[Qwen] request aborted requestId=${requestId} model=${this.model} timeoutMs=${timeoutMs} promptMessages=${prompt.length}`,
+				);
+			} else if (error instanceof Error) {
+				console.error(
+					`[Qwen] request error requestId=${requestId} model=${this.model} timeoutMs=${timeoutMs} message=${error.message}`,
+				);
+			}
+			throw error;
 		} finally {
 			clearTimeout(timeoutId);
 		}

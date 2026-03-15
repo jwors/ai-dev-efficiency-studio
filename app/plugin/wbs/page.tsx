@@ -11,8 +11,14 @@ type PluginResult = {
   error?: string;
 };
 
+const QUICK_EXAMPLES = [
+  { label: '电商项目', text: '开发一个电商平台，包含用户系统、商品管理、订单系统、支付模块' },
+  { label: 'APP 开发', text: '设计一个社交 APP，包含用户注册登录、好友系统、消息聊天、动态发布功能' },
+  { label: '企业系统', text: '搭建企业内部管理系统，包含员工管理、考勤系统、审批流程、报表统计' },
+];
+
 export default function WbsPluginPage() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
@@ -83,10 +89,17 @@ export default function WbsPluginPage() {
     }
   }
 
-  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') {
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void handleRun();
+    }
+  }
+
+  function handleExampleClick(text: string) {
+    if (inputRef.current) {
+      inputRef.current.value = text;
+      inputRef.current.focus();
     }
   }
 
@@ -117,14 +130,30 @@ export default function WbsPluginPage() {
           <span>任务输入</span>
           {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>生成中...</span>}
         </div>
-        <input
-          type="text"
+        <textarea
           ref={inputRef}
           className="input"
-          placeholder="描述您想要拆解的任务..."
+          placeholder="描述您想要拆解的任务（Shift+Enter 换行）..."
           disabled={loading}
           onKeyDown={handleInputKeyDown}
+          rows={4}
         />
+        <div className="examples">
+          <span className="examples-label">快捷示例：</span>
+          <div className="examples-list">
+            {QUICK_EXAMPLES.map((example) => (
+              <button
+                key={example.label}
+                type="button"
+                className="example-tag"
+                onClick={() => handleExampleClick(example.text)}
+                disabled={loading}
+              >
+                {example.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="actions">
           <button
             className="button button-primary"

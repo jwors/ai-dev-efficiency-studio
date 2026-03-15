@@ -33,8 +33,13 @@ export default function RouteShell({ children }: RouteShellProps) {
     }
   }, [pathname, router, status]);
 
-  if (status === 'loading') {
-    return null;
+  // 登录/注册页面在 loading 时直接显示，避免闪烁
+  if (status === 'loading' && !AUTH_ROUTES.has(pathname)) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+      </div>
+    );
   }
 
   if (pathname === '/login' || pathname === '/register') {

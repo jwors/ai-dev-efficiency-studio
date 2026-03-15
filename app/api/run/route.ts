@@ -48,7 +48,6 @@ export async function POST(req: Request) {
 
   // 基于完整上下文的二次安全检查
   const contextBlocked = contextGuard(input, state.history);
-  console.log(contextBlocked,'contextBlocked')
   if (contextBlocked) {
     return NextResponse.json(
       {

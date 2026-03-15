@@ -1,29 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import styles from './login.module.css';
 import { isValidEmail } from '@/lib/validators';
+import { useToast } from '@/app/components/Toast';
 import Image from 'next/image';
+
+const REMEMBERED_EMAIL_KEY = 'jwors_remembered_email';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const toast = useToast();
+  const router = useRouter();
+
+  // 加载记住的邮箱
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-
     if (!isValidEmail(email)) {
-      setError('请输入正确的邮箱地址');
+      toast.error('请输入正确的邮箱地址');
       return;
     }
-    if (!password) {
-      setError('请输入密码');
+
+    if (!password.trim()) {
+      toast.error('请输入密码');
       return;
     }
 
@@ -35,11 +48,20 @@ export default function LoginPage() {
         password,
       });
       if (!result?.ok) {
-        setError('邮箱或密码错误');
+        toast.error('邮箱或密码错误');
         return;
       }
 
-      window.location.href = '/';
+      // 处理"记住我"
+      if (rememberMe) {
+        localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+      } else {
+        localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+      }
+
+      toast.success('登录成功');
+      // 使用 router.replace 避免硬刷新，同时替换历史记录
+      router.replace('/');
     } finally {
       setLoading(false);
     }
@@ -132,15 +154,10 @@ export default function LoginPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <label htmlFor="rememberMe" className={styles.rememberLabel}>
-                  记住我
+                  记住邮箱
                 </label>
               </div>
-              <a href="#" className={styles.forgotLink}>
-                忘记密码?
-              </a>
             </div>
-
-            {error && <div className={styles.error}>{error}</div>}
 
             <button className={styles.submit} type="submit" disabled={loading}>
               {loading ? '加载中...' : '登录'}

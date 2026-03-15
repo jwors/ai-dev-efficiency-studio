@@ -18,8 +18,16 @@ export async function runPlugins(
   for (const plugin of plugins) {
     try {
       const res = await plugin.run(input, state);
+      if (!res.ok) {
+        console.error(
+          `[Plugins] plugin failed name=${plugin.name} sessionId=${state.sessionId} error=${res.error ?? 'unknown'}`,
+        );
+      }
       results.push(res);
     } catch (error) {
+      console.error(
+        `[Plugins] plugin threw name=${plugin.name} sessionId=${state.sessionId} error=${error instanceof Error ? error.message : 'Plugin failed'}`,
+      );
       results.push({
         name: plugin.name,
         ok: false,

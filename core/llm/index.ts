@@ -32,7 +32,6 @@ export async function callLLM(prompt: Message[]): Promise<LLMRawResponse> {
   }
 
   const requestId = crypto.randomUUID();
-
   return withFallback(
     providers,
     async (provider) => {

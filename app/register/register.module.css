@@ -9,7 +9,7 @@
   background-color: #FFFFFF;
   font-family: var(--font-poppins), Poppins, sans-serif;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Logo in top left corner */
@@ -190,6 +190,15 @@
   width: 21px;
   height: 21px;
   color: #ABABAB;
+}
+
+/* Password hint */
+.passwordHint {
+  font-family: var(--font-poppins), Poppins, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #ABABAB;
+  margin-top: 4px;
 }
 
 /* Submit button */

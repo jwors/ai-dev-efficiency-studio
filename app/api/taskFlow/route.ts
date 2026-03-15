@@ -3,7 +3,7 @@ import { initLLMOnce } from '@/core/llm/init';
 import { getSession, saveSession } from '@/core/storage/storageMap/map';
 import { contextGuard,baseGuard } from '@/core/security/inputGuard';
 import { runPlugins } from '@/core/plugins/runPlugins';
-import { wbsPlugin } from '@/core/plugins';
+import { taskFlowPlugin } from '@/core/plugins';
 import { updateSession } from '@/core/session';
 
 export async function POST(req: Request) {
@@ -29,12 +29,12 @@ export async function POST(req: Request) {
   }
   await updateSession(input, state);
 
-  const pluginResults = await runPlugins([wbsPlugin], input, state);
+  const pluginResults = await runPlugins([taskFlowPlugin], input, state);
 
   await saveSession(state);
 
   return NextResponse.json({
-    wbs: state.wbs ?? null,
+    tf: state.flowchart ?? null,
     plugins: pluginResults,
     sessionId: state.sessionId,
   });

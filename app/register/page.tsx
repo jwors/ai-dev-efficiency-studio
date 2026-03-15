@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import styles from './register.module.css';
-import { message } from 'antd';
-import { isValidEmail } from '@/lib/validators';
+import { isValidEmail, validatePassword } from '@/lib/validators';
+import { useToast } from '@/app/components/Toast';
 import Image from 'next/image';
 
 export default function RegisterPage() {
@@ -14,20 +14,24 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const toast = useToast();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!isValidEmail(email)) {
-      message.error({ content: '请输入正确的邮箱地址' });
+      toast.error('请输入正确的邮箱地址');
       return;
     }
-    if (!password) {
-      message.error({ content: '请输入密码' });
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      toast.error(passwordValidation.errors[0]);
       return;
     }
+
     if (password !== confirmPassword) {
-      message.error({ content: '请输入相同的密码' });
+      toast.error('两次输入的密码不一致');
       return;
     }
 
@@ -43,18 +47,22 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (data.ok) {
-        message.success({ content: '注册成功' });
+        toast.success('注册成功');
         const result = await signIn('credentials', {
           redirect: false,
           email,
           password,
         });
         if (result?.ok) {
-          window.location.href = '/';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 500);
         }
+      } else {
+        toast.error(data.error || '注册失败');
       }
     } catch (err) {
-      message.error({ content: '接口请求失败' });
+      toast.error('网络请求失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -135,6 +143,7 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              <span className={styles.passwordHint}>密码至少 8 位，需包含字母和数字</span>
             </label>
 
             <label className={styles.label}>

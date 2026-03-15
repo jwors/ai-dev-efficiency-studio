@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt'
 import { prisma } from '@/lib/prisma';
+import { validatePassword } from '@/lib/validators';
 
 /**
  * 用户注册的 POST 端点。
@@ -19,17 +20,18 @@ export async function POST(req: Request) {
 		//邮箱必填
 		if (!email) {
 			return NextResponse.json({
-				error: "邮箱必填",
+				error: "请输入邮箱地址",
 			},
 				{
 					status: 400
 				}
 			)
 		}
-		// 密码限制
-		if (password.length < 8) {
+		// 密码验证
+		const passwordValidation = validatePassword(password);
+		if (!passwordValidation.valid) {
 			return NextResponse.json({
-				error: '密码至少 8 位'
+				error: passwordValidation.errors[0],
 			},
 				{
 					status: 400
@@ -47,7 +49,7 @@ export async function POST(req: Request) {
 				})
 		}
 
-		// 密码转hsh
+		// 密码转hash
 		const passwordHash = await bcrypt.hash(password, 12);
 		const user = await prisma.user.create({
 			data: {
@@ -63,7 +65,7 @@ export async function POST(req: Request) {
 			{
 				status:201
 			})
-	} catch (e) { 
+	} catch (e) {
 		return NextResponse.json({
 			error:"服务器错误",
 		},

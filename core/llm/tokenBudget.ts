@@ -184,7 +184,7 @@ export async function getUserRemainingBudget(userId: string): Promise<number> {
  * @returns 包含已使用、配额和剩余 token 的统计对象
  * @throws TokenBudgetUserNotFoundError 如果用户不存在
  */
-export async function getUserTokenStats(userId: string): Promise<{
+async function getUserTokenStats(userId: string): Promise<{
   used: number;
   quota: number;
   remaining: number;

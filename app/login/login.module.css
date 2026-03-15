@@ -9,7 +9,7 @@
   background-color: #FFFFFF;
   font-family: var(--font-poppins), Poppins, sans-serif;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Logo in top left corner */
@@ -195,7 +195,6 @@
 /* Options row */
 .optionsRow {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: 56px;
 }
@@ -242,20 +241,6 @@
   line-height: 1.5;
   color: #000000;
   cursor: pointer;
-}
-
-.forgotLink {
-  font-family: var(--font-poppins), Poppins, sans-serif;
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 1.5;
-  color: #4D4D4D;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.forgotLink:hover {
-  color: #000000;
 }
 
 /* Submit button */

@@ -18,6 +18,12 @@ type TaskFlowApiResponse = {
   sessionId?: string;
 };
 
+const QUICK_EXAMPLES = [
+  { label: '用户注册', text: '用户注册流程：填写邮箱 → 发送验证码 → 验证邮箱 → 设置密码 → 注册成功' },
+  { label: '订单处理', text: '电商订单处理流程：下单 → 支付 → 库存检查 → 发货 → 物流跟踪 → 确认收货' },
+  { label: '审批流程', text: '企业请假审批流程：提交申请 → 主管审批 → 人事审核 → 结果通知' },
+];
+
 export default function TaskFlowPluginPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
@@ -30,6 +36,13 @@ export default function TaskFlowPluginPage() {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void handleRun();
+    }
+  }
+
+  function handleExampleClick(text: string) {
+    if (inputRef.current) {
+      inputRef.current.value = text;
+      inputRef.current.focus();
     }
   }
 
@@ -99,6 +112,22 @@ export default function TaskFlowPluginPage() {
           onKeyDown={handleInputKeyDown}
           rows={4}
         />
+        <div className="examples">
+          <span className="examples-label">快捷示例：</span>
+          <div className="examples-list">
+            {QUICK_EXAMPLES.map((example) => (
+              <button
+                key={example.label}
+                type="button"
+                className="example-tag"
+                onClick={() => handleExampleClick(example.text)}
+                disabled={loading}
+              >
+                {example.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="actions">
           <button
             className="button button-primary"

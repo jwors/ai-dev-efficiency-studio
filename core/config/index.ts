@@ -19,7 +19,7 @@ function parseEnvNumber(value: string | undefined, defaultValue: number): number
 export const config = {
   llmProvider: process.env.LLM_PROVIDER ?? 'mock',
   llmFallbackProvider: process.env.LLM_FALLBACK_PROVIDER ?? 'mock',
-  llmTimeoutMs: parseEnvNumber(process.env.LLM_TIMEOUT_MS , 12000),
+  llmTimeoutMs: parseEnvNumber(process.env.LLM_TIMEOUT_MS , 300000),
   llmMaxRetries: parseEnvNumber(process.env.LLM_MAX_RETRIES ,3),
   llmBaseDelayMs: parseEnvNumber(process.env.LLM_BASE_DELAY_MS ,400),
   llmMaxDelayMs: parseEnvNumber(process.env.LLM_MAX_DELAY_MS ,4000),

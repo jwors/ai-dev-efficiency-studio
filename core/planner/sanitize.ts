@@ -39,7 +39,7 @@ export function isRefusalLikeText(text: string) {
   return matchesAny(content, REFUSAL_PATTERNS);
 }
 
-export function isRiskyHistoryText(text: string) {
+function isRiskyHistoryText(text: string) {
   const content = String(text ?? '').trim();
   if (!content) return false;
   return matchesAny(content, RISKY_HISTORY_PATTERNS);

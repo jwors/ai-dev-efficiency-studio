@@ -46,7 +46,7 @@ async function writeIndex(items: ArtifactRecord[]) {
  * 优先写入数据库，失败时降级为文件存储。
  * @param record - 制品记录
  */
-export async function addArtifactRecord(record: ArtifactRecord) {
+async function addArtifactRecord(record: ArtifactRecord) {
   if (!dbDisabled) {
     try {
       await prisma.artifact.create({
