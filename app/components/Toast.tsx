@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface Toast {
   id: number;
@@ -10,37 +10,51 @@ interface Toast {
   message: string;
 }
 
+interface ToastOptions {
+  duration?: number;
+}
+
 interface ToastContextType {
-  toast: (type: ToastType, message: string) => void;
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
-  warning: (message: string) => void;
+  toast: (type: ToastType, message: string, options?: ToastOptions) => void;
+  success: (message: string, options?: ToastOptions) => void;
+  error: (message: string, options?: ToastOptions) => void;
+  info: (message: string, options?: ToastOptions) => void;
+  warning: (message: string, options?: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
-let toastId = 0;
+// 默认超时时间配置
+const DEFAULT_DURATION: Record<ToastType, number> = {
+  success: 3000,
+  error: 5000,    // 错误消息显示更长时间
+  info: 3000,
+  warning: 4000,
+};
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // 使用 useRef 替代模块级变量，避免 SSR 问题
+  const toastIdRef = useRef(0);
 
   const removeToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const addToast = useCallback((type: ToastType, message: string) => {
-    const id = ++toastId;
+  const addToast = useCallback((type: ToastType, message: string, options?: ToastOptions) => {
+    const id = ++toastIdRef.current;
+    const duration = options?.duration ?? DEFAULT_DURATION[type];
+
     setToasts((prev) => [...prev, { id, type, message }]);
-    setTimeout(() => removeToast(id), 3000);
+    setTimeout(() => removeToast(id), duration);
   }, [removeToast]);
 
   const value: ToastContextType = {
     toast: addToast,
-    success: (message) => addToast('success', message),
-    error: (message) => addToast('error', message),
-    info: (message) => addToast('info', message),
-    warning: (message) => addToast('warning', message),
+    success: (message, options) => addToast('success', message, options),
+    error: (message, options) => addToast('error', message, options),
+    info: (message, options) => addToast('info', message, options),
+    warning: (message, options) => addToast('warning', message, options),
   };
 
   return (

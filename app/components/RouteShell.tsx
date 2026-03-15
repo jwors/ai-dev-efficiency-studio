@@ -16,12 +16,13 @@ export default function RouteShell({ children }: RouteShellProps) {
   const router = useRouter();
   const { status, data: session } = useSession();
 
+  const isAuthRoute = AUTH_ROUTES.has(pathname);
+
   useEffect(() => {
     if (!pathname) return;
     if (status === 'loading') return;
 
     const isAuthed = status === 'authenticated';
-    const isAuthRoute = AUTH_ROUTES.has(pathname);
 
     if (isAuthRoute && isAuthed) {
       router.replace('/');
@@ -31,10 +32,10 @@ export default function RouteShell({ children }: RouteShellProps) {
     if (!isAuthRoute && !isAuthed) {
       router.replace('/login');
     }
-  }, [pathname, router, status]);
+  }, [pathname, router, status, isAuthRoute]);
 
   // 登录/注册页面在 loading 时直接显示，避免闪烁
-  if (status === 'loading' && !AUTH_ROUTES.has(pathname)) {
+  if (status === 'loading' && !isAuthRoute) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
@@ -42,7 +43,7 @@ export default function RouteShell({ children }: RouteShellProps) {
     );
   }
 
-  if (pathname === '/login' || pathname === '/register') {
+  if (isAuthRoute) {
     return <div className="route route-single">{children}</div>;
   }
 

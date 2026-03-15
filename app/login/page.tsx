@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from './login.module.css';
@@ -18,6 +18,15 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const toast = useToast();
   const router = useRouter();
+  const mountedRef = useRef(true);
+
+  // 组件卸载时标记
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // 加载记住的邮箱
   useEffect(() => {
@@ -52,7 +61,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 处理"记住我"
+      // 处理"记住邮箱"
       if (rememberMe) {
         localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
       } else {
@@ -60,10 +69,17 @@ export default function LoginPage() {
       }
 
       toast.success('登录成功');
-      // 使用 router.replace 避免硬刷新，同时替换历史记录
-      router.replace('/');
+      // 延迟跳转，确保 toast 能够显示
+      setTimeout(() => {
+        if (mountedRef.current) {
+          router.replace('/');
+        }
+      }, 500);
     } finally {
-      setLoading(false);
+      // 仅在组件仍然挂载时更新状态
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -99,7 +115,7 @@ export default function LoginPage() {
             <label className={styles.label}>
               <span className={styles.labelText}>邮箱</span>
               <input
-                type="text"
+                type="email"
                 name="email"
                 className={styles.input}
                 placeholder="请输入邮箱地址"
