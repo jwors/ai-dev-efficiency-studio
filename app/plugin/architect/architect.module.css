@@ -192,14 +192,21 @@
   height: 100%;
 }
 
+/* input-panel 默认占满宽度 */
 .bottomSection > .input-panel {
-  flex: 1 1 0;
+  flex: 1 1 100%;
   min-width: 0;
+}
+
+/* 当有 infoPanel 时，input-panel 固定宽度，infoPanel 占剩余空间 */
+.bottomSection:has(.infoPanel) > .input-panel {
+  flex: 0 0 auto;
+  width: 480px;
 }
 
 /* 信息面板 */
 .infoPanel {
-  flex: 0 0 360px;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
