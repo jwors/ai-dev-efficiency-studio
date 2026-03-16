@@ -115,6 +115,101 @@ function buildFlowchartMock(input: string) {
   };
 }
 
+function buildArchitectureMock(input: string) {
+  return {
+    version: 'arch.v1' as const,
+    title: input.includes('后台') ? '后台管理系统' : input.includes('电商') ? '电商平台' : '系统架构',
+    description: `基于用户需求"${input}"设计的系统架构`,
+    style: 'monolith' as const,
+    layers: [
+      { name: 'presentation' as const, description: '前端界面层' },
+      { name: 'application' as const, description: '应用服务层' },
+      { name: 'data' as const, description: '数据存储层' },
+    ],
+    components: [
+      {
+        id: 'frontend-app',
+        name: '前端应用',
+        type: 'frontend' as const,
+        layer: 'presentation' as const,
+        description: '用户界面',
+        technology: 'React + TypeScript',
+        metadata: { features: ['响应式设计', '状态管理'] },
+      },
+      {
+        id: 'api-server',
+        name: 'API 服务',
+        type: 'backend' as const,
+        layer: 'application' as const,
+        description: 'RESTful API 服务',
+        technology: 'Node.js + Express',
+        metadata: { port: 3001 },
+      },
+      {
+        id: 'postgres-db',
+        name: 'PostgreSQL 数据库',
+        type: 'database' as const,
+        layer: 'data' as const,
+        description: '主数据库',
+        technology: 'PostgreSQL 15',
+      },
+      {
+        id: 'redis-cache',
+        name: 'Redis 缓存',
+        type: 'cache' as const,
+        layer: 'infrastructure' as const,
+        description: '缓存服务',
+        technology: 'Redis 7',
+      },
+    ],
+    connections: [
+      {
+        id: 'frontend-to-api',
+        from: 'frontend-app',
+        to: 'api-server',
+        type: 'http' as const,
+        label: 'REST API',
+        description: '前端调用后端 API',
+      },
+      {
+        id: 'api-to-db',
+        from: 'api-server',
+        to: 'postgres-db',
+        type: 'database' as const,
+        description: 'API 读写数据库',
+      },
+      {
+        id: 'api-to-redis',
+        from: 'api-server',
+        to: 'redis-cache',
+        type: 'cache' as const,
+        description: 'API 读写缓存',
+      },
+    ],
+    techStack: [
+      { category: '前端框架', name: 'React', version: '18', reason: '生态成熟' },
+      { category: '后端框架', name: 'Express', version: '4', reason: '轻量灵活' },
+      { category: '数据库', name: 'PostgreSQL', version: '15', reason: '开源稳定' },
+      { category: '缓存', name: 'Redis', version: '7', reason: '高性能' },
+    ],
+    decisions: [
+      {
+        topic: '架构风格',
+        choice: '单体架构',
+        reason: '初期项目规模较小，开发效率高',
+        alternatives: ['微服务架构'],
+      },
+    ],
+    updates: {
+      addedComponentIds: ['frontend-app', 'api-server', 'postgres-db', 'redis-cache'],
+      updatedComponentIds: [],
+      removedComponentIds: [],
+      addedConnectionIds: ['frontend-to-api', 'api-to-db', 'api-to-redis'],
+      removedConnectionIds: [],
+    },
+  };
+}
+
 export class MockProvider implements LLMProvider {
   name: LLMProviderName = 'mock';
 
@@ -127,6 +222,8 @@ export class MockProvider implements LLMProvider {
       content = JSON.stringify(buildWbsMock(input));
     } else if (includesSchema(prompt, '"version": "flowchart.v1"')) {
       content = JSON.stringify(buildFlowchartMock(input));
+    } else if (includesSchema(prompt, '"version": "arch.v1"')) {
+      content = JSON.stringify(buildArchitectureMock(input));
     }
 
     return {

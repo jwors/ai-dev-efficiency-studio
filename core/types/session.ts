@@ -24,6 +24,7 @@ export type SessionState = {
   };
   wbs?: WbsGraph;
   flowchart?: FlowchartJson;
+  architecture?: ArchitectureJson;  // 架构图数据
   policyContext?: PolicyContext;  // 安全策略上下文（会话级）
   updatedAt: number;
   createdAt: number;
@@ -113,6 +114,68 @@ export type FlowEdge = {
   to: string;
   label?: string;
   type: 'sequence' | 'condition' | 'parallel';
+};
+
+// Architecture Types
+export type ArchitectureComponentType = 'frontend' | 'backend' | 'database' | 'cache' | 'queue' | 'api-gateway' | 'auth-service' | 'storage' | 'cdn' | 'external-api';
+export type ArchitectureLayer = 'presentation' | 'application' | 'domain' | 'infrastructure' | 'data';
+export type ArchitectureConnectionType = 'http' | 'websocket' | 'tcp' | 'grpc' | 'database' | 'cache' | 'queue' | 'file';
+
+export type ArchitectureComponent = {
+  id: string;
+  name: string;
+  type: ArchitectureComponentType;
+  layer: ArchitectureLayer;
+  description?: string;
+  technology?: string;
+  metadata?: {
+    port?: number;
+    replicas?: number;
+    features?: string[];
+  };
+};
+
+export type ArchitectureConnection = {
+  id: string;
+  from: string;
+  to: string;
+  type: ArchitectureConnectionType;
+  label?: string;
+  description?: string;
+};
+
+export type TechStack = {
+  category: string;
+  name: string;
+  version?: string;
+  reason?: string;
+};
+
+export type ArchitectureJson = {
+  version: 'arch.v1';
+  title: string;
+  description?: string;
+  style?: 'monolith' | 'microservice' | 'serverless' | 'hybrid';
+  layers: Array<{
+    name: ArchitectureLayer;
+    description?: string;
+  }>;
+  components: ArchitectureComponent[];
+  connections: ArchitectureConnection[];
+  techStack: TechStack[];
+  decisions?: Array<{
+    topic: string;
+    choice: string;
+    reason: string;
+    alternatives?: string[];
+  }>;
+  updates: {
+    addedComponentIds: string[];
+    updatedComponentIds: string[];
+    removedComponentIds: string[];
+    addedConnectionIds: string[];
+    removedConnectionIds: string[];
+  };
 };
 
 export interface Observation {

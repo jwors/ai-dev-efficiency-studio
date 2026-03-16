@@ -2,6 +2,7 @@ import type { Plugin } from './types';
 import { runWbsPlugin } from './wbs';
 import { runTaskFlowPlugin } from './taskFlow'
 import { runPlanExecutePlugin } from './planExecute';
+import { runArchitectPlugin } from './architect';
 
 export const wbsPlugin: Plugin = {
   name: 'wbs',
@@ -16,4 +17,9 @@ export const planExecutePlugin: Plugin = {
 export const taskFlowPlugin: Plugin = {
   name: 'tf',
   run: runTaskFlowPlugin
+}
+
+export const architectPlugin: Plugin = {
+  name: 'architect',
+  run: runArchitectPlugin,
 }

@@ -31,6 +31,17 @@ export type {
   FlowEdge,
 } from './session';
 
+// Architecture Types
+export type {
+  ArchitectureComponentType,
+  ArchitectureLayer,
+  ArchitectureConnectionType,
+  ArchitectureComponent,
+  ArchitectureConnection,
+  TechStack,
+  ArchitectureJson,
+} from './session';
+
 // Audit Types
 export type {
   Evidence,

@@ -1,0 +1,185 @@
+/* LOGIFY Style for Architect Plugin */
+
+.architectRoot :global(.flow-wrap .react-flow) {
+  width: 100%;
+  height: 100%;
+}
+
+.architectRoot :global(.react-flow__node) {
+  background: #FFFFFF;
+  color: #000000;
+  border: 0.5px solid #878787;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
+  transition: all 200ms ease;
+}
+
+.architectRoot :global(.react-flow__node:hover) {
+  border-color: #000000;
+  box-shadow: 0px 8px 32px 0px rgba(0, 0, 0, 0.1);
+}
+
+.architectRoot :global(.react-flow__edge-path),
+.architectRoot :global(.react-flow__connection-path) {
+  stroke: #878787;
+  stroke-width: 1.5;
+}
+
+.architectRoot :global(.react-flow__edge.animated .react-flow__edge-path) {
+  stroke: #3b82f6;
+  stroke-dasharray: 6 4;
+  animation: dash 1.5s linear infinite;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.architectRoot :global(.react-flow__controls) {
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
+  border-radius: 6px;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
+}
+
+.architectRoot :global(.react-flow__controls button) {
+  background: #FAFAFA;
+  border: none;
+  color: #4D4D4D;
+  border-radius: 4px;
+  transition: all 200ms ease;
+}
+
+.architectRoot :global(.react-flow__controls button:hover) {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.architectRoot :global(.react-flow__minimap) {
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
+  border-radius: 6px;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
+}
+
+.architectRoot :global(.react-flow__background) {
+  background: transparent;
+}
+
+.architectRoot :global(.react-flow__attribution) {
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: #ABABAB;
+}
+
+/* 技术栈样式 */
+.techStack {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.techItem {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 200ms ease;
+}
+
+.techItem:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.techCategory {
+  font-size: 11px;
+  color: #878787;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.techName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.techVersion {
+  font-size: 11px;
+  font-weight: 400;
+  color: #878787;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.techReason {
+  font-size: 12px;
+  color: #4D4D4D;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* 架构决策样式 */
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.decisionItem {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid #000000;
+}
+
+.decisionTopic {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.decisionChoice {
+  font-size: 14px;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.decisionReason {
+  font-size: 13px;
+  color: #4D4D4D;
+  margin-bottom: 4px;
+}
+
+.decisionAlternatives {
+  font-size: 12px;
+  color: #878787;
+}
+
+.decisionLabel {
+  color: #878787;
+  font-weight: 500;
+}
