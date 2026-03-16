@@ -1,4 +1,4 @@
-/* LOGIFY Style for Architect Plugin */
+﻿/* LOGIFY Style for Architect Plugin */
 
 .architectRoot :global(.flow-wrap .react-flow) {
   width: 100%;
@@ -81,6 +81,56 @@
   padding: 4px 10px;
   font-size: 10px;
   color: #ABABAB;
+}
+
+.flowHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.viewTabs {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.viewTab,
+.viewTabActive {
+  appearance: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: #4D4D4D;
+  transition: all 200ms ease;
+}
+
+.viewTab:hover,
+.viewTabActive:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.viewTab:disabled,
+.viewTabActive:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.viewTabActive {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.viewHint {
+  font-size: 12px;
+  color: #6B7280;
+  margin-bottom: 12px;
 }
 
 /* 技术栈样式 */
@@ -192,19 +242,16 @@
   height: 100%;
 }
 
-/* input-panel 默认占满宽度 */
 .bottomSection > :global(.input-panel) {
   flex: 1 1 100%;
   min-width: 0;
 }
 
-/* 当有 infoPanel 时，input-panel 固定宽度，infoPanel 占剩余空间 */
 .bottomSection:has(.infoPanel) > :global(.input-panel) {
   flex: 0 0 auto;
   width: 480px;
 }
 
-/* 信息面板 */
 .infoPanel {
   flex: 1 1 0;
   min-width: 0;

@@ -1,10 +1,13 @@
-'use client'
+﻿'use client'
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import styles from './architect.module.css'
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import { ArchitectureFlow } from '@/app/components/ArchitectureFlow';
+import WbsFlow from '@/app/components/Wbs';
+import { TaskFlow } from '@/app/components/taskFlow';
 import type { ArchitectureJson } from '@/core/types';
+import { architectureToTaskFlowView, architectureToWbsView } from '@/lib/architecture/adapters';
 
 type PluginResult = {
   name: string;
@@ -18,6 +21,8 @@ type ArchitectApiResponse = {
   sessionId?: string;
 };
 
+type ArchitectView = 'architecture' | 'wbs' | 'taskflow';
+
 const QUICK_EXAMPLES = [
   { label: '后台管理系统', text: '搭建一个后台管理系统，需要用户管理、权限控制、数据统计功能' },
   { label: '电商平台', text: '设计一个电商平台，包含用户、商品、订单、支付模块，需要高并发支持' },
@@ -25,13 +30,32 @@ const QUICK_EXAMPLES = [
   { label: '微服务 SaaS', text: '设计一个微服务架构的 SaaS 平台，包含租户管理、计费、通知服务' },
 ];
 
+const VIEW_OPTIONS: Array<{ key: ArchitectView; label: string }> = [
+  { key: 'architecture', label: '架构图' },
+  { key: 'wbs', label: 'WBS 视图' },
+  { key: 'taskflow', label: '流程视图' },
+];
+
 export default function ArchitectPluginPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ArchitectApiResponse | null>(null);
+  const [activeView, setActiveView] = useState<ArchitectView>('architecture');
   const { userId } = useAuthUserId();
   const sessionId = userId ? `${userId}:architect` : '';
+
+  const architecture = result?.architecture ?? null;
+
+  const wbsView = useMemo(() => {
+    if (!architecture) return null;
+    return architectureToWbsView(architecture);
+  }, [architecture]);
+
+  const taskFlowView = useMemo(() => {
+    if (!architecture) return null;
+    return architectureToTaskFlowView(architecture);
+  }, [architecture]);
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -56,6 +80,7 @@ export default function ArchitectPluginPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setActiveView('architecture');
     try {
       const response = await fetch('/api/architect', {
         method: 'POST',
@@ -82,30 +107,71 @@ export default function ArchitectPluginPage() {
     (p) => p.name === 'architect',
   );
 
-  const hasTechStack = result?.architecture?.techStack && result.architecture.techStack.length > 0;
-  const hasDecisions = result?.architecture?.decisions && result.architecture.decisions.length > 0;
+  const hasTechStack = architecture?.techStack && architecture.techStack.length > 0;
+  const hasDecisions = architecture?.decisions && architecture.decisions.length > 0;
   const showInfoPanel = hasTechStack || hasDecisions;
+
+  const flowSummary = useMemo(() => {
+    if (!architecture) return null;
+    if (activeView === 'wbs') {
+      return `${wbsView?.nodes.length || 0} 个节点 · ${wbsView?.edges.length || 0} 条关系`;
+    }
+    if (activeView === 'taskflow') {
+      return `${taskFlowView?.nodes.length || 0} 个流程节点 · ${taskFlowView?.edges.length || 0} 条连线`;
+    }
+    return `${architecture.components?.length || 0} 个组件 · ${architecture.techStack?.length || 0} 项技术栈`;
+  }, [activeView, architecture, taskFlowView, wbsView]);
+
+  function renderActiveView() {
+    if (activeView === 'wbs') {
+      return <WbsFlow wbs={wbsView} />;
+    }
+
+    if (activeView === 'taskflow') {
+      return <TaskFlow tf={taskFlowView} />;
+    }
+
+    return (
+      <div className="flow-wrap">
+        <ArchitectureFlow architecture={architecture} />
+      </div>
+    );
+  }
 
   return (
     <main className={`main ${styles.architectRoot}`}>
-      {/* 架构图 - 上半部分 */}
       <div className="main-top">
         <section className="panel flow-panel" style={{ animationDelay: '0ms' }}>
-          <div className="panel-title">
-            <span>系统架构图</span>
-            {result?.architecture && (
-              <span style={{ fontSize: '11px', opacity: 0.6 }}>
-                {result.architecture.components?.length || 0} 个组件 · {result.architecture.techStack?.length || 0} 项技术栈
-              </span>
-            )}
+          <div className={styles.flowHeader}>
+            <div className="panel-title">
+              <span>系统设计视图</span>
+              {flowSummary && (
+                <span style={{ fontSize: '11px', opacity: 0.6 }}>
+                  {flowSummary}
+                </span>
+              )}
+            </div>
+            <div className={styles.viewTabs}>
+              {VIEW_OPTIONS.map((view) => (
+                <button
+                  key={view.key}
+                  type="button"
+                  className={view.key === activeView ? styles.viewTabActive : styles.viewTab}
+                  onClick={() => setActiveView(view.key)}
+                  disabled={!architecture}
+                >
+                  {view.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flow-wrap">
-            <ArchitectureFlow architecture={result?.architecture ?? null} />
+          <div className={styles.viewHint}>
+            当前为只读视图切换，用于验证 adapter 输出能否直接驱动现有组件。
           </div>
+          {renderActiveView()}
         </section>
       </div>
 
-      {/* 下半部分：输入区 + 信息面板 */}
       <div className={styles.bottomSection}>
         <section className="panel input-panel" style={{ animationDelay: '50ms' }}>
           <div className="panel-title">
@@ -156,19 +222,17 @@ export default function ArchitectPluginPage() {
           )}
         </section>
 
-        {/* 技术栈与架构决策 - 合并为可滚动容器 */}
         {showInfoPanel && (
           <section className={`panel ${styles.infoPanel}`} style={{ animationDelay: '100ms' }}>
             <div className="panel-title">
               <span>架构详情</span>
             </div>
             <div className={styles.infoScroll}>
-              {/* 技术栈展示 */}
               {hasTechStack && (
                 <div className={styles.infoSection}>
                   <div className={styles.infoSectionTitle}>技术栈</div>
                   <div className={styles.techStack}>
-                    {result!.architecture!.techStack!.map((tech, index) => (
+                    {architecture!.techStack!.map((tech, index) => (
                       <div key={index} className={styles.techItem}>
                         <div className={styles.techCategory}>{tech.category}</div>
                         <div className={styles.techName}>
@@ -182,12 +246,11 @@ export default function ArchitectPluginPage() {
                 </div>
               )}
 
-              {/* 架构决策展示 */}
               {hasDecisions && (
                 <div className={styles.infoSection}>
                   <div className={styles.infoSectionTitle}>架构决策</div>
                   <div className={styles.decisions}>
-                    {result!.architecture!.decisions!.map((decision, index) => (
+                    {architecture!.decisions!.map((decision, index) => (
                       <div key={index} className={styles.decisionItem}>
                         <div className={styles.decisionTopic}>{decision.topic}</div>
                         <div className={styles.decisionChoice}>

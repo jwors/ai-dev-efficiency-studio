@@ -1,6 +1,9 @@
 import z from 'zod';
 
-// 架构组件类型
+/**
+ * 架构组件类型枚举
+ * @description 定义系统中可能出现的组件类型
+ */
 export const ArchitectureComponentType = z.enum([
   'frontend',      // 前端应用
   'backend',       // 后端服务
@@ -14,7 +17,10 @@ export const ArchitectureComponentType = z.enum([
   'external-api',  // 外部 API
 ]);
 
-// 架构层
+/**
+ * 架构层枚举
+ * @description 定义分层架构中的各层
+ */
 export const ArchitectureLayer = z.enum([
   'presentation',  // 表现层
   'application',   // 应用层
@@ -23,7 +29,10 @@ export const ArchitectureLayer = z.enum([
   'data',          // 数据层
 ]);
 
-// 连接类型
+/**
+ * 连接类型枚举
+ * @description 定义组件间的连接类型
+ */
 export const ArchitectureConnectionType = z.enum([
   'http',          // HTTP 请求
   'websocket',     // WebSocket
@@ -35,7 +44,10 @@ export const ArchitectureConnectionType = z.enum([
   'file',          // 文件读写
 ]);
 
-// 架构组件定义
+/**
+ * 架构组件定义 Schema
+ * @description 定义单个架构组件的结构
+ */
 export const ArchitectureComponentSchema = z.object({
   id: z.string().min(1, 'Component ID must be non-empty'),
   name: z.string().min(1, 'Component name must be non-empty'),
@@ -50,7 +62,10 @@ export const ArchitectureComponentSchema = z.object({
   }).optional(),
 });
 
-// 架构连接定义
+/**
+ * 架构连接定义 Schema
+ * @description 定义组件间的连接关系
+ */
 export const ArchitectureConnectionSchema = z.object({
   id: z.string().min(1, 'Connection ID must be non-empty'),
   from: z.string().min(1, 'From component ID must be non-empty'),
@@ -60,7 +75,10 @@ export const ArchitectureConnectionSchema = z.object({
   description: z.string().optional(),
 });
 
-// 技术栈定义
+/**
+ * 技术栈定义 Schema
+ * @description 定义技术选型项的结构
+ */
 export const TechStackSchema = z.object({
   category: z.string(),  // 分类：前端、后端、数据库等
   name: z.string(),      // 技术名称
@@ -68,7 +86,10 @@ export const TechStackSchema = z.object({
   reason: z.string().optional(),  // 选型理由
 });
 
-// 完整架构图 Schema
+/**
+ * 完整架构图 Schema
+ * @description 定义完整的系统架构输出结构，包含组件、连接、技术栈和决策
+ */
 export const ArchitectureSchema = z.object({
   version: z.literal('arch.v1'),
   title: z.string().min(1, 'Architecture title is required'),
@@ -117,7 +138,11 @@ export const ArchitectureSchema = z.object({
 });
 
 // 导出类型
+/** 架构组件类型 */
 export type ArchitectureComponent = z.infer<typeof ArchitectureComponentSchema>;
+/** 架构连接类型 */
 export type ArchitectureConnection = z.infer<typeof ArchitectureConnectionSchema>;
+/** 技术栈类型 */
 export type TechStack = z.infer<typeof TechStackSchema>;
+/** 完整架构类型 */
 export type Architecture = z.infer<typeof ArchitectureSchema>;

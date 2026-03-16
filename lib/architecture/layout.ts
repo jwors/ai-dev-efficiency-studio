@@ -6,7 +6,8 @@ import type { ArchitectureComponent, ArchitectureConnection } from '@/core/types
 const nodeWidth = 240;
 const nodeHeight = 100;
 
-type LayoutedComponent = ArchitectureComponent & {
+/** 布局后的组件类型，包含位置信息 */
+export type LayoutedComponent = ArchitectureComponent & {
   position: XYPosition;
   sourcePosition: Position;
   targetPosition: Position;
