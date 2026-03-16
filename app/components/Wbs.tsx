@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useMemo } from 'react';
 import {
@@ -126,7 +126,7 @@ export default function wbsFlow({ wbs }: WBSProps) {
   return (
     <div className="flow-wrap">
       <ReactFlow nodes={nodes} edges={edges} fitView>
-        <Background />
+        <Background gap={16} size={1} color="#d4d4d4" />
         <Controls />
         <MiniMap />
       </ReactFlow>
