@@ -82,8 +82,13 @@ export default function ArchitectPluginPage() {
     (p) => p.name === 'architect',
   );
 
+  const hasTechStack = result?.architecture?.techStack && result.architecture.techStack.length > 0;
+  const hasDecisions = result?.architecture?.decisions && result.architecture.decisions.length > 0;
+  const showInfoPanel = hasTechStack || hasDecisions;
+
   return (
     <main className={`main ${styles.architectRoot}`}>
+      {/* 架构图 - 上半部分 */}
       <div className="main-top">
         <section className="panel flow-panel" style={{ animationDelay: '0ms' }}>
           <div className="panel-title">
@@ -100,105 +105,114 @@ export default function ArchitectPluginPage() {
         </section>
       </div>
 
-      <section className="panel input-panel" style={{ animationDelay: '50ms' }}>
-        <div className="panel-title">
-          <span>需求描述</span>
-          {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>生成中...</span>}
-        </div>
-        <textarea
-          ref={inputRef}
-          className="input"
-          placeholder="描述您想要构建的系统（Shift+Enter 换行）..."
-          disabled={loading}
-          onKeyDown={handleInputKeyDown}
-          rows={4}
-        />
-        <div className="examples">
-          <span className="examples-label">快捷示例：</span>
-          <div className="examples-list">
-            {QUICK_EXAMPLES.map((example) => (
-              <button
-                key={example.label}
-                type="button"
-                className="example-tag"
-                onClick={() => handleExampleClick(example.text)}
-                disabled={loading}
-              >
-                {example.label}
-              </button>
-            ))}
+      {/* 下半部分：输入区 + 信息面板 */}
+      <div className={styles.bottomSection}>
+        <section className="panel input-panel" style={{ animationDelay: '50ms' }}>
+          <div className="panel-title">
+            <span>需求描述</span>
+            {loading && <span style={{ fontSize: '11px', opacity: 0.7 }}>生成中...</span>}
           </div>
-        </div>
-        <div className="actions">
-          <button
-            className="button button-primary"
-            onClick={handleRun}
+          <textarea
+            ref={inputRef}
+            className="input"
+            placeholder="描述您想要构建的系统（Shift+Enter 换行）..."
             disabled={loading}
-          >
-            {loading ? '生成中...' : '生成架构图'}
-          </button>
-        </div>
-        <div className="status">
-          {loading ? 'AI 正在设计系统架构...' : '输入需求描述，AI 将为您生成系统架构设计'}
-        </div>
-        {error && <div className="status errmsg">{error}</div>}
-        {architectPlugin && !architectPlugin.ok && (
-          <div className="status errmsg">
-            架构图插件执行失败: {architectPlugin.error ?? '未知错误'}
+            onKeyDown={handleInputKeyDown}
+            rows={4}
+          />
+          <div className="examples">
+            <span className="examples-label">快捷示例：</span>
+            <div className="examples-list">
+              {QUICK_EXAMPLES.map((example) => (
+                <button
+                  key={example.label}
+                  type="button"
+                  className="example-tag"
+                  onClick={() => handleExampleClick(example.text)}
+                  disabled={loading}
+                >
+                  {example.label}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
-      </section>
-
-      {/* 技术栈展示 */}
-      {result?.architecture?.techStack && result.architecture.techStack.length > 0 && (
-        <section className="panel" style={{ animationDelay: '100ms', marginTop: '16px' }}>
-          <div className="panel-title">
-            <span>技术栈</span>
+          <div className="actions">
+            <button
+              className="button button-primary"
+              onClick={handleRun}
+              disabled={loading}
+            >
+              {loading ? '生成中...' : '生成架构图'}
+            </button>
           </div>
-          <div className={styles.techStack}>
-            {result.architecture.techStack.map((tech, index) => (
-              <div key={index} className={styles.techItem}>
-                <div className={styles.techCategory}>{tech.category}</div>
-                <div className={styles.techName}>
-                  {tech.name}
-                  {tech.version && <span className={styles.techVersion}>v{tech.version}</span>}
-                </div>
-                {tech.reason && <div className={styles.techReason}>{tech.reason}</div>}
-              </div>
-            ))}
+          <div className="status">
+            {loading ? 'AI 正在设计系统架构...' : '输入需求描述，AI 将为您生成系统架构设计'}
           </div>
+          {error && <div className="status errmsg">{error}</div>}
+          {architectPlugin && !architectPlugin.ok && (
+            <div className="status errmsg">
+              架构图插件执行失败: {architectPlugin.error ?? '未知错误'}
+            </div>
+          )}
         </section>
-      )}
 
-      {/* 架构决策展示 */}
-      {result?.architecture?.decisions && result.architecture.decisions.length > 0 && (
-        <section className="panel" style={{ animationDelay: '150ms', marginTop: '16px' }}>
-          <div className="panel-title">
-            <span>架构决策</span>
-          </div>
-          <div className={styles.decisions}>
-            {result.architecture.decisions.map((decision, index) => (
-              <div key={index} className={styles.decisionItem}>
-                <div className={styles.decisionTopic}>{decision.topic}</div>
-                <div className={styles.decisionChoice}>
-                  <span className={styles.decisionLabel}>选择：</span>
-                  {decision.choice}
-                </div>
-                <div className={styles.decisionReason}>
-                  <span className={styles.decisionLabel}>理由：</span>
-                  {decision.reason}
-                </div>
-                {decision.alternatives && decision.alternatives.length > 0 && (
-                  <div className={styles.decisionAlternatives}>
-                    <span className={styles.decisionLabel}>备选：</span>
-                    {decision.alternatives.join('、')}
+        {/* 技术栈与架构决策 - 合并为可滚动容器 */}
+        {showInfoPanel && (
+          <section className={`panel ${styles.infoPanel}`} style={{ animationDelay: '100ms' }}>
+            <div className="panel-title">
+              <span>架构详情</span>
+            </div>
+            <div className={styles.infoScroll}>
+              {/* 技术栈展示 */}
+              {hasTechStack && (
+                <div className={styles.infoSection}>
+                  <div className={styles.infoSectionTitle}>技术栈</div>
+                  <div className={styles.techStack}>
+                    {result!.architecture!.techStack!.map((tech, index) => (
+                      <div key={index} className={styles.techItem}>
+                        <div className={styles.techCategory}>{tech.category}</div>
+                        <div className={styles.techName}>
+                          {tech.name}
+                          {tech.version && <span className={styles.techVersion}>v{tech.version}</span>}
+                        </div>
+                        {tech.reason && <div className={styles.techReason}>{tech.reason}</div>}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+                </div>
+              )}
+
+              {/* 架构决策展示 */}
+              {hasDecisions && (
+                <div className={styles.infoSection}>
+                  <div className={styles.infoSectionTitle}>架构决策</div>
+                  <div className={styles.decisions}>
+                    {result!.architecture!.decisions!.map((decision, index) => (
+                      <div key={index} className={styles.decisionItem}>
+                        <div className={styles.decisionTopic}>{decision.topic}</div>
+                        <div className={styles.decisionChoice}>
+                          <span className={styles.decisionLabel}>选择：</span>
+                          {decision.choice}
+                        </div>
+                        <div className={styles.decisionReason}>
+                          <span className={styles.decisionLabel}>理由：</span>
+                          {decision.reason}
+                        </div>
+                        {decision.alternatives && decision.alternatives.length > 0 && (
+                          <div className={styles.decisionAlternatives}>
+                            <span className={styles.decisionLabel}>备选：</span>
+                            {decision.alternatives.join('、')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }

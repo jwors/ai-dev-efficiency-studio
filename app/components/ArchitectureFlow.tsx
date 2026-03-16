@@ -259,7 +259,7 @@ export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
     const json = JSON.stringify(architecture, null, 2);
     navigator.clipboard.writeText(json).then(() => {
       alert('✅ 架构 JSON 已复制到剪贴板');
-    });
+    }).catch(() => alert('复制失败，请检查浏览器权限'));
   }, [architecture]);
 
   // 空状态
