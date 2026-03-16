@@ -13,11 +13,12 @@
      - 根据需求生成 `ArchitectureJson`
      - 输出组件、连接、技术栈、关键决策
      - React Flow 可视化展示
+     - architect 页面已集成只读 WBS 视图与流程视图（通过 adapter 驱动现有组件）
      - 导出 PNG、复制 JSON
      - 基于会话上下文做增量更新
    - 未完成：
      - 与 WBS / TaskFlow 的统一 `ArchitectGraph` 模型
-     - 架构视图与任务视图联动
+     - 原生任务语义建模（当前仅完成只读视图投影，不复用 plugin 逻辑）
      - 节点/连线在线编辑闭环
      - 编辑结果持久化与冲突处理
 
@@ -373,14 +374,15 @@ const [selectedNode, setSelectedNode] = useState<ArchitectNode | null>(null);
 
 ## 五、实现路线图
 
-### Phase 1: 核心功能（MVP）- 预计 5 天
+### Phase 1: 核心功能（MVP）- 已完成
 
 ```
-Day 1: Schema 定义 + Prompt 设计
-Day 2: 插件核心逻辑 + LLM 集成
-Day 3: 架构视图可视化组件
-Day 4: 任务视图可视化组件（复用 TaskFlow）
-Day 5: API 端点 + 前端集成
+已完成项：
+1. Schema 定义 + Prompt 设计
+2. architect 插件核心逻辑 + LLM 集成
+3. 架构视图可视化组件
+4. architect 页面只读集成 WBS 视图与流程视图（通过 adapter 适配现有组件）
+5. API 端点 + 前端集成
 ```
 
 ### Phase 2: 编辑能力 - 预计 5 天
@@ -451,7 +453,7 @@ Day 13: 性能优化 + 测试
 
 ```
 1. 小阶段 1：保持 architect 独立模型，先稳定架构生成质量
-2. 小阶段 2：抽取 adapter，将 ArchitectureJson 适配到 TaskFlow / WBS 组件输入
+2. 小阶段 2：抽取 adapter，将 ArchitectureJson 适配到 TaskFlow / WBS 组件输入（已完成只读验证）
 3. 小阶段 3：验证组件复用是否成立，再决定是否抽通用 GraphViewModel
 4. 小阶段 4：在 architect 页面内补基础编辑能力（先文本属性，后节点关系）
 5. 小阶段 5：最后评估是否需要统一图模型，而不是提前设计大一统结构
@@ -489,4 +491,7 @@ Day 13: 性能优化 + 测试
 - [Excalidraw](https://excalidraw.com/) - 在线白板
 - [Draw.io](https://app.diagrams.net/) - 架构图编辑器
 - [Miro](https://miro.com/) - 协作白板
+
+
+
 

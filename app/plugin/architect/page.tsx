@@ -23,6 +23,12 @@ type ArchitectApiResponse = {
 
 type ArchitectView = 'architecture' | 'wbs' | 'taskflow';
 
+type ProjectionCard = {
+  title: string;
+  primary: string;
+  secondary: string;
+};
+
 const QUICK_EXAMPLES = [
   { label: '后台管理系统', text: '搭建一个后台管理系统，需要用户管理、权限控制、数据统计功能' },
   { label: '电商平台', text: '设计一个电商平台，包含用户、商品、订单、支付模块，需要高并发支持' },
@@ -56,6 +62,31 @@ export default function ArchitectPluginPage() {
     if (!architecture) return null;
     return architectureToTaskFlowView(architecture);
   }, [architecture]);
+
+  const projectionCards = useMemo<ProjectionCard[]>(() => {
+    if (!architecture || !wbsView || !taskFlowView) return [];
+
+    const rootCount = wbsView.nodes.filter((node) => !node.parentId).length;
+    const blockedCount = taskFlowView.nodes.filter((node) => node.status === 'blocked').length;
+
+    return [
+      {
+        title: '架构源模型',
+        primary: `${architecture.components.length} 组件 / ${architecture.connections.length} 连线`,
+        secondary: `${architecture.layers.length} 层级 · ${architecture.style ?? '未指定风格'}`,
+      },
+      {
+        title: 'WBS 投影',
+        primary: `${wbsView.nodes.length} 节点 / ${wbsView.edges.length} 关系`,
+        secondary: `${rootCount} 个根节点 · 适配任务拆解视图`,
+      },
+      {
+        title: '流程投影',
+        primary: `${taskFlowView.nodes.length} 节点 / ${taskFlowView.edges.length} 连线`,
+        secondary: `${blockedCount} 个风险节点 · 适配流程视图`,
+      },
+    ];
+  }, [architecture, taskFlowView, wbsView]);
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -107,9 +138,9 @@ export default function ArchitectPluginPage() {
     (p) => p.name === 'architect',
   );
 
-  const hasTechStack = architecture?.techStack && architecture.techStack.length > 0;
-  const hasDecisions = architecture?.decisions && architecture.decisions.length > 0;
-  const showInfoPanel = hasTechStack || hasDecisions;
+  const hasTechStack = Boolean(architecture?.techStack?.length);
+  const hasDecisions = Boolean(architecture?.decisions?.length);
+  const showInfoPanel = Boolean(architecture) || hasTechStack || hasDecisions;
 
   const flowSummary = useMemo(() => {
     if (!architecture) return null;
@@ -119,7 +150,7 @@ export default function ArchitectPluginPage() {
     if (activeView === 'taskflow') {
       return `${taskFlowView?.nodes.length || 0} 个流程节点 · ${taskFlowView?.edges.length || 0} 条连线`;
     }
-    return `${architecture.components?.length || 0} 个组件 · ${architecture.techStack?.length || 0} 项技术栈`;
+    return `${architecture.components.length} 个组件 · ${architecture.techStack.length} 项技术栈`;
   }, [activeView, architecture, taskFlowView, wbsView]);
 
   function renderActiveView() {
@@ -146,7 +177,7 @@ export default function ArchitectPluginPage() {
             <div className="panel-title">
               <span>系统设计视图</span>
               {flowSummary && (
-                <span style={{ fontSize: '11px', opacity: 0.6 }}>
+                <span style={{ fontSize: '11px',color:'black',marginLeft:'3px', opacity: 0.6 }}>
                   {flowSummary}
                 </span>
               )}
@@ -164,9 +195,6 @@ export default function ArchitectPluginPage() {
                 </button>
               ))}
             </div>
-          </div>
-          <div className={styles.viewHint}>
-            当前为只读视图切换，用于验证 adapter 输出能否直接驱动现有组件。
           </div>
           {renderActiveView()}
         </section>
@@ -228,11 +256,26 @@ export default function ArchitectPluginPage() {
               <span>架构详情</span>
             </div>
             <div className={styles.infoScroll}>
+              {projectionCards.length > 0 && (
+                <div className={styles.infoSection}>
+                  <div className={styles.infoSectionTitle}>Phase 1 验证摘要</div>
+                  <div className={styles.projectionGrid}>
+                    {projectionCards.map((card) => (
+                      <div key={card.title} className={styles.projectionCard}>
+                        <div className={styles.projectionTitle}>{card.title}</div>
+                        <div className={styles.projectionPrimary}>{card.primary}</div>
+                        <div className={styles.projectionSecondary}>{card.secondary}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {hasTechStack && (
                 <div className={styles.infoSection}>
                   <div className={styles.infoSectionTitle}>技术栈</div>
                   <div className={styles.techStack}>
-                    {architecture!.techStack!.map((tech, index) => (
+                    {architecture!.techStack.map((tech, index) => (
                       <div key={index} className={styles.techItem}>
                         <div className={styles.techCategory}>{tech.category}</div>
                         <div className={styles.techName}>

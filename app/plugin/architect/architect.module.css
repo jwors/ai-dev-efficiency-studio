@@ -133,7 +133,40 @@
   margin-bottom: 12px;
 }
 
-/* 技术栈样式 */
+.projectionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.projectionCard {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.projectionTitle {
+  font-size: 11px;
+  color: #878787;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.projectionPrimary {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  margin-bottom: 4px;
+}
+
+.projectionSecondary {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4D4D4D;
+}
+
 .techStack {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -187,7 +220,6 @@
   line-height: 1.4;
 }
 
-/* 架构决策样式 */
 .decisions {
   display: flex;
   flex-direction: column;
@@ -234,7 +266,6 @@
   font-weight: 500;
 }
 
-/* 下半部分布局 */
 .bottomSection {
   display: flex;
   gap: 20px;
