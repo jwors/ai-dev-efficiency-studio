@@ -9,7 +9,27 @@ import { updateSession } from '@/core/session';
 export async function POST(req: Request) {
   initLLMOnce();
 
-  const { input, uuid }: { input: string; uuid: string } = await req.json();
+  // 安全解析请求体
+  let input: string;
+  let uuid: string;
+
+  try {
+    const body = await req.json();
+    input = typeof body.input === 'string' ? body.input.trim() : '';
+    uuid = typeof body.uuid === 'string' ? body.uuid.trim() : '';
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 },
+    );
+  }
+
+  if (!input || !uuid) {
+    return NextResponse.json(
+      { error: 'input and uuid are required' },
+      { status: 400 },
+    );
+  }
 
   // 基础安全检查
   const blocked = baseGuard(input);
