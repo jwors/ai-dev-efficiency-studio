@@ -20,6 +20,7 @@ import { toPng } from 'html-to-image';
 
 import type { ArchitectureJson } from '@/core/types';
 import { getLayoutedArchitecture, type LayoutedComponent } from '@/lib/architecture/layout';
+import { flowToArchitecture } from '@/lib/architecture/adapters';
 import {
   COMPONENT_COLORS,
   CONNECTION_STYLES,
@@ -32,6 +33,10 @@ import styles from './ArchitectureFlow.module.css';
 interface ArchitectureFlowProps {
   /** 架构数据对象 */
   architecture: ArchitectureJson | null;
+  /** 是否启用编辑模式（外部控制） */
+  editable?: boolean;
+  /** 架构数据变更回调 */
+  onChange?: (architecture: ArchitectureJson) => void;
 }
 
 interface TransformedData {
@@ -152,17 +157,24 @@ function transformArchitectureToFlow(
  * - 自动布局
  * - 导出 PNG 图片
  * - 复制 JSON 数据
+ * - 编辑模式（可选）
  *
  * @param props - 组件属性
  * @param props.architecture - 架构数据对象
+ * @param props.editable - 是否启用编辑功能
+ * @param props.onChange - 架构数据变更回调
  */
-export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
+export function ArchitectureFlow({ architecture, editable = false, onChange }: ArchitectureFlowProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const toast = useToast();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // 编辑模式状态
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalArchitecture, setOriginalArchitecture] = useState<ArchitectureJson | null>(null);
 
   // 数据转换与布局计算
   const { initialNodes, initialEdges } = useMemo<TransformedData>(
@@ -183,6 +195,38 @@ export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
       }
     }
   }, [initialNodes, initialEdges, setNodes, setEdges, rfInstance]);
+
+  // 进入编辑模式
+  const handleEnterEditMode = useCallback(() => {
+    if (!architecture) return;
+    setOriginalArchitecture(architecture);
+    setIsEditing(true);
+    toast.info('已进入编辑模式');
+  }, [architecture, toast]);
+
+  // 保存编辑
+  const handleSaveEdit = useCallback(() => {
+    if (!originalArchitecture || !onChange) return;
+
+    const updatedArchitecture = flowToArchitecture(nodes, edges, originalArchitecture);
+    onChange(updatedArchitecture);
+    setIsEditing(false);
+    setOriginalArchitecture(null);
+    toast.success('架构已更新');
+  }, [nodes, edges, originalArchitecture, onChange, toast]);
+
+  // 取消编辑
+  const handleCancelEdit = useCallback(() => {
+    if (!originalArchitecture) return;
+
+    // 恢复原始数据
+    const { initialNodes: restoredNodes, initialEdges: restoredEdges } = transformArchitectureToFlow(originalArchitecture);
+    setNodes(restoredNodes);
+    setEdges(restoredEdges);
+    setIsEditing(false);
+    setOriginalArchitecture(null);
+    toast.info('已取消编辑');
+  }, [originalArchitecture, setNodes, setEdges, toast]);
 
   // 导出 PNG
   const handleExportImage = useCallback(async () => {
@@ -298,23 +342,55 @@ export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
     <div ref={reactFlowWrapper} className={styles.container}>
       {/* 工具栏 */}
       <div className={`export-toolbar ${styles.toolbar}`}>
-        <button
-          onClick={handleExportImage}
-          className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
-        >
-          下载 PNG
-        </button>
-        <button
-          onClick={handleExportJson}
-          className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
-        >
-          复制 JSON
-        </button>
+        {isEditing ? (
+          // 编辑模式工具栏
+          <>
+            <button
+              onClick={handleSaveEdit}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
+            >
+              保存
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
+            >
+              取消
+            </button>
+          </>
+        ) : (
+          // 查看模式工具栏
+          <>
+            {editable && (
+              <button
+                onClick={handleEnterEditMode}
+                className={`${styles.toolbarButton} ${styles.toolbarButtonEdit}`}
+              >
+                编辑
+              </button>
+            )}
+            <button
+              onClick={handleExportImage}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
+            >
+              下载 PNG
+            </button>
+            <button
+              onClick={handleExportJson}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
+            >
+              复制 JSON
+            </button>
+          </>
+        )}
       </div>
 
       {/* 架构标题 */}
       <div className={styles.titlePanel}>
-        <div className={styles.titleText}>{architecture.title}</div>
+        <div className={styles.titleText}>
+          {architecture.title}
+          {isEditing && <span className={styles.editingBadge}>编辑中</span>}
+        </div>
         {architecture.style && (
           <div className={styles.styleText}>架构风格: {architecture.style}</div>
         )}
@@ -323,15 +399,15 @@ export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={isEditing ? onNodesChange : undefined}
+        onEdgesChange={isEditing ? onEdgesChange : undefined}
         onInit={setRfInstance}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         attributionPosition="bottom-left"
         defaultEdgeOptions={{ type: 'smoothstep' }}
-        nodesConnectable={false}
-        elementsSelectable={false}
+        nodesConnectable={isEditing}
+        elementsSelectable={isEditing}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -339,15 +415,7 @@ export function ArchitectureFlow({ architecture }: ArchitectureFlowProps) {
           size={1.5}
           color="rgba(255, 140, 66, 0.1)"
         />
-        <Controls showInteractive={false} />
-        <MiniMap
-          nodeStrokeColor={(n) =>
-            COMPONENT_COLORS[n.data?.type as string] || '#555'
-          }
-          maskColor="rgba(240, 240, 240, 0.6)"
-          zoomable
-          pannable
-        />
+        <Controls showInteractive={isEditing} />
       </ReactFlow>
     </div>
   );

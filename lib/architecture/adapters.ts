@@ -1,5 +1,6 @@
-﻿import type { ArchitectureJson, WbsGraph } from '@/core/types';
+﻿import type { ArchitectureJson, ArchitectureComponent, ArchitectureConnection, ArchitectureLayer, ArchitectureComponentType, WbsGraph } from '@/core/types';
 import type { FlowchartGraph, FlowchartNode, FlowchartEdge } from '@/core/plugins/taskFlow/schema';
+import type { Node, Edge } from '@xyflow/react';
 
 const WBS_TYPE_BY_LAYER: Record<ArchitectureJson['components'][number]['layer'], WbsGraph['nodes'][number]['type']> = {
   presentation: 'goal',
@@ -146,6 +147,101 @@ export function architectureToTaskFlowView(architecture: ArchitectureJson): Flow
       removedNodeIds: architecture.updates.removedComponentIds,
       addedEdgeIds: architecture.updates.addedConnectionIds,
       removedEdgeIds: architecture.updates.removedConnectionIds,
+    },
+  };
+}
+
+// ============================================================================
+// 反向转换：React Flow → ArchitectureJson
+// ============================================================================
+
+/** React Flow 节点数据类型 */
+interface ArchitectureNodeData {
+  label?: React.ReactNode;
+  type?: ArchitectureComponentType;
+  layer?: ArchitectureLayer;
+  name?: string;
+  description?: string;
+  technology?: string;
+}
+
+/**
+ * 从 React Flow 节点和边转换回 ArchitectureJson
+ *
+ * @param nodes - React Flow 节点数组
+ * @param edges - React Flow 边数组
+ * @param originalArchitecture - 原始架构数据（用于保留非编辑字段如 techStack、decisions）
+ * @returns 更新后的 ArchitectureJson
+ */
+export function flowToArchitecture(
+  nodes: Node[],
+  edges: Edge[],
+  originalArchitecture: ArchitectureJson,
+): ArchitectureJson {
+  // 转换节点 → 组件
+  const components: ArchitectureComponent[] = nodes.map((node) => {
+    const data = node.data as ArchitectureNodeData;
+    const originalComponent = originalArchitecture.components.find((c) => c.id === node.id);
+
+    return {
+      id: node.id,
+      name: typeof data.name === 'string' ? data.name : (originalComponent?.name ?? node.id),
+      type: data.type ?? originalComponent?.type ?? 'backend',
+      layer: data.layer ?? originalComponent?.layer ?? 'application',
+      description: data.description ?? originalComponent?.description,
+      technology: data.technology ?? originalComponent?.technology,
+      metadata: originalComponent?.metadata,
+    };
+  });
+
+  // 转换边 → 连接
+  const connections: ArchitectureConnection[] = edges.map((edge) => {
+    const originalConnection = originalArchitecture.connections.find(
+      (c) => c.id === edge.id || (c.from === edge.source && c.to === edge.target),
+    );
+
+    return {
+      id: edge.id,
+      from: edge.source,
+      to: edge.target,
+      type: (edge.data?.type as ArchitectureConnection['type']) ?? originalConnection?.type ?? 'http',
+      label: edge.label?.toString() ?? originalConnection?.label,
+      description: originalConnection?.description,
+    };
+  });
+
+  // 计算变更追踪
+  const originalComponentIds = new Set(originalArchitecture.components.map((c) => c.id));
+  const newComponentIds = new Set(components.map((c) => c.id));
+  const originalConnectionIds = new Set(originalArchitecture.connections.map((c) => c.id));
+
+  const addedComponentIds = components.filter((c) => !originalComponentIds.has(c.id)).map((c) => c.id);
+  const removedComponentIds = originalArchitecture.components.filter((c) => !newComponentIds.has(c.id)).map((c) => c.id);
+  const updatedComponentIds = components.filter((c) => {
+    if (!originalComponentIds.has(c.id)) return false;
+    const original = originalArchitecture.components.find((o) => o.id === c.id);
+    return original && (
+      original.name !== c.name ||
+      original.type !== c.type ||
+      original.layer !== c.layer ||
+      original.description !== c.description ||
+      original.technology !== c.technology
+    );
+  }).map((c) => c.id);
+
+  const addedConnectionIds = connections.filter((c) => !originalConnectionIds.has(c.id)).map((c) => c.id);
+  const removedConnectionIds = originalArchitecture.connections.filter((c) => !connections.some((nc) => nc.id === c.id)).map((c) => c.id);
+
+  return {
+    ...originalArchitecture,
+    components,
+    connections,
+    updates: {
+      addedComponentIds,
+      updatedComponentIds,
+      removedComponentIds,
+      addedConnectionIds,
+      removedConnectionIds,
     },
   };
 }

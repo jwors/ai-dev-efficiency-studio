@@ -153,6 +153,17 @@ export default function ArchitectPluginPage() {
     return `${architecture.components.length} 个组件 · ${architecture.techStack.length} 项技术栈`;
   }, [activeView, architecture, taskFlowView, wbsView]);
 
+  // 处理架构编辑更新
+  function handleArchitectureChange(updatedArchitecture: ArchitectureJson) {
+    if (!result) return;
+    // 更新本地状态
+    setResult({
+      ...result,
+      architecture: updatedArchitecture,
+    });
+    // TODO: 可选 - 持久化到后端
+  }
+
   function renderActiveView() {
     if (activeView === 'wbs') {
       return <WbsFlow wbs={wbsView} />;
@@ -164,7 +175,11 @@ export default function ArchitectPluginPage() {
 
     return (
       <div className="flow-wrap">
-        <ArchitectureFlow architecture={architecture} />
+        <ArchitectureFlow
+          architecture={architecture}
+          editable={true}
+          onChange={handleArchitectureChange}
+        />
       </div>
     );
   }
