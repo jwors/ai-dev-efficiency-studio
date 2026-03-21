@@ -9,6 +9,11 @@ import { wbsPrompt } from '../../prompts/wbsPrompt';
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 1200;
 
+/**
+ * 预览原始文本，移除多余空白并截断。
+ * @param raw - 原始文本
+ * @returns 预览字符串
+ */
 function previewRawText(raw: string): string {
   return raw.replace(/\s+/g, ' ').slice(0, 240);
 }
@@ -57,6 +62,12 @@ const EDGE_TYPE_MAP: Record<string, WbsGraph['edges'][number]['type']> = {
   prerequisite: 'dependency',
 };
 
+/**
+ * 将未知值标准化为字符串数组。
+ * 支持数组和逗号/换行分隔的字符串。
+ * @param value - 待标准化的值
+ * @returns 标准化后的字符串数组
+ */
 function normalizeStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -74,6 +85,11 @@ function normalizeStringArray(value: unknown): string[] {
   return [];
 }
 
+/**
+ * 将未知值标准化为 WBS 节点类型。
+ * @param value - 待标准化的值
+ * @returns WBS 节点类型（goal、milestone、task、subtask）
+ */
 function normalizeNodeType(value: unknown): WbsGraph['nodes'][number]['type'] {
   if (typeof value !== 'string') {
     return 'task';
@@ -82,6 +98,11 @@ function normalizeNodeType(value: unknown): WbsGraph['nodes'][number]['type'] {
   return NODE_TYPE_MAP[value.trim().toLowerCase()] ?? 'task';
 }
 
+/**
+ * 将未知值标准化为 WBS 节点状态。
+ * @param value - 待标准化的值
+ * @returns WBS 节点状态（todo、doing、done、blocked）
+ */
 function normalizeNodeStatus(value: unknown): WbsGraph['nodes'][number]['status'] {
   if (typeof value !== 'string') {
     return 'todo';
@@ -90,6 +111,11 @@ function normalizeNodeStatus(value: unknown): WbsGraph['nodes'][number]['status'
   return NODE_STATUS_MAP[value.trim().toLowerCase()] ?? 'todo';
 }
 
+/**
+ * 将未知值标准化为 WBS 边类型。
+ * @param value - 待标准化的值
+ * @returns WBS 边类型（parent、dependency）
+ */
 function normalizeEdgeType(value: unknown): WbsGraph['edges'][number]['type'] {
   if (typeof value !== 'string') {
     return 'parent';
@@ -98,6 +124,12 @@ function normalizeEdgeType(value: unknown): WbsGraph['edges'][number]['type'] {
   return EDGE_TYPE_MAP[value.trim().toLowerCase()] ?? 'parent';
 }
 
+/**
+ * 标准化 WBS 输出数据。
+ * 处理 LLM 返回的 JSON，统一字段名称和格式。
+ * @param json - LLM 返回的原始 JSON
+ * @returns 标准化后的 WBS 数据对象
+ */
 function normalizeWbsOutput(json: unknown): unknown {
   if (!json || typeof json !== 'object') {
     return json;
@@ -202,6 +234,11 @@ function normalizeWbsOutput(json: unknown): unknown {
 
 import { ZodError } from 'zod';
 
+/**
+ * 格式化 Zod 验证错误信息。
+ * @param error - Zod 验证错误对象
+ * @returns 格式化后的错误字符串
+ */
 function formatZodIssues(error: ZodError): string {
   return error.issues
     .slice(0, 5)

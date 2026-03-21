@@ -66,7 +66,11 @@ export function getLayoutedArchitecture(
 }
 
 /**
- * 按架构层分组计算布局
+ * 按架构层分组计算布局。
+ * 组件按 presentation、application、domain、infrastructure、data 的顺序从上到下排列。
+ * @param components - 架构组件数组
+ * @param connections - 架构连接数组
+ * @returns 包含位置信息的布局后组件和连接
  */
 export function getLayeredLayout(
   components: ArchitectureComponent[],

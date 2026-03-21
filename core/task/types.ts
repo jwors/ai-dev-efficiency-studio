@@ -1,6 +1,10 @@
 import 'server-only';
 import {z} from 'zod'
 
+/**
+ * 任务动作类型枚举。
+ * 定义所有支持的任务动作类型。
+ */
 export const Action = z.enum([
   'log',
   'emit',
@@ -12,6 +16,10 @@ export const Action = z.enum([
   'artifact.export',
 ]);
 
+/**
+ * 日志任务类型。
+ * 用于记录日志消息。
+ */
 export type LogTask = {
   type: 'log';
   params: {
@@ -19,6 +27,10 @@ export type LogTask = {
   };
 };
 
+/**
+ * 发送任务类型。
+ * 用于向用户发送内容。
+ */
 export type EmitTask = {
   type: 'emit';
   params: {
@@ -26,6 +38,10 @@ export type EmitTask = {
   };
 };
 
+/**
+ * HTTP 请求任务类型。
+ * 用于发送 HTTP 请求。
+ */
 export type HttpTask = {
   type: 'http';
   params: {
@@ -36,6 +52,10 @@ export type HttpTask = {
   };
 };
 
+/**
+ * 导出流程图任务类型。
+ * 用于导出流程图为图片文件。
+ */
 export type ExportFlowTask = {
   type: 'export_flow',
   params?: {
@@ -44,6 +64,10 @@ export type ExportFlowTask = {
   };
 }
 
+/**
+ * 网页搜索任务类型。
+ * 用于在互联网上搜索信息。
+ */
 export type WebSearchTask = {
   type: 'web.search';
   params: {
@@ -53,6 +77,10 @@ export type WebSearchTask = {
   };
 };
 
+/**
+ * 网页抓取任务类型。
+ * 用于获取网页内容。
+ */
 export type WebFetchTask = {
   type: 'web.fetch';
   params: {
@@ -60,6 +88,10 @@ export type WebFetchTask = {
   };
 };
 
+/**
+ * 文件写入任务类型。
+ * 用于将内容写入文件。
+ */
 export type FileWriteTask = {
   type: 'file.write';
   params: {
@@ -68,6 +100,10 @@ export type FileWriteTask = {
   };
 };
 
+/**
+ * 制品导出任务类型。
+ * 用于导出制品供用户下载。
+ */
 export type ArtifactExportTask = {
   type: 'artifact.export';
   params: {
@@ -76,6 +112,10 @@ export type ArtifactExportTask = {
   };
 };
 
+/**
+ * 任务类型联合。
+ * 汇总所有可能的任务类型。
+ */
 export type Task =
   | LogTask
   | EmitTask

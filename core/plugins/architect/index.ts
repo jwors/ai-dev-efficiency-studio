@@ -11,27 +11,53 @@ import { ZodError } from 'zod';
 const MAX_PROMPT_TOKENS = 8000;
 const RESERVED_OUTPUT = 2000;
 
+/**
+ * 预览原始文本，移除多余空白并截断。
+ * @param raw - 原始文本
+ * @returns 预览字符串
+ */
 function previewRawText(raw: string): string {
   return raw.replace(/\s+/g, ' ').slice(0, 240);
 }
 
 // ============ Normalization Functions ============
 
+/**
+ * 将未知值标准化为架构组件类型。
+ * @param value - 待标准化的值
+ * @returns 架构组件类型
+ */
 function normalizeComponentType(value: unknown): ArchitectureJson['components'][number]['type'] {
   if (typeof value !== 'string') return 'backend';
   return COMPONENT_TYPE_MAP[value.trim().toLowerCase()] ?? 'backend';
 }
 
+/**
+ * 将未知值标准化为架构层名称。
+ * @param value - 待标准化的值
+ * @returns 架构层名称
+ */
 function normalizeLayer(value: unknown): ArchitectureJson['components'][number]['layer'] {
   if (typeof value !== 'string') return 'application';
   return LAYER_MAP[value.trim().toLowerCase()] ?? 'application';
 }
 
+/**
+ * 将未知值标准化为架构连接类型。
+ * @param value - 待标准化的值
+ * @returns 架构连接类型
+ */
 function normalizeConnectionType(value: unknown): ArchitectureJson['connections'][number]['type'] {
   if (typeof value !== 'string') return 'http';
   return CONNECTION_TYPE_MAP[value.trim().toLowerCase()] ?? 'http';
 }
 
+/**
+ * 将未知值标准化为字符串数组。
+ * 支持数组和逗号/换行分隔的字符串。
+ * @param value - 待标准化的值
+ * @returns 标准化后的字符串数组
+ */
 function normalizeStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -47,6 +73,11 @@ function normalizeStringArray(value: unknown): string[] {
   return [];
 }
 
+/**
+ * 标准化架构层数组。
+ * @param layers - 待标准化的层数据
+ * @returns 标准化后的架构层数组
+ */
 function normalizeLayers(layers: unknown): ArchitectureJson['layers'] {
   if (!Array.isArray(layers)) {
     return [
@@ -68,6 +99,11 @@ function normalizeLayers(layers: unknown): ArchitectureJson['layers'] {
     .filter((l): l is NonNullable<typeof l> => l !== null);
 }
 
+/**
+ * 标准化架构组件数组。
+ * @param components - 待标准化的组件数据
+ * @returns 标准化后的架构组件数组
+ */
 function normalizeComponents(components: unknown): ArchitectureJson['components'] {
   if (!Array.isArray(components)) return [];
 
@@ -101,6 +137,11 @@ function normalizeComponents(components: unknown): ArchitectureJson['components'
     .filter((c): c is NonNullable<typeof c> => c !== null);
 }
 
+/**
+ * 标准化架构连接数组。
+ * @param connections - 待标准化的连接数据
+ * @returns 标准化后的架构连接数组
+ */
 function normalizeConnections(connections: unknown): ArchitectureJson['connections'] {
   if (!Array.isArray(connections)) return [];
 
@@ -142,6 +183,11 @@ function normalizeConnections(connections: unknown): ArchitectureJson['connectio
     .filter((c): c is NonNullable<typeof c> => c !== null);
 }
 
+/**
+ * 标准化技术栈数组。
+ * @param techStack - 待标准化的技术栈数据
+ * @returns 标准化后的技术栈数组
+ */
 function normalizeTechStack(techStack: unknown): ArchitectureJson['techStack'] {
   if (!Array.isArray(techStack)) return [];
 
@@ -159,6 +205,11 @@ function normalizeTechStack(techStack: unknown): ArchitectureJson['techStack'] {
     .filter((t): t is NonNullable<typeof t> => t !== null && t.name !== '');
 }
 
+/**
+ * 标准化架构决策数组。
+ * @param decisions - 待标准化的决策数据
+ * @returns 标准化后的架构决策数组，无有效数据时返回 undefined
+ */
 function normalizeDecisions(decisions: unknown): ArchitectureJson['decisions'] | undefined {
   if (!Array.isArray(decisions)) return undefined;
 
@@ -178,6 +229,11 @@ function normalizeDecisions(decisions: unknown): ArchitectureJson['decisions'] |
   return result.length > 0 ? result : undefined;
 }
 
+/**
+ * 标准化架构更新追踪对象。
+ * @param updates - 待标准化的更新数据
+ * @returns 标准化后的更新追踪对象
+ */
 function normalizeUpdates(
   updates: unknown,
 ): ArchitectureJson['updates'] {
@@ -195,6 +251,12 @@ function normalizeUpdates(
   };
 }
 
+/**
+ * 标准化架构输出数据。
+ * 处理 LLM 返回的 JSON，统一字段名称和格式。
+ * @param json - LLM 返回的原始 JSON
+ * @returns 标准化后的架构数据对象
+ */
 function normalizeArchitectureOutput(json: unknown): unknown {
   if (!json || typeof json !== 'object') return json;
 
@@ -230,6 +292,11 @@ function normalizeArchitectureOutput(json: unknown): unknown {
 
 // ============ Error Formatting ============
 
+/**
+ * 格式化 Zod 验证错误信息。
+ * @param error - Zod 验证错误对象
+ * @returns 格式化后的错误字符串
+ */
 function formatZodIssues(error: ZodError): string {
   return error.issues
     .slice(0, 5)

@@ -11,6 +11,10 @@ import { sanitizeHistoryForPlanner } from '../../planner/sanitize';
  * 2. 架构设计需考虑：可扩展性、可维护性、安全性、性能
  * 3. 技术选型需给出明确理由
  * 4. 组件 ID 必须稳定可复用
+ *
+ * @param input - 用户输入（需求描述）
+ * @param state - 会话状态
+ * @returns 完整的消息数组
  */
 export function architectPrompt(input: string, state: SessionState): Message[] {
   const messages: Message[] = [

@@ -3,15 +3,31 @@ import 'server-only';
 import { LLMProvider, LLMProviderName } from '../types';
 import type { LLMRawResponse, Message } from '@/core/types';
 
+/**
+ * 从提示消息中获取最后一条用户消息。
+ * @param prompt - 消息数组
+ * @returns 最后一条用户消息的内容，不存在时返回默认字符串
+ */
 function getLastUserMessage(prompt: Message[]): string {
   const message = [...prompt].reverse().find((item) => item.role === 'user');
   return message?.content?.trim() || 'mock task';
 }
 
+/**
+ * 检查消息数组中是否包含特定标记。
+ * @param prompt - 消息数组
+ * @param marker - 要查找的标记字符串
+ * @returns 如果包含标记返回 true
+ */
 function includesSchema(prompt: Message[], marker: string): boolean {
   return prompt.some((item) => item.content.includes(marker));
 }
 
+/**
+ * 构建模拟 Plan 响应数据。
+ * @param input - 用户输入
+ * @returns 模拟的 Plan 对象
+ */
 function buildPlanMock(input: string) {
   return {
     goal: input,
@@ -28,6 +44,11 @@ function buildPlanMock(input: string) {
   };
 }
 
+/**
+ * 构建模拟 WBS 响应数据。
+ * @param input - 用户输入
+ * @returns 模拟的 WBS 图对象
+ */
 function buildWbsMock(input: string) {
   return {
     version: 'wbs.v1' as const,
@@ -74,6 +95,11 @@ function buildWbsMock(input: string) {
   };
 }
 
+/**
+ * 构建模拟流程图响应数据。
+ * @param input - 用户输入
+ * @returns 模拟的流程图对象
+ */
 function buildFlowchartMock(input: string) {
   return {
     version: 'flowchart.v1' as const,
@@ -115,6 +141,11 @@ function buildFlowchartMock(input: string) {
   };
 }
 
+/**
+ * 构建模拟架构图响应数据。
+ * @param input - 用户输入
+ * @returns 模拟的架构图对象
+ */
 function buildArchitectureMock(input: string) {
   return {
     version: 'arch.v1' as const,
@@ -210,9 +241,19 @@ function buildArchitectureMock(input: string) {
   };
 }
 
+/**
+ * Mock LLM 提供者。
+ * 用于测试和开发环境，根据提示消息类型返回预定义的模拟响应。
+ */
 export class MockProvider implements LLMProvider {
   name: LLMProviderName = 'mock';
 
+  /**
+   * 调用 Mock 提供者生成响应。
+   * 根据消息中的 Schema 标记返回对应的模拟数据。
+   * @param prompt - 消息数组
+   * @returns 模拟的 LLM 响应
+   */
   async call(prompt: Message[]): Promise<LLMRawResponse> {
     const input = getLastUserMessage(prompt);
 

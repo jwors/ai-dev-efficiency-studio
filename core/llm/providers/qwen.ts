@@ -19,14 +19,30 @@ interface QwenApiResponse {
 	};
 }
 
+/**
+ * 通义千问（Qwen）LLM 提供者。
+ * 通过阿里云 DashScope API 调用通义千问模型。
+ */
 export class QwenProvider implements LLMProvider {
 	name:LLMProviderName = 'qwen';
 
+	/**
+	 * 创建 Qwen 提供者实例。
+	 * @param apiKey - 阿里云 API Key
+	 * @param model - 模型名称，默认为 'qwen-plus'
+	 */
 	constructor(
 		private apiKey: string,
 		private model = 'qwen-plus'
 	) { }
 
+	/**
+	 * 调用通义千问 API 生成响应。
+	 * @param prompt - 消息数组
+	 * @param options - 调用选项（超时、请求 ID 等）
+	 * @returns LLM 原始响应
+	 * @throws LLMError 如果 API 调用失败或超时
+	 */
 	async call(prompt: Message[], options?: LLMCallOptions): Promise<LLMRawResponse> {
 		if (!this.apiKey) {
 			throw new LLMError(

@@ -3,6 +3,13 @@ import type { Message, SessionState } from '@/core/types';
 import { buildObservationDigest } from '../agent/digest';
 import { sanitizeHistoryForPlanner, sanitizePlannerContextText } from '../planner/sanitize';
 
+/**
+ * 构建规划器插件的提示消息数组。
+ * 包含系统提示、会话摘要、观察摘要和历史记录。
+ * @param input - 用户输入
+ * @param opts - 会话状态
+ * @returns 完整的消息数组
+ */
 export function plannerPrompt(input: string, opts: SessionState): Message[] {
   const messages: Message[] = [
     {

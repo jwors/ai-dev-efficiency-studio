@@ -23,6 +23,12 @@ const FLOW_NODE_TYPE_BY_COMPONENT: Record<ArchitectureJson['components'][number]
   'external-api': 'end',
 };
 
+/**
+ * 按架构层顺序对组件进行排序。
+ * 排序优先级：presentation > application > domain > infrastructure > data。
+ * @param architecture - 架构数据对象
+ * @returns 排序后的组件数组
+ */
 function sortComponentsForViews(architecture: ArchitectureJson) {
   const layerOrder: Record<ArchitectureJson['components'][number]['layer'], number> = {
     presentation: 0,
@@ -39,15 +45,34 @@ function sortComponentsForViews(architecture: ArchitectureJson) {
   });
 }
 
+/**
+ * 将架构组件转换为流程图节点状态。
+ * 如果组件存在风险（如外部 API 或功能过多），返回 blocked 状态。
+ * @param component - 架构组件
+ * @returns 流程图节点状态
+ */
 function toFlowNodeStatus(component: ArchitectureJson['components'][number]): FlowchartNode['status'] {
   return architectureComponentHasRisk(component) ? 'blocked' : 'todo';
 }
 
+/**
+ * 判断架构组件是否存在风险。
+ * 外部 API 或功能数量超过 5 个的组件被视为高风险。
+ * @param component - 架构组件
+ * @returns 如果存在风险返回 true
+ */
 function architectureComponentHasRisk(component: ArchitectureJson['components'][number]): boolean {
   const featureCount = component.metadata?.features?.length ?? 0;
   return component.type === 'external-api' || featureCount >= 5;
 }
 
+/**
+ * 查找组件的父节点 ID。
+ * 根据架构层顺序，返回上层组件的 ID。
+ * @param component - 当前组件
+ * @param ordered - 已排序的组件数组
+ * @returns 父节点 ID，没有时返回 null
+ */
 function findParentId(
   component: ArchitectureJson['components'][number],
   ordered: ArchitectureJson['components'],
@@ -74,6 +99,11 @@ function findParentId(
   return ordered[0]?.id ?? null;
 }
 
+/**
+ * 将架构数据转换为 WBS 视图格式。
+ * @param architecture - 架构数据对象
+ * @returns WBS 图数据
+ */
 export function architectureToWbsView(architecture: ArchitectureJson): WbsGraph {
   const ordered = sortComponentsForViews(architecture);
 
@@ -116,6 +146,11 @@ export function architectureToWbsView(architecture: ArchitectureJson): WbsGraph 
   };
 }
 
+/**
+ * 将架构数据转换为任务流程图视图格式。
+ * @param architecture - 架构数据对象
+ * @returns 流程图数据
+ */
 export function architectureToTaskFlowView(architecture: ArchitectureJson): FlowchartGraph {
   const ordered = sortComponentsForViews(architecture);
 
