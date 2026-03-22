@@ -1,6 +1,6 @@
 ﻿# 架构规划插件可行性报告
 
-## 更新说明（基于当前代码复评，2026-03-20）
+## 更新说明（基于当前代码复评，2026-03-23）
 
 本报告最初从”新插件规划”角度出发，但结合当前仓库实现，`architect` 插件已经完成了 MVP 级落地，以下结论应作为阅读本报告的前置说明：
 
@@ -8,7 +8,7 @@
    - 当前仓库已经具备完整链路：`architect` 插件、`/api/architect` 路由、页面入口、架构图可视化组件、会话态保存、Schema 校验与输出归一化。
    - 因此，报告中”开发一个新插件”的表述已经过时，更准确的说法应为：**现有插件已完成基础落地，后续重点是增强与整合**。
 
-2. **当前真实能力范围：已完成架构生成、展示与编辑模式框架**
+2. **当前真实能力范围：已完成架构生成、展示与完整编辑功能**
    - 已完成：
      - 根据需求生成 `ArchitectureJson`
      - 输出组件、连接、技术栈、关键决策
@@ -20,21 +20,24 @@
        - 编辑/保存/取消流程
        - 节点拖拽
        - 变更追踪
+     - **节点编辑（Phase 2.2 已完成）**
+       - 双击节点编辑名称
+       - 右键菜单删除节点
+       - 新增节点表单
    - 进行中：
-     - 节点文本编辑、新增/删除节点
-     - 连线编辑
+     - 连线编辑（Phase 2.3）
    - 未完成：
      - 与 WBS / TaskFlow 的统一 `ArchitectGraph` 模型
      - 原生任务语义建模（当前仅完成只读视图投影，不复用 plugin 逻辑）
      - 编辑结果持久化与冲突处理
 
-3. **报告中的“高复用”判断基本成立，但“直接复用”表述偏乐观**
+3. **报告中的”高复用”判断基本成立，但”直接复用”表述偏乐观**
    - `@xyflow/react`、LLM 封装、Zod 校验、会话管理等基础设施确实可复用。
-   - 但 WBS 与 TaskFlow 当前仍是独立插件，若要形成统一的“架构 + 任务 + 流程”一体化图模型，属于新增一层编排，不是简单拼接已有代码。
+   - 但 WBS 与 TaskFlow 当前仍是独立插件，若要形成统一的”架构 + 任务 + 流程”一体化图模型，属于新增一层编排，不是简单拼接已有代码。
 
 4. **工期评估需要按目标拆分**
-   - 若目标仅为“架构图生成插件 MVP”，该目标实际上已经完成。
-   - 若目标是报告中描述的完整形态，即“统一模型 + 任务拆解 + 流程图联动 + 在线编辑”，则 `13-18` 天偏乐观，更合理的预期应按 3 个阶段推进：
+   - 若目标仅为”架构图生成插件 MVP”，该目标实际上已经完成。
+   - 若目标是报告中描述的完整形态，即”统一模型 + 任务拆解 + 流程图联动 + 在线编辑”，则 `13-18` 天偏乐观，更合理的预期应按 3 个阶段推进：
      - Phase A：稳定现有架构插件输出质量
      - Phase B：打通任务拆解 / 流程联动
      - Phase C：补齐在线编辑、持久化和冲突处理
@@ -420,7 +423,7 @@ const [selectedNode, setSelectedNode] = useState<ArchitectNode | null>(null);
 | 点击"取消"恢复原始数据 | ✅ |
 | 变更追踪 | ✅ |
 
-#### 阶段 2.2: 节点编辑 - ✅ 已完成（2026-03-22）
+#### 阶段 2.2: 节点编辑 - ✅ 已完成（2026-03-23）
 
 **实现内容：**
 - 双击节点进入文本编辑（弹出内联编辑框，Enter 确认，Esc 取消）
@@ -447,11 +450,176 @@ const [selectedNode, setSelectedNode] = useState<ArchitectNode | null>(null);
 
 #### 阶段 2.3: 连线编辑 - 待实施
 
-```
-- 从节点拖出创建新连线
+**目标功能：**
+- 从节点 Handle 拖出创建新连线
 - 点击连线选中 + 删除
-- 连线类型选择（http、websocket 等）
+- 连线类型选择（http、websocket、grpc 等）
+
+**技术方案：**
+
+##### 1. 创建新连线（拖拽连线）
+
+React Flow 提供了 `onConnect` 回调，当用户从源节点 Handle 拖拽到目标节点 Handle 时触发。
+
+```typescript
+// ArchitectureFlow.tsx
+const handleConnect = useCallback(
+  (connection: Connection) => {
+    if (!isEditing) return;
+
+    // 生成新连线 ID
+    const newEdgeId = `conn-${connection.source}-${connection.target}`;
+
+    // 检查是否已存在相同连线
+    const exists = edges.some(
+      (e) => e.source === connection.source && e.target === connection.target
+    );
+    if (exists) {
+      toast.warning('该连线已存在');
+      return;
+    }
+
+    // 创建新边，默认类型为 http
+    const newEdge: Edge = {
+      id: newEdgeId,
+      source: connection.source,
+      target: connection.target,
+      type: 'smoothstep',
+      label: 'http',
+      animated: true,
+      style: { stroke: '#3b82f6', strokeWidth: 2 },
+      data: { connectionType: 'http' },
+    };
+
+    setEdges((eds) => addEdge(newEdge, eds));
+    toast.success('连线已创建');
+  },
+  [isEditing, edges, setEdges, toast]
+);
+
+// ReactFlow 组件添加 onConnect
+<ReactFlow
+  onConnect={isEditing ? handleConnect : undefined}
+  // ...其他属性
+/>
 ```
+
+##### 2. 选中与删除连线
+
+React Flow 支持边的选中，通过 `onEdgesChange` 已可选中。需要添加：
+- 选中状态的视觉反馈
+- 删除选中连线的快捷键（Delete/Backspace）
+- 右键菜单删除连线
+
+```typescript
+// 选中边状态
+const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+
+// 边点击选中
+const handleEdgeClick = useCallback(
+  (_event: React.MouseEvent, edge: Edge) => {
+    if (!isEditing) return;
+    setSelectedEdgeId(edge.id);
+  },
+  [isEditing]
+);
+
+// 键盘删除
+useEffect(() => {
+  if (!isEditing || !selectedEdgeId) return;
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      setEdges((eds) => eds.filter((e) => e.id !== selectedEdgeId));
+      setSelectedEdgeId(null);
+      toast.success('连线已删除');
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [isEditing, selectedEdgeId, setEdges, toast]);
+
+// 边右键菜单
+const handleEdgeContextMenu = useCallback(
+  (event: React.MouseEvent, edge: Edge) => {
+    if (!isEditing) return;
+    event.preventDefault();
+    setContextMenu({ type: 'edge', id: edge.id, x: event.clientX, y: event.clientY });
+  },
+  [isEditing]
+);
+```
+
+##### 3. 连线类型选择
+
+通过弹窗或下拉菜单让用户选择连线类型：
+
+```typescript
+// 连线类型选项（来自 constants.ts）
+const CONNECTION_TYPE_OPTIONS = [
+  { value: 'http', label: 'HTTP', color: '#3b82f6' },
+  { value: 'websocket', label: 'WebSocket', color: '#10b981' },
+  { value: 'tcp', label: 'TCP', color: '#f59e0b' },
+  { value: 'grpc', label: 'gRPC', color: '#8b5cf6' },
+  { value: 'database', label: 'Database', color: '#ef4444' },
+  { value: 'cache', label: 'Cache', color: '#ec4899' },
+  { value: 'queue', label: 'Queue', color: '#06b6d4' },
+  { value: 'file', label: 'File', color: '#6366f1' },
+];
+
+// 修改连线类型
+const handleChangeConnectionType = useCallback(
+  (edgeId: string, newType: string) => {
+    const style = CONNECTION_STYLES[newType] || { stroke: '#94a3b8' };
+    const isAnimated = ANIMATED_CONNECTION_TYPES.includes(newType);
+
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.id !== edgeId) return edge;
+        return {
+          ...edge,
+          label: newType,
+          animated: isAnimated,
+          style: { stroke: style.stroke, strokeWidth: 2, strokeDasharray: style.strokeDasharray },
+          data: { ...edge.data, connectionType: newType },
+        };
+      })
+    );
+    toast.success('连线类型已更新');
+  },
+  [setEdges, toast]
+);
+```
+
+##### 4. 数据同步
+
+连线变更通过 `flowToArchitecture()` 自动同步：
+
+```typescript
+// adapters.ts - 已有逻辑，确保 edge.data.connectionType 正确传递
+const connections: ArchitectureConnection[] = edges.map((edge) => ({
+  id: edge.id,
+  from: edge.source,
+  to: edge.target,
+  type: (edge.data?.connectionType as ArchitectureConnection['type']) ?? 'http',
+  label: edge.label?.toString(),
+}));
+```
+
+**修改文件清单：**
+
+| 文件 | 变更说明 |
+|------|----------|
+| `app/components/ArchitectureFlow.tsx` | 添加 onConnect、边选中/删除、连线类型选择 |
+| `app/components/ArchitectureFlow.module.css` | 选中边样式、连线类型选择器样式 |
+| `lib/architecture/constants.ts` | 新增 CONNECTION_TYPE_OPTIONS |
+| `lib/architecture/adapters.ts` | 确保 edge.data.connectionType 正确映射 |
+
+**实施顺序：**
+1. Step 1：实现拖拽创建连线（最基础）
+2. Step 2：实现选中与删除连线
+3. Step 3：实现连线类型选择
 
 ### Phase 3: 增强功能 - 预计 3 天
 
