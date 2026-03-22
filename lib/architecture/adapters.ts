@@ -1,4 +1,5 @@
-﻿import type { ArchitectureJson, ArchitectureComponent, ArchitectureConnection, ArchitectureLayer, ArchitectureComponentType, WbsGraph } from '@/core/types';
+﻿import type React from 'react';
+import type { ArchitectureJson, ArchitectureComponent, ArchitectureConnection, ArchitectureLayer, ArchitectureComponentType, WbsGraph } from '@/core/types';
 import type { FlowchartGraph, FlowchartNode, FlowchartEdge } from '@/core/plugins/taskFlow/schema';
 import type { Node, Edge } from '@xyflow/react';
 
@@ -192,12 +193,12 @@ export function architectureToTaskFlowView(architecture: ArchitectureJson): Flow
 
 /** React Flow 节点数据类型 */
 interface ArchitectureNodeData {
-  label?: React.ReactNode;
+  name?: string;
   type?: ArchitectureComponentType;
   layer?: ArchitectureLayer;
-  name?: string;
   description?: string;
   technology?: string;
+  label?: React.ReactNode;
 }
 
 /**
@@ -220,7 +221,7 @@ export function flowToArchitecture(
 
     return {
       id: node.id,
-      name: typeof data.name === 'string' ? data.name : (originalComponent?.name ?? node.id),
+      name: data.name || originalComponent?.name || node.id,
       type: data.type ?? originalComponent?.type ?? 'backend',
       layer: data.layer ?? originalComponent?.layer ?? 'application',
       description: data.description ?? originalComponent?.description,

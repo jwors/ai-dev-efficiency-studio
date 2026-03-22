@@ -14,11 +14,15 @@ import {
   Edge,
   getNodesBounds,
   getViewportForBounds,
+  applyNodeChanges,
+  NodeChange,
+  Handle,
+  Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { toPng } from 'html-to-image';
 
-import type { ArchitectureJson } from '@/core/types';
+import type { ArchitectureJson, ArchitectureComponentType, ArchitectureLayer } from '@/core/types';
 import { getLayoutedArchitecture, type LayoutedComponent } from '@/lib/architecture/layout';
 import { flowToArchitecture } from '@/lib/architecture/adapters';
 import {
@@ -27,6 +31,13 @@ import {
   LAYER_ICONS,
   ANIMATED_CONNECTION_TYPES,
 } from '@/lib/architecture/constants';
+import {
+  COMPONENT_TYPE_OPTIONS,
+  ARCHITECTURE_LAYER_OPTIONS,
+  generateComponentId,
+  getDefaultPosition,
+  validateComponentName,
+} from '@/lib/architecture/utils';
 import { useToast } from './Toast';
 import styles from './ArchitectureFlow.module.css';
 
@@ -44,6 +55,48 @@ interface TransformedData {
   initialEdges: Edge[];
 }
 
+/** 节点数据类型 */
+interface ArchitectureNodeData {
+  name?: string;
+  type?: ArchitectureComponentType;
+  layer?: ArchitectureLayer;
+  description?: string;
+  technology?: string;
+  label?: React.ReactNode;
+}
+
+/**
+ * 自定义架构节点组件
+ * 动态渲染节点内容，支持编辑时实时更新
+ */
+function ArchitectureNodeComponent({ data }: { data: ArchitectureNodeData }) {
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className={styles.nodeHandle} />
+      <div className={styles.nodeLabel}>
+        <div className={styles.nodeLabelHeader}>
+          <span className={styles.nodeLabelIcon}>
+            {LAYER_ICONS[data.layer || 'domain'] || '📦'}
+          </span>
+          <span className={styles.nodeLabelName}>{data.name || '未命名'}</span>
+        </div>
+        {data.technology && (
+          <span className={styles.nodeLabelTechnology}>{data.technology}</span>
+        )}
+        {data.description && (
+          <span className={styles.nodeLabelDescription}>{data.description}</span>
+        )}
+      </div>
+      <Handle type="source" position={Position.Bottom} className={styles.nodeHandle} />
+    </>
+  );
+}
+
+/** 自定义节点类型映射 */
+const nodeTypes = {
+  architectureNode: ArchitectureNodeComponent,
+};
+
 /**
  * 将架构数据转换为 React Flow 节点
  */
@@ -54,27 +107,14 @@ function transformComponentToNode(
 
   return {
     id: comp.id,
-    type: 'default',
+    type: 'architectureNode',
     position: comp.position,
     data: {
-      label: (
-        <div className={styles.nodeLabel}>
-          <div className={styles.nodeLabelHeader}>
-            <span className={styles.nodeLabelIcon}>
-              {LAYER_ICONS[comp.layer] || '📦'}
-            </span>
-            <span className={styles.nodeLabelName}>{comp.name}</span>
-          </div>
-          {comp.technology && (
-            <span className={styles.nodeLabelTechnology}>{comp.technology}</span>
-          )}
-          {comp.description && (
-            <span className={styles.nodeLabelDescription}>{comp.description}</span>
-          )}
-        </div>
-      ),
+      name: comp.name,
       type: comp.type,
       layer: comp.layer,
+      description: comp.description,
+      technology: comp.technology,
     },
     style: {
       background: color,
@@ -176,6 +216,28 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   const [isEditing, setIsEditing] = useState(false);
   const [originalArchitecture, setOriginalArchitecture] = useState<ArchitectureJson | null>(null);
 
+  // 内联编辑状态（双击编辑节点名称）
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  // 右键菜单状态
+  const [contextMenu, setContextMenu] = useState<{
+    nodeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // 新增节点弹窗状态
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newNodeForm, setNewNodeForm] = useState({
+    name: '',
+    type: 'backend' as ArchitectureComponentType,
+    layer: 'application' as ArchitectureLayer,
+    description: '',
+    technology: '',
+  });
+
   // 数据转换与布局计算
   const { initialNodes, initialEdges } = useMemo<TransformedData>(
     () => transformArchitectureToFlow(architecture),
@@ -227,6 +289,168 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setOriginalArchitecture(null);
     toast.info('已取消编辑');
   }, [originalArchitecture, setNodes, setEdges, toast]);
+
+  // ========== 内联编辑（双击编辑节点名称）==========
+
+  // 双击节点进入编辑
+  const handleNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (!isEditing) return;
+
+      const nodeData = node.data as { name?: string };
+      setEditingNodeId(node.id);
+      setEditingValue(nodeData.name || node.id);
+    },
+    [isEditing]
+  );
+
+  // 编辑输入变更
+  const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingValue(e.target.value);
+  }, []);
+
+  // 提交编辑
+  const handleEditSubmit = useCallback(() => {
+    if (!editingNodeId) return;
+
+    const validation = validateComponentName(editingValue);
+    if (!validation.valid) {
+      toast.error(validation.error || '名称无效');
+      return;
+    }
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id !== editingNodeId) return node;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            name: editingValue.trim(),
+          },
+        };
+      })
+    );
+
+    setEditingNodeId(null);
+    setEditingValue('');
+    toast.success('节点名称已更新');
+  }, [editingNodeId, editingValue, setNodes, toast]);
+
+  // 取消编辑
+  const handleEditCancel = useCallback(() => {
+    setEditingNodeId(null);
+    setEditingValue('');
+  }, []);
+
+  // ========== 右键菜单（删除节点）==========
+
+  // 右键菜单显示
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      if (!isEditing) return;
+
+      event.preventDefault();
+      setContextMenu({
+        nodeId: node.id,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    [isEditing]
+  );
+
+  // 关闭右键菜单
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // 删除节点
+  const handleDeleteNode = useCallback(() => {
+    if (!contextMenu) return;
+
+    const nodeId = contextMenu.nodeId;
+
+    // 删除节点
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+
+    // 删除相关连线
+    setEdges((eds) =>
+      eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+    );
+
+    setContextMenu(null);
+    toast.success('节点已删除');
+  }, [contextMenu, setNodes, setEdges, toast]);
+
+  // ========== 新增节点 ==========
+
+  // 打开新增弹窗
+  const handleOpenAddModal = useCallback(() => {
+    setNewNodeForm({
+      name: '',
+      type: 'backend',
+      layer: 'application',
+      description: '',
+      technology: '',
+    });
+    setShowAddModal(true);
+  }, []);
+
+  // 关闭新增弹窗
+  const handleCloseAddModal = useCallback(() => {
+    setShowAddModal(false);
+  }, []);
+
+  // 表单字段变更
+  const handleFormChange = useCallback(
+    (field: keyof typeof newNodeForm, value: string) => {
+      setNewNodeForm((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    []
+  );
+
+  // 提交新增节点
+  const handleAddNode = useCallback(() => {
+    const validation = validateComponentName(newNodeForm.name);
+    if (!validation.valid) {
+      toast.error(validation.error || '名称无效');
+      return;
+    }
+
+    const existingIds = new Set(nodes.map((n) => n.id));
+    const newId = generateComponentId(newNodeForm.name, existingIds);
+    const position = getDefaultPosition(nodes);
+
+    const newNode: Node = {
+      id: newId,
+      type: 'architectureNode',
+      position,
+      data: {
+        name: newNodeForm.name.trim(),
+        type: newNodeForm.type,
+        layer: newNodeForm.layer,
+        description: newNodeForm.description || undefined,
+        technology: newNodeForm.technology || undefined,
+      },
+      style: {
+        background: COMPONENT_COLORS[newNodeForm.type] || COMPONENT_COLORS.default,
+        color: '#fff',
+        border: '2px solid rgba(255,255,255,0.3)',
+        borderRadius: '16px',
+        padding: '16px',
+        minWidth: '200px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    setShowAddModal(false);
+    toast.success('节点已添加');
+  }, [newNodeForm, nodes, setNodes, toast]);
 
   // 导出 PNG
   const handleExportImage = useCallback(async () => {
@@ -339,12 +563,19 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   }
 
   return (
-    <div ref={reactFlowWrapper} className={styles.container}>
+    <div ref={reactFlowWrapper} className={styles.container} onClick={handleCloseContextMenu}>
       {/* 工具栏 */}
       <div className={`export-toolbar ${styles.toolbar}`}>
         {isEditing ? (
           // 编辑模式工具栏
           <>
+            <button
+              onClick={handleOpenAddModal}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonAdd}`}
+              title="添加节点"
+            >
+              + 添加
+            </button>
             <button
               onClick={handleSaveEdit}
               className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
@@ -396,11 +627,157 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         )}
       </div>
 
+      {/* 右键菜单 */}
+      {contextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 1000,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={styles.contextMenuItem}
+            onClick={handleDeleteNode}
+          >
+            删除节点
+          </button>
+        </div>
+      )}
+
+      {/* 新增节点弹窗 */}
+      {showAddModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseAddModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>添加组件</h3>
+              <button
+                className={styles.modalClose}
+                onClick={handleCloseAddModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>名称 *</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={newNodeForm.name}
+                  onChange={(e) => handleFormChange('name', e.target.value)}
+                  placeholder="输入组件名称"
+                  autoFocus
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>类型</label>
+                <select
+                  className={styles.formSelect}
+                  value={newNodeForm.type}
+                  onChange={(e) => handleFormChange('type', e.target.value)}
+                >
+                  {COMPONENT_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>架构层</label>
+                <select
+                  className={styles.formSelect}
+                  value={newNodeForm.layer}
+                  onChange={(e) => handleFormChange('layer', e.target.value)}
+                >
+                  {ARCHITECTURE_LAYER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>技术栈</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={newNodeForm.technology}
+                  onChange={(e) => handleFormChange('technology', e.target.value)}
+                  placeholder="如 React, PostgreSQL"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>描述</label>
+                <textarea
+                  className={styles.formTextarea}
+                  value={newNodeForm.description}
+                  onChange={(e) => handleFormChange('description', e.target.value)}
+                  placeholder="组件功能描述"
+                  rows={2}
+                />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
+                onClick={handleCloseAddModal}
+              >
+                取消
+              </button>
+              <button
+                className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
+                onClick={handleAddNode}
+              >
+                添加
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 内联编辑输入框 */}
+      {editingNodeId && (
+        <div
+          className={styles.inlineEditOverlay}
+          onClick={handleEditCancel}
+        >
+          <div
+            className={styles.inlineEditContainer}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              ref={editInputRef}
+              type="text"
+              className={styles.inlineEditInput}
+              value={editingValue}
+              onChange={handleEditInputChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleEditSubmit();
+                if (e.key === 'Escape') handleEditCancel();
+              }}
+              onBlur={handleEditSubmit}
+              autoFocus
+            />
+            <div className={styles.inlineEditHint}>
+              按 Enter 确认，Esc 取消
+            </div>
+          </div>
+        </div>
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={isEditing ? onNodesChange : undefined}
         onEdgesChange={isEditing ? onEdgesChange : undefined}
+        onNodeDoubleClick={handleNodeDoubleClick}
+        onNodeContextMenu={handleNodeContextMenu}
         onInit={setRfInstance}
         fitView
         fitViewOptions={{ padding: 0.2 }}

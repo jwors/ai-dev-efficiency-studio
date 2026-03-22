@@ -420,13 +420,30 @@ const [selectedNode, setSelectedNode] = useState<ArchitectNode | null>(null);
 | 点击"取消"恢复原始数据 | ✅ |
 | 变更追踪 | ✅ |
 
-#### 阶段 2.2: 节点编辑 - 待实施
+#### 阶段 2.2: 节点编辑 - ✅ 已完成（2026-03-22）
 
-```
-- 双击节点进入文本编辑
-- 右键菜单删除节点
-- 新增节点表单（选择 type、layer）
-```
+**实现内容：**
+- 双击节点进入文本编辑（弹出内联编辑框，Enter 确认，Esc 取消）
+- 右键菜单删除节点（自动删除相关连线）
+- 新增节点表单（名称、类型、架构层、技术栈、描述）
+- 自定义节点组件 ArchitectureNodeComponent（支持动态渲染编辑后的名称）
+
+**修改文件：**
+- `lib/architecture/utils.ts` - 新增工具函数（ID 生成、默认位置、验证）
+- `app/components/ArchitectureFlow.tsx` - 添加编辑功能、右键菜单、新增节点弹窗
+- `app/components/ArchitectureFlow.module.css` - 添加新组件样式
+- `lib/architecture/adapters.ts` - 更新 ArchitectureNodeData 接口
+
+**当前功能：**
+| 操作 | 状态 |
+|------|------|
+| 双击节点编辑名称 | ✅ |
+| 右键菜单删除节点 | ✅ |
+| 新增节点表单 | ✅ |
+| 拖拽节点位置 | ✅ |
+| 点击"保存"确认修改 | ✅ |
+| 点击"取消"恢复原始数据 | ✅ |
+| 变更追踪 | ✅ |
 
 #### 阶段 2.3: 连线编辑 - 待实施
 
