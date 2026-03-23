@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -276,16 +276,16 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     }
   }, [initialNodes, initialEdges, setNodes, setEdges, rfInstance]);
 
-  // 进入编辑模式
-  const handleEnterEditMode = useCallback(() => {
+  // ========== 编辑模式 ==========
+
+  function handleEnterEditMode() {
     if (!architecture) return;
     setOriginalArchitecture(architecture);
     setIsEditing(true);
     toast.info('已进入编辑模式');
-  }, [architecture, toast]);
+  }
 
-  // 保存编辑
-  const handleSaveEdit = useCallback(() => {
+  function handleSaveEdit() {
     if (!originalArchitecture || !onChange) return;
 
     const updatedArchitecture = flowToArchitecture(nodes, edges, originalArchitecture);
@@ -293,10 +293,9 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setIsEditing(false);
     setOriginalArchitecture(null);
     toast.success('架构已更新');
-  }, [nodes, edges, originalArchitecture, onChange, toast]);
+  }
 
-  // 取消编辑
-  const handleCancelEdit = useCallback(() => {
+  function handleCancelEdit() {
     if (!originalArchitecture) return;
 
     // 恢复原始数据
@@ -306,29 +305,19 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setIsEditing(false);
     setOriginalArchitecture(null);
     toast.info('已取消编辑');
-  }, [originalArchitecture, setNodes, setEdges, toast]);
+  }
 
   // ========== 内联编辑（双击编辑节点名称）==========
 
-  // 双击节点进入编辑
-  const handleNodeDoubleClick = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      if (!isEditing) return;
+  function handleNodeDoubleClick(_event: React.MouseEvent, node: Node) {
+    if (!isEditing) return;
 
-      const nodeData = node.data as { name?: string };
-      setEditingNodeId(node.id);
-      setEditingValue(nodeData.name || node.id);
-    },
-    [isEditing]
-  );
+    const nodeData = node.data as { name?: string };
+    setEditingNodeId(node.id);
+    setEditingValue(nodeData.name || node.id);
+  }
 
-  // 编辑输入变更
-  const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingValue(e.target.value);
-  }, []);
-
-  // 提交编辑
-  const handleEditSubmit = useCallback(() => {
+  function handleEditSubmit() {
     if (!editingNodeId) return;
 
     const validation = validateComponentName(editingValue);
@@ -353,38 +342,22 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setEditingNodeId(null);
     setEditingValue('');
     toast.success('节点名称已更新');
-  }, [editingNodeId, editingValue, setNodes, toast]);
-
-  // 取消编辑
-  const handleEditCancel = useCallback(() => {
-    setEditingNodeId(null);
-    setEditingValue('');
-  }, []);
+  }
 
   // ========== 右键菜单（删除节点）==========
 
-  // 右键菜单显示
-  const handleNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      if (!isEditing) return;
+  function handleNodeContextMenu(event: React.MouseEvent, node: Node) {
+    if (!isEditing) return;
 
-      event.preventDefault();
-      setContextMenu({
-        nodeId: node.id,
-        x: event.clientX,
-        y: event.clientY,
-      });
-    },
-    [isEditing]
-  );
+    event.preventDefault();
+    setContextMenu({
+      nodeId: node.id,
+      x: event.clientX - 300,
+      y: event.clientY,
+    });
+  }
 
-  // 关闭右键菜单
-  const handleCloseContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
-
-  // 删除节点
-  const handleDeleteNode = useCallback(() => {
+  function handleDeleteNode() {
     if (!contextMenu) return;
 
     const nodeId = contextMenu.nodeId;
@@ -399,12 +372,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
     setContextMenu(null);
     toast.success('节点已删除');
-  }, [contextMenu, setNodes, setEdges, toast]);
+  }
 
   // ========== 新增节点 ==========
 
-  // 打开新增弹窗
-  const handleOpenAddModal = useCallback(() => {
+  function handleOpenAddModal() {
     setNewNodeForm({
       name: '',
       type: 'backend',
@@ -413,26 +385,9 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       technology: '',
     });
     setShowAddModal(true);
-  }, []);
+  }
 
-  // 关闭新增弹窗
-  const handleCloseAddModal = useCallback(() => {
-    setShowAddModal(false);
-  }, []);
-
-  // 表单字段变更
-  const handleFormChange = useCallback(
-    (field: keyof typeof newNodeForm, value: string) => {
-      setNewNodeForm((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    },
-    []
-  );
-
-  // 提交新增节点
-  const handleAddNode = useCallback(() => {
+  function handleAddNode() {
     const validation = validateComponentName(newNodeForm.name);
     if (!validation.valid) {
       toast.error(validation.error || '名称无效');
@@ -468,84 +423,86 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setNodes((nds) => [...nds, newNode]);
     setShowAddModal(false);
     toast.success('节点已添加');
-  }, [newNodeForm, nodes, setNodes, toast]);
+  }
 
   // ========== 连线编辑 ==========
 
-  // 创建新连线（从 Handle 拖拽）
-  const handleConnect = useCallback(
-    (connection: Connection) => {
-      if (!isEditing) return;
+  function handleConnect(connection: Connection) {
+    if (!isEditing) return;
 
-      // 生成新连线 ID
-      const newEdgeId = `conn-${connection.source}-${connection.target}`;
+    // 验证：源节点和目标节点必须存在
+    if (!connection.source || !connection.target) {
+      toast.error('无效的连线：缺少源节点或目标节点');
+      return;
+    }
 
-      // 检查是否已存在相同连线
-      const exists = edges.some(
-        (e) => e.source === connection.source && e.target === connection.target
-      );
-      if (exists) {
-        toast.warning('该连线已存在');
-        return;
-      }
+    // 验证：禁止自环连线（source === target）
+    if (connection.source === connection.target) {
+      toast.warning('不能创建自环连线');
+      return;
+    }
 
-      // 创建新边，默认类型为 http
-      const connStyle = CONNECTION_STYLES.http;
-      const newEdge: Edge = {
-        id: newEdgeId,
-        source: connection.source!,
-        target: connection.target!,
-        label: 'http',
-        type: 'smoothstep',
-        animated: true,
-        style: {
-          stroke: connStyle.stroke,
-          strokeWidth: 2,
-        },
-        labelStyle: { fill: '#64748b', fontWeight: 600, fontSize: 11 },
-        labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
-        labelBgPadding: [4, 4] as [number, number],
-        labelBgBorderRadius: 4,
-        data: { connectionType: 'http' },
-      };
+    // 验证：源节点和目标节点必须存在于当前节点列表中
+    const sourceExists = nodes.some((n) => n.id === connection.source);
+    const targetExists = nodes.some((n) => n.id === connection.target);
+    if (!sourceExists || !targetExists) {
+      toast.error('无效的连线：节点不存在');
+      return;
+    }
 
-      setEdges((eds) => addEdge(newEdge, eds));
-      toast.success('连线已创建');
-    },
-    [isEditing, edges, setEdges, toast]
-  );
+    // 检查是否已存在相同连线（相同源和目标）
+    const exists = edges.some(
+      (e) => e.source === connection.source && e.target === connection.target
+    );
+    if (exists) {
+      toast.warning('该连线已存在');
+      return;
+    }
 
-  // 边点击选中
-  const handleEdgeClick = useCallback(
-    (_event: React.MouseEvent, edge: Edge) => {
-      if (!isEditing) return;
-      setSelectedEdgeId(edge.id);
-    },
-    [isEditing]
-  );
+    // 生成唯一的连线 ID：使用时间戳确保唯一性
+    const newEdgeId = `conn-${connection.source}-${connection.target}-${Date.now()}`;
 
-  // 边右键菜单
-  const handleEdgeContextMenu = useCallback(
-    (event: React.MouseEvent, edge: Edge) => {
-      if (!isEditing) return;
-      event.preventDefault();
-      setEdgeContextMenu({
-        edgeId: edge.id,
-        x: event.clientX,
-        y: event.clientY,
-      });
-      setSelectedEdgeId(edge.id);
-    },
-    [isEditing]
-  );
+    // 创建新边，默认类型为 http
+    const connStyle = CONNECTION_STYLES.http;
+    const newEdge: Edge = {
+      id: newEdgeId,
+      source: connection.source!,
+      target: connection.target!,
+      label: 'http',
+      type: 'smoothstep',
+      animated: true,
+      style: {
+        stroke: connStyle.stroke,
+        strokeWidth: 2,
+      },
+      labelStyle: { fill: '#64748b', fontWeight: 600, fontSize: 11 },
+      labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+      labelBgPadding: [4, 4] as [number, number],
+      labelBgBorderRadius: 4,
+      data: { connectionType: 'http' },
+    };
 
-  // 关闭边右键菜单
-  const handleCloseEdgeContextMenu = useCallback(() => {
-    setEdgeContextMenu(null);
-  }, []);
+    setEdges((eds) => addEdge(newEdge, eds));
+    toast.success('连线已创建');
+  }
 
-  // 删除选中的边
-  const handleDeleteEdge = useCallback(() => {
+  function handleEdgeClick(_event: React.MouseEvent, edge: Edge) {
+    if (!isEditing) return;
+    setSelectedEdgeId(edge.id);
+  }
+
+  function handleEdgeContextMenu(event: React.MouseEvent, edge: Edge) {
+    if (!isEditing) return;
+    event.preventDefault();
+    setEdgeContextMenu({
+      edgeId: edge.id,
+      x: event.clientX,
+      y: event.clientY,
+    });
+    setSelectedEdgeId(edge.id);
+  }
+
+  function handleDeleteEdge() {
     if (!selectedEdgeId && !edgeContextMenu) return;
 
     const edgeIdToDelete = edgeContextMenu?.edgeId || selectedEdgeId;
@@ -555,54 +512,43 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     setSelectedEdgeId(null);
     setEdgeContextMenu(null);
     toast.success('连线已删除');
-  }, [selectedEdgeId, edgeContextMenu, setEdges, toast]);
+  }
 
-  // 打开连线类型选择弹窗
-  const handleOpenConnectionTypeModal = useCallback(() => {
+  function handleOpenConnectionTypeModal() {
     if (!edgeContextMenu) return;
     setEditingEdgeId(edgeContextMenu.edgeId);
     setShowConnectionTypeModal(true);
     setEdgeContextMenu(null);
-  }, [edgeContextMenu]);
+  }
 
-  // 关闭连线类型选择弹窗
-  const handleCloseConnectionTypeModal = useCallback(() => {
+  function handleChangeConnectionType(newType: string) {
+    if (!editingEdgeId) return;
+
+    const style = CONNECTION_STYLES[newType] || { stroke: '#94a3b8' };
+    const isAnimated = ANIMATED_CONNECTION_TYPES.includes(newType);
+
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.id !== editingEdgeId) return edge;
+        return {
+          ...edge,
+          label: newType,
+          animated: isAnimated,
+          style: {
+            stroke: style.stroke,
+            strokeWidth: 2,
+            strokeDasharray: style.strokeDasharray,
+          },
+          data: { ...edge.data, connectionType: newType },
+        };
+      })
+    );
+
     setShowConnectionTypeModal(false);
     setEditingEdgeId(null);
-  }, []);
-
-  // 修改连线类型
-  const handleChangeConnectionType = useCallback(
-    (newType: string) => {
-      if (!editingEdgeId) return;
-
-      const style = CONNECTION_STYLES[newType] || { stroke: '#94a3b8' };
-      const isAnimated = ANIMATED_CONNECTION_TYPES.includes(newType);
-
-      setEdges((eds) =>
-        eds.map((edge) => {
-          if (edge.id !== editingEdgeId) return edge;
-          return {
-            ...edge,
-            label: newType,
-            animated: isAnimated,
-            style: {
-              stroke: style.stroke,
-              strokeWidth: 2,
-              strokeDasharray: style.strokeDasharray,
-            },
-            data: { ...edge.data, connectionType: newType },
-          };
-        })
-      );
-
-      setShowConnectionTypeModal(false);
-      setEditingEdgeId(null);
-      setSelectedEdgeId(null);
-      toast.success('连线类型已更新');
-    },
-    [editingEdgeId, setEdges, toast]
-  );
+    setSelectedEdgeId(null);
+    toast.success('连线类型已更新');
+  }
 
   // 键盘删除选中的边
   useEffect(() => {
@@ -649,8 +595,9 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     );
   }, [selectedEdgeId, isEditing, setEdges]);
 
-  // 导出 PNG
-  const handleExportImage = useCallback(async () => {
+  // ========== 导出功能 ==========
+
+  async function handleExportImage() {
     if (!rfInstance || !reactFlowWrapper.current) {
       toast.warning('图表尚未加载完成');
       return;
@@ -717,10 +664,9 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       console.error('[ArchitectureFlow] Export image error:', err);
       toast.error('导出图片失败，请重试');
     }
-  }, [rfInstance, toast]);
+  }
 
-  // 导出架构 JSON
-  const handleExportJson = useCallback(() => {
+  function handleExportJson() {
     if (!architecture) return;
 
     const json = JSON.stringify(architecture, null, 2);
@@ -732,7 +678,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       .catch(() => {
         toast.error('复制失败，请检查浏览器权限');
       });
-  }, [architecture, toast]);
+  }
 
   // 空状态
   if (!architecture || !architecture.components || architecture.components.length === 0) {
@@ -764,8 +710,8 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       ref={reactFlowWrapper}
       className={styles.container}
       onClick={() => {
-        handleCloseContextMenu();
-        handleCloseEdgeContextMenu();
+        setContextMenu(null);
+        setEdgeContextMenu(null);
       }}
     >
       {/* 工具栏 */}
@@ -881,7 +827,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
       {/* 连线类型选择弹窗 */}
       {showConnectionTypeModal && (
-        <div className={styles.modalOverlay} onClick={handleCloseConnectionTypeModal}>
+        <div className={styles.modalOverlay} onClick={() => setShowConnectionTypeModal(false)}>
           <div
             className={`${styles.modal} ${styles.connectionTypeModal}`}
             onClick={(e) => e.stopPropagation()}
@@ -890,7 +836,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
               <h3 className={styles.modalTitle}>选择连线类型</h3>
               <button
                 className={styles.modalClose}
-                onClick={handleCloseConnectionTypeModal}
+                onClick={() => setShowConnectionTypeModal(false)}
               >
                 ×
               </button>
@@ -914,13 +860,13 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
       {/* 新增节点弹窗 */}
       {showAddModal && (
-        <div className={styles.modalOverlay} onClick={handleCloseAddModal}>
+        <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>添加组件</h3>
               <button
                 className={styles.modalClose}
-                onClick={handleCloseAddModal}
+                onClick={() => setShowAddModal(false)}
               >
                 ×
               </button>
@@ -932,7 +878,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
                   type="text"
                   className={styles.formInput}
                   value={newNodeForm.name}
-                  onChange={(e) => handleFormChange('name', e.target.value)}
+                  onChange={(e) => setNewNodeForm((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="输入组件名称"
                   autoFocus
                 />
@@ -942,7 +888,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
                 <select
                   className={styles.formSelect}
                   value={newNodeForm.type}
-                  onChange={(e) => handleFormChange('type', e.target.value)}
+                  onChange={(e) => setNewNodeForm((prev) => ({ ...prev, type: e.target.value as ArchitectureComponentType }))}
                 >
                   {COMPONENT_TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -956,7 +902,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
                 <select
                   className={styles.formSelect}
                   value={newNodeForm.layer}
-                  onChange={(e) => handleFormChange('layer', e.target.value)}
+                  onChange={(e) => setNewNodeForm((prev) => ({ ...prev, layer: e.target.value as ArchitectureLayer }))}
                 >
                   {ARCHITECTURE_LAYER_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -971,7 +917,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
                   type="text"
                   className={styles.formInput}
                   value={newNodeForm.technology}
-                  onChange={(e) => handleFormChange('technology', e.target.value)}
+                  onChange={(e) => setNewNodeForm((prev) => ({ ...prev, technology: e.target.value }))}
                   placeholder="如 React, PostgreSQL"
                 />
               </div>
@@ -980,7 +926,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
                 <textarea
                   className={styles.formTextarea}
                   value={newNodeForm.description}
-                  onChange={(e) => handleFormChange('description', e.target.value)}
+                  onChange={(e) => setNewNodeForm((prev) => ({ ...prev, description: e.target.value }))}
                   placeholder="组件功能描述"
                   rows={2}
                 />
@@ -989,7 +935,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
             <div className={styles.modalFooter}>
               <button
                 className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
-                onClick={handleCloseAddModal}
+                onClick={() => setShowAddModal(false)}
               >
                 取消
               </button>
@@ -1008,7 +954,10 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       {editingNodeId && (
         <div
           className={styles.inlineEditOverlay}
-          onClick={handleEditCancel}
+          onClick={() => {
+            setEditingNodeId(null);
+            setEditingValue('');
+          }}
         >
           <div
             className={styles.inlineEditContainer}
@@ -1019,10 +968,13 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
               type="text"
               className={styles.inlineEditInput}
               value={editingValue}
-              onChange={handleEditInputChange}
+              onChange={(e) => setEditingValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleEditSubmit();
-                if (e.key === 'Escape') handleEditCancel();
+                if (e.key === 'Escape') {
+                  setEditingNodeId(null);
+                  setEditingValue('');
+                }
               }}
               onBlur={handleEditSubmit}
               autoFocus
