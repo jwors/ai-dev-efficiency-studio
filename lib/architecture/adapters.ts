@@ -106,6 +106,8 @@ function findParentId(
  * @returns WBS 图数据
  */
 export function architectureToWbsView(architecture: ArchitectureJson): WbsGraph {
+
+  // 先按照架构层面排序
   const ordered = sortComponentsForViews(architecture);
 
   const nodes: WbsGraph['nodes'] = ordered.map((component) => ({

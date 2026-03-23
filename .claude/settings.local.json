@@ -22,7 +22,8 @@
       "Bash(rm:*)",
       "Bash(npm list:*)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }

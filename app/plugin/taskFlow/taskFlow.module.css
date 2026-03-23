@@ -6,7 +6,7 @@
 }
 
 .wbsRoot :global(.react-flow__node) {
-  background: #FFFFFF;
+  background: #640a0a;
   color: #000000;
   border: 0.5px solid #878787;
   border-radius: 6px;
@@ -107,6 +107,10 @@
 
 .wbsRoot :global(.react-flow__minimap-mask) {
   fill: rgba(0, 0, 0, 0.1);
+}
+
+.wbsRoot :global(.react-flow) {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .wbsRoot :global(.react-flow__background) {

@@ -70,6 +70,10 @@
   box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
 }
 
+.architectRoot :global(.react-flow) {
+  background: #F0F0F0;
+}
+
 .architectRoot :global(.react-flow__background) {
   background: transparent;
 }

@@ -89,6 +89,10 @@
   fill: rgba(0, 0, 0, 0.1);
 }
 
+.wbsRoot :global(.react-flow) {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 .wbsRoot :global(.react-flow__background) {
   background: transparent;
 }

@@ -1056,8 +1056,8 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         <Background
           variant={BackgroundVariant.Dots}
           gap={24}
-          size={1.5}
-          color="rgba(255, 140, 66, 0.1)"
+          size={1}
+          color="rgba(0, 0, 0, 0.08)"
         />
         <Controls showInteractive={isEditing} />
       </ReactFlow>
