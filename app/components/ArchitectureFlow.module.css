@@ -1,14 +1,14 @@
-/* ArchitectureFlow Component Styles */
+/* ArchitectureFlow Component Styles - LOGIFY Design */
 
 .container {
   width: 100%;
   height: 100%;
-  border: 1px solid var(--stroke);
-  border-radius: var(--border-radius);
+  border: 0.5px solid #878787;
+  border-radius: 10px;
   overflow: hidden;
   position: relative;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: #FAFAFA;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
 }
 
 .toolbar {
@@ -18,54 +18,62 @@
   z-index: 1000;
   display: flex;
   gap: 8px;
-  background: rgba(20, 15, 10, 0.95);
+  background: #FFFFFF;
   padding: 8px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--stroke);
-  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 0.5px solid #878787;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
 }
 
 .toolbarButton {
   padding: 8px 14px;
-  font-size: 11px;
+  font-size: 12px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
   transition: all 200ms ease;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+  border: none;
 }
 
 .toolbarButtonPrimary {
-  background: linear-gradient(135deg, var(--accent), #e67332);
-  color: white;
-  border: 1px solid var(--accent);
-  box-shadow: 0 2px 10px var(--accent-glow);
+  background: #000000;
+  color: #FFFFFF;
 }
 
 .toolbarButtonPrimary:hover {
-  opacity: 0.9;
+  background: #1a1a1a;
 }
 
 .toolbarButtonSecondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-  border: 1px solid var(--stroke);
+  background: #FAFAFA;
+  color: #4D4D4D;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
 }
 
 .toolbarButtonSecondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #F0F0F0;
 }
 
 .toolbarButtonEdit {
-  background: rgba(100, 180, 255, 0.2);
-  color: #64b4ff;
-  border: 1px solid rgba(100, 180, 255, 0.5);
+  background: #FFFFFF;
+  color: #000000;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
 }
 
 .toolbarButtonEdit:hover {
-  background: rgba(100, 180, 255, 0.3);
+  background: #FAFAFA;
+  border-color: #878787;
+}
+
+/* Add Button */
+.toolbarButtonAdd {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.toolbarButtonAdd:hover {
+  background: #1a1a1a;
 }
 
 .titlePanel {
@@ -73,46 +81,49 @@
   bottom: 12px;
   left: 80px;
   z-index: 1000;
-  background: rgba(20, 15, 10, 0.9);
-  color:white;
+  background: #FFFFFF;
+  color: #000000;
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid var(--stroke);
-  backdrop-filter: blur(10px);
+  border: 0.5px solid #878787;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
 }
 
 .titleText {
   font-size: 14px;
-  font-weight: 700;
-  color: white;
+  font-weight: 500;
+  color: #000000;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .styleText {
   font-size: 11px;
-  color: var(--muted);
+  color: #878787;
   margin-top: 2px;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .editingBadge {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-size: 10px;
-  font-weight: 600;
-  color: #64b4ff;
-  background: rgba(100, 180, 255, 0.2);
+  font-weight: 500;
+  color: #000000;
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
-/* Node Label Styles */
+/* Node Label Styles - LOGIFY Design */
 .nodeLabel {
   display: flex;
   flex-direction: column;
   gap: 6px;
   text-align: center;
   min-width: 180px;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .nodeLabelHeader {
@@ -123,136 +134,136 @@
 }
 
 .nodeLabelIcon {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .nodeLabelName {
-  font-weight: bold;
+  font-weight: 500;
   font-size: 14px;
   line-height: 1.4;
+  color: #000000;
 }
 
 .nodeLabelTechnology {
   font-size: 11px;
-  opacity: 0.85;
-  background: rgba(255, 255, 255, 0.15);
+  font-weight: 400;
+  color: #4D4D4D;
+  background: rgba(0, 0, 0, 0.05);
   padding: 2px 8px;
   border-radius: 4px;
 }
 
 .nodeLabelDescription {
-  font-size: 10px;
-  opacity: 0.7;
+  font-size: 11px;
+  color: #878787;
   line-height: 1.3;
 }
 
-/* Node Handle */
+/* Node Handle - LOGIFY Design */
 .nodeHandle {
-  width: 10px;
-  height: 10px;
-  background: var(--accent);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  width: 8px;
+  height: 8px;
+  background: #000000;
+  border: 1.5px solid #FFFFFF;
   border-radius: 50%;
 }
 
 .nodeHandle:hover {
-  background: #fff;
-  border-color: var(--accent);
+  background: #FFFFFF;
+  border-color: #000000;
 }
 
-/* Empty State */
+/* Empty State - LOGIFY Design */
 .emptyState {
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  border: 1px solid var(--stroke);
+  color: #878787;
+  background: #FAFAFA;
+  border-radius: 10px;
   gap: 12px;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .emptyIcon {
   width: 48px;
   height: 48px;
-  color: var(--accent);
-  filter: drop-shadow(0 0 15px var(--accent-glow));
+  color: #878787;
 }
 
 .emptyTitle {
   font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 500;
+  color: #000000;
   margin-bottom: 4px;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .emptySubtitle {
   font-size: 12px;
-  color: var(--muted);
+  color: #878787;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
-/* Add Button */
-.toolbarButtonAdd {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.5);
-}
-
-.toolbarButtonAdd:hover {
-  background: rgba(16, 185, 129, 0.3);
-}
-
-/* Context Menu */
+/* Context Menu - LOGIFY Design Style */
 .contextMenu {
-  background: rgba(20, 15, 10, 0.98);
-  border: 1px solid var(--stroke);
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  min-width: 120px;
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.1);
+  min-width: 140px;
   padding: 4px;
-  backdrop-filter: blur(10px);
 }
 
 .contextMenuItem {
   display: block;
   width: 100%;
   padding: 10px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #ef4444;
+  font-size: 13px;
+  font-weight: 400;
+  color: #000000;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   text-align: left;
-  transition: background 150ms ease;
+  transition: background 200ms ease;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .contextMenuItem:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(0, 0, 0, 0.05);
 }
 
-/* Modal */
+/* Context Menu Danger Item */
+.contextMenuItemDanger {
+  color: #ef4444;
+}
+
+.contextMenuItemDanger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Modal - LOGIFY Design Style */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: rgba(30, 25, 20, 0.98);
-  border: 1px solid var(--stroke);
-  border-radius: 16px;
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
+  border-radius: 10px;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -261,14 +272,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--stroke);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  background: #FAFAFA;
 }
 
 .modalTitle {
   margin: 0;
   font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 500;
+  color: #000000;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .modalClose {
@@ -278,17 +291,17 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: var(--muted);
+  color: #878787;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all 200ms ease;
 }
 
 .modalClose:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.1);
+  color: #000000;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .modalBody {
@@ -302,10 +315,11 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 20px;
-  border-top: 1px solid var(--stroke);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  background: #FAFAFA;
 }
 
-/* Form */
+/* Form - LOGIFY Design Style */
 .formGroup {
   margin-bottom: 16px;
 }
@@ -317,44 +331,44 @@
 .formLabel {
   display: block;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 400;
+  color: #000000;
   margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .formInput,
 .formSelect,
 .formTextarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  transition: all 150ms ease;
+  font-weight: 300;
+  color: #000000;
+  background: #FFFFFF;
+  border: 0.6px solid #282828;
+  border-radius: 6px;
+  transition: border-color 200ms ease;
   box-sizing: border-box;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: #ABABAB;
 }
 
 .formInput:focus,
 .formSelect:focus,
 .formTextarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.15);
-}
-
-.formInput::placeholder,
-.formTextarea::placeholder {
-  color: var(--muted);
+  border-color: #000000;
 }
 
 .formSelect {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23878787' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
@@ -363,14 +377,13 @@
 .formTextarea {
   resize: vertical;
   min-height: 60px;
-  font-family: inherit;
 }
 
-/* Inline Edit */
+/* Inline Edit - LOGIFY Design Style */
 .inlineEditOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,11 +391,11 @@
 }
 
 .inlineEditContainer {
-  background: rgba(30, 25, 20, 0.98);
-  border: 1px solid var(--stroke);
-  border-radius: 12px;
+  background: #FFFFFF;
+  border: 0.5px solid #878787;
+  border-radius: 10px;
   padding: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.1);
   min-width: 300px;
 }
 
@@ -390,22 +403,75 @@
   width: 100%;
   padding: 12px 14px;
   font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
+  font-weight: 400;
+  color: #000000;
+  background: #FFFFFF;
+  border: 0.6px solid #282828;
+  border-radius: 6px;
   outline: none;
   box-sizing: border-box;
+  font-family: var(--font-poppins), Poppins, sans-serif;
 }
 
 .inlineEditInput:focus {
-  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.2);
+  border-color: #000000;
 }
 
 .inlineEditHint {
   margin-top: 8px;
   font-size: 11px;
-  color: var(--muted);
+  color: #878787;
   text-align: center;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+}
+
+/* Connection Type Modal - LOGIFY Design Style */
+.connectionTypeModal {
+  width: 320px;
+}
+
+.connectionTypeList {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.connectionTypeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #FAFAFA;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-left-width: 3px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.connectionTypeItem:hover {
+  background: #FFFFFF;
+  border-color: #878787;
+}
+
+.connectionTypeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+}
+
+.connectionTypeValue {
+  font-size: 11px;
+  color: #878787;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-family: var(--font-poppins), Poppins, sans-serif;
+}
+
+/* Selected Edge Style - applied via edge style */
+.selectedEdge {
+  stroke: #000000 !important;
+  stroke-width: 2px !important;
 }

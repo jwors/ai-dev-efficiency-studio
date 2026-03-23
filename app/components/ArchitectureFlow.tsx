@@ -18,6 +18,8 @@ import {
   NodeChange,
   Handle,
   Position,
+  addEdge,
+  Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { toPng } from 'html-to-image';
@@ -30,6 +32,7 @@ import {
   CONNECTION_STYLES,
   LAYER_ICONS,
   ANIMATED_CONNECTION_TYPES,
+  CONNECTION_TYPE_OPTIONS,
 } from '@/lib/architecture/constants';
 import {
   COMPONENT_TYPE_OPTIONS,
@@ -152,6 +155,7 @@ function transformConnectionToEdge(
     labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
     labelBgPadding: [4, 4] as [number, number],
     labelBgBorderRadius: 4,
+    data: { connectionType: conn.type },
   };
 }
 
@@ -237,6 +241,20 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     description: '',
     technology: '',
   });
+
+  // 选中的边（用于删除和修改类型）
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+
+  // 边右键菜单状态
+  const [edgeContextMenu, setEdgeContextMenu] = useState<{
+    edgeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // 连线类型选择弹窗状态
+  const [showConnectionTypeModal, setShowConnectionTypeModal] = useState(false);
+  const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
 
   // 数据转换与布局计算
   const { initialNodes, initialEdges } = useMemo<TransformedData>(
@@ -452,6 +470,185 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     toast.success('节点已添加');
   }, [newNodeForm, nodes, setNodes, toast]);
 
+  // ========== 连线编辑 ==========
+
+  // 创建新连线（从 Handle 拖拽）
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      if (!isEditing) return;
+
+      // 生成新连线 ID
+      const newEdgeId = `conn-${connection.source}-${connection.target}`;
+
+      // 检查是否已存在相同连线
+      const exists = edges.some(
+        (e) => e.source === connection.source && e.target === connection.target
+      );
+      if (exists) {
+        toast.warning('该连线已存在');
+        return;
+      }
+
+      // 创建新边，默认类型为 http
+      const connStyle = CONNECTION_STYLES.http;
+      const newEdge: Edge = {
+        id: newEdgeId,
+        source: connection.source!,
+        target: connection.target!,
+        label: 'http',
+        type: 'smoothstep',
+        animated: true,
+        style: {
+          stroke: connStyle.stroke,
+          strokeWidth: 2,
+        },
+        labelStyle: { fill: '#64748b', fontWeight: 600, fontSize: 11 },
+        labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+        labelBgPadding: [4, 4] as [number, number],
+        labelBgBorderRadius: 4,
+        data: { connectionType: 'http' },
+      };
+
+      setEdges((eds) => addEdge(newEdge, eds));
+      toast.success('连线已创建');
+    },
+    [isEditing, edges, setEdges, toast]
+  );
+
+  // 边点击选中
+  const handleEdgeClick = useCallback(
+    (_event: React.MouseEvent, edge: Edge) => {
+      if (!isEditing) return;
+      setSelectedEdgeId(edge.id);
+    },
+    [isEditing]
+  );
+
+  // 边右键菜单
+  const handleEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      if (!isEditing) return;
+      event.preventDefault();
+      setEdgeContextMenu({
+        edgeId: edge.id,
+        x: event.clientX,
+        y: event.clientY,
+      });
+      setSelectedEdgeId(edge.id);
+    },
+    [isEditing]
+  );
+
+  // 关闭边右键菜单
+  const handleCloseEdgeContextMenu = useCallback(() => {
+    setEdgeContextMenu(null);
+  }, []);
+
+  // 删除选中的边
+  const handleDeleteEdge = useCallback(() => {
+    if (!selectedEdgeId && !edgeContextMenu) return;
+
+    const edgeIdToDelete = edgeContextMenu?.edgeId || selectedEdgeId;
+    if (!edgeIdToDelete) return;
+
+    setEdges((eds) => eds.filter((e) => e.id !== edgeIdToDelete));
+    setSelectedEdgeId(null);
+    setEdgeContextMenu(null);
+    toast.success('连线已删除');
+  }, [selectedEdgeId, edgeContextMenu, setEdges, toast]);
+
+  // 打开连线类型选择弹窗
+  const handleOpenConnectionTypeModal = useCallback(() => {
+    if (!edgeContextMenu) return;
+    setEditingEdgeId(edgeContextMenu.edgeId);
+    setShowConnectionTypeModal(true);
+    setEdgeContextMenu(null);
+  }, [edgeContextMenu]);
+
+  // 关闭连线类型选择弹窗
+  const handleCloseConnectionTypeModal = useCallback(() => {
+    setShowConnectionTypeModal(false);
+    setEditingEdgeId(null);
+  }, []);
+
+  // 修改连线类型
+  const handleChangeConnectionType = useCallback(
+    (newType: string) => {
+      if (!editingEdgeId) return;
+
+      const style = CONNECTION_STYLES[newType] || { stroke: '#94a3b8' };
+      const isAnimated = ANIMATED_CONNECTION_TYPES.includes(newType);
+
+      setEdges((eds) =>
+        eds.map((edge) => {
+          if (edge.id !== editingEdgeId) return edge;
+          return {
+            ...edge,
+            label: newType,
+            animated: isAnimated,
+            style: {
+              stroke: style.stroke,
+              strokeWidth: 2,
+              strokeDasharray: style.strokeDasharray,
+            },
+            data: { ...edge.data, connectionType: newType },
+          };
+        })
+      );
+
+      setShowConnectionTypeModal(false);
+      setEditingEdgeId(null);
+      setSelectedEdgeId(null);
+      toast.success('连线类型已更新');
+    },
+    [editingEdgeId, setEdges, toast]
+  );
+
+  // 键盘删除选中的边
+  useEffect(() => {
+    if (!isEditing || !selectedEdgeId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // 防止在输入框中触发
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) {
+          return;
+        }
+        setEdges((eds) => eds.filter((e) => e.id !== selectedEdgeId));
+        setSelectedEdgeId(null);
+        toast.success('连线已删除');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, selectedEdgeId, setEdges, toast]);
+
+  // 更新选中边的样式
+  useEffect(() => {
+    if (!isEditing) return;
+
+    setEdges((eds) =>
+      eds.map((edge) => {
+        const isSelected = edge.id === selectedEdgeId;
+        const connType = (edge.data?.connectionType as string) || 'http';
+        const baseStyle = CONNECTION_STYLES[connType] || { stroke: '#94a3b8' };
+
+        return {
+          ...edge,
+          style: {
+            stroke: isSelected ? '#ff8c42' : baseStyle.stroke,
+            strokeWidth: isSelected ? 3 : 2,
+            strokeDasharray: baseStyle.strokeDasharray,
+          },
+        };
+      })
+    );
+  }, [selectedEdgeId, isEditing, setEdges]);
+
   // 导出 PNG
   const handleExportImage = useCallback(async () => {
     if (!rfInstance || !reactFlowWrapper.current) {
@@ -563,7 +760,14 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   }
 
   return (
-    <div ref={reactFlowWrapper} className={styles.container} onClick={handleCloseContextMenu}>
+    <div
+      ref={reactFlowWrapper}
+      className={styles.container}
+      onClick={() => {
+        handleCloseContextMenu();
+        handleCloseEdgeContextMenu();
+      }}
+    >
       {/* 工具栏 */}
       <div className={`export-toolbar ${styles.toolbar}`}>
         {isEditing ? (
@@ -645,6 +849,66 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
           >
             删除节点
           </button>
+        </div>
+      )}
+
+      {/* 边右键菜单 */}
+      {edgeContextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{
+            position: 'fixed',
+            left: edgeContextMenu.x,
+            top: edgeContextMenu.y,
+            zIndex: 1000,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={styles.contextMenuItem}
+            onClick={handleOpenConnectionTypeModal}
+          >
+            修改连线类型
+          </button>
+          <button
+            className={`${styles.contextMenuItem} ${styles.contextMenuItemDanger}`}
+            onClick={handleDeleteEdge}
+          >
+            删除连线
+          </button>
+        </div>
+      )}
+
+      {/* 连线类型选择弹窗 */}
+      {showConnectionTypeModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseConnectionTypeModal}>
+          <div
+            className={`${styles.modal} ${styles.connectionTypeModal}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>选择连线类型</h3>
+              <button
+                className={styles.modalClose}
+                onClick={handleCloseConnectionTypeModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.connectionTypeList}>
+              {CONNECTION_TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  className={styles.connectionTypeItem}
+                  onClick={() => handleChangeConnectionType(option.value)}
+                  style={{ borderLeftColor: option.color }}
+                >
+                  <span className={styles.connectionTypeLabel}>{option.label}</span>
+                  <span className={styles.connectionTypeValue}>{option.value}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -776,8 +1040,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         nodeTypes={nodeTypes}
         onNodesChange={isEditing ? onNodesChange : undefined}
         onEdgesChange={isEditing ? onEdgesChange : undefined}
+        onConnect={isEditing ? handleConnect : undefined}
         onNodeDoubleClick={handleNodeDoubleClick}
         onNodeContextMenu={handleNodeContextMenu}
+        onEdgeClick={handleEdgeClick}
+        onEdgeContextMenu={handleEdgeContextMenu}
         onInit={setRfInstance}
         fitView
         fitViewOptions={{ padding: 0.2 }}

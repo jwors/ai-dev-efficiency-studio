@@ -236,11 +236,17 @@ export function flowToArchitecture(
       (c) => c.id === edge.id || (c.from === edge.source && c.to === edge.target),
     );
 
+    // 优先使用 edge.data.connectionType，这是编辑模式下设置的连线类型
+    const connectionType = (edge.data?.connectionType as ArchitectureConnection['type']) ??
+      (edge.data?.type as ArchitectureConnection['type']) ??
+      originalConnection?.type ??
+      'http';
+
     return {
       id: edge.id,
       from: edge.source,
       to: edge.target,
-      type: (edge.data?.type as ArchitectureConnection['type']) ?? originalConnection?.type ?? 'http',
+      type: connectionType,
       label: edge.label?.toString() ?? originalConnection?.label,
       description: originalConnection?.description,
     };

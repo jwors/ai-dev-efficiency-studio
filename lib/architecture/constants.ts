@@ -41,3 +41,22 @@ export const LAYER_ICONS: Record<string, string> = {
 
 // 动画连接类型
 export const ANIMATED_CONNECTION_TYPES = ['http', 'websocket', 'queue'];
+
+/**
+ * 连接类型选项列表
+ * 用于编辑模式下选择连线类型
+ */
+export const CONNECTION_TYPE_OPTIONS: Array<{
+  value: string;
+  label: string;
+  color: string;
+}> = [
+  { value: 'http', label: 'HTTP', color: '#3b82f6' },
+  { value: 'websocket', label: 'WebSocket', color: '#10b981' },
+  { value: 'tcp', label: 'TCP', color: '#f59e0b' },
+  { value: 'grpc', label: 'gRPC', color: '#8b5cf6' },
+  { value: 'database', label: 'Database', color: '#ef4444' },
+  { value: 'cache', label: 'Cache', color: '#ec4899' },
+  { value: 'queue', label: 'Queue', color: '#06b6d4' },
+  { value: 'file', label: 'File', color: '#6366f1' },
+];
