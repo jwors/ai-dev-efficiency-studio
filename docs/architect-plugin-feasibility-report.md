@@ -483,13 +483,581 @@ const [selectedNode, setSelectedNode] = useState<ArchitectNode | null>(null);
 | 点击"取消"恢复原始数据 | ✅ |
 | 变更追踪 | ✅ |
 
+
 ### Phase 3: 增强功能 - 预计 3 天
 
 ```
-Day 11: 导出 PNG/Mermaid
+Day 11: 导出 Mermaid 格式
 Day 12: 模板库（预设架构模板）
 Day 13: 性能优化 + 测试
 ```
+
+#### 阶段 3.1: Mermaid 导出 - 待实现
+
+**目标：** 将架构图导出为 Mermaid flowchart 格式，便于在 Markdown 文档、GitHub、Notion 等平台直接渲染。
+
+**技术方案：**
+
+1. **Mermaid 转换函数** (`lib/architecture/mermaid.ts`)
+
+```typescript
+/**
+ * 将 ArchitectureJson 转换为 Mermaid flowchart 语法
+ *
+ * 输出示例：
+ * ```mermaid
+ * flowchart TB
+ *   subgraph presentation [表现层]
+ *     frontend[前端应用<br/>React]
+ *   end
+ *   subgraph application [应用层]
+ *     backend[后端服务<br/>Node.js]
+ *     api[API 网关]
+ *   end
+ *   frontend -->|http| api
+ *   api -->|http| backend
+ *   backend -->|database| db[(数据库)]
+ * ```
+ */
+export function architectureToMermaid(architecture: ArchitectureJson): string {
+  const lines: string[] = [];
+  const { components, connections, style } = architecture;
+
+  // 1. 图表方向：TB (从上到下) 或 LR (从左到右)
+  lines.push('flowchart TB');
+  lines.push('');
+
+  // 2. 按架构层分组生成 subgraph
+  const layers = groupByLayer(components);
+  for (const [layerName, comps] of layers) {
+    lines.push(`  subgraph ${layerName} [${getLayerLabel(layerName)}]`);
+    for (const comp of comps) {
+      const nodeDef = formatMermaidNode(comp);
+      lines.push(`    ${nodeDef}`);
+    }
+    lines.push('  end');
+    lines.push('');
+  }
+
+  // 3. 生成连接关系
+  for (const conn of connections) {
+    const edgeDef = formatMermaidEdge(conn);
+    lines.push(`  ${edgeDef}`);
+  }
+
+  // 4. 样式定义（可选）
+  lines.push('');
+  lines.push(generateMermaidStyles(components));
+
+  return lines.join('\n');
+}
+
+/**
+ * 格式化 Mermaid 节点定义
+ * 根据组件类型选择不同的形状：
+ * - database: [(名称)]
+ * - queue: {{名称}}
+ * - external-api: [[名称]]
+ * - 默认: [名称]
+ */
+function formatMermaidNode(comp: ArchitectureComponent): string {
+  const label = comp.technology
+    ? `${comp.name}<br/>${comp.technology}`
+    : comp.name;
+
+  switch (comp.type) {
+    case 'database':
+      return `${comp.id}[((${label}))]`;
+    case 'queue':
+      return `${comp.id}{{${label}}}`;
+    case 'external-api':
+      return `${comp.id}[[${label}]]`;
+    case 'cache':
+      return `${comp.id}[(${label})]`;
+    default:
+      return `${comp.id}[${label}]`;
+  }
+}
+
+/**
+ * 格式化 Mermaid 边定义
+ * 使用不同的线型表示不同的连接类型
+ */
+function formatMermaidEdge(conn: ArchitectureConnection): string {
+  const label = conn.label || conn.type;
+
+  switch (conn.type) {
+    case 'websocket':
+      return `${conn.from} -.->|${label}| ${conn.to}`;
+    case 'cache':
+    case 'queue':
+      return `${conn.from} -.->|${label}| ${conn.to}`;
+    default:
+      return `${conn.from} -->|${label}| ${conn.to}`;
+  }
+}
+
+/**
+ * 生成 Mermaid 样式定义
+ */
+function generateMermaidStyles(components: ArchitectureComponent[]): string {
+  const styles: string[] = [];
+
+  // 为不同类型节点定义颜色
+  const typeStyles: Record<string, string> = {
+    frontend: 'fill:#3b82f6,color:#fff',
+    backend: 'fill:#10b981,color:#fff',
+    database: 'fill:#f59e0b,color:#fff',
+    cache: 'fill:#ef4444,color:#fff',
+    queue: 'fill:#8b5cf6,color:#fff',
+    'api-gateway': 'fill:#06b6d4,color:#fff',
+    'auth-service': 'fill:#ec4899,color:#fff',
+  };
+
+  for (const comp of components) {
+    const style = typeStyles[comp.type];
+    if (style) {
+      styles.push(`style ${comp.id} ${style}`);
+    }
+  }
+
+  return styles.join('\n');
+}
+```
+
+2. **UI 集成** (`app/components/ArchitectureFlow.tsx`)
+
+```typescript
+// 工具栏添加 Mermaid 导出按钮
+async function handleExportMermaid() {
+  if (!architecture) return;
+
+  const mermaidCode = architectureToMermaid(architecture);
+
+  // 复制到剪贴板
+  await navigator.clipboard.writeText(mermaidCode);
+  toast.success('Mermaid 代码已复制到剪贴板');
+}
+
+// 下载 .mmd 文件
+function handleDownloadMermaid() {
+  if (!architecture) return;
+
+  const mermaidCode = architectureToMermaid(architecture);
+  const blob = new Blob([mermaidCode], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.download = `${architecture.title || 'architecture'}.mmd`;
+  link.href = url;
+  link.click();
+
+  URL.revokeObjectURL(url);
+  toast.success('Mermaid 文件已下载');
+}
+```
+
+**修改文件：**
+- `lib/architecture/mermaid.ts` - 新建 Mermaid 转换函数
+- `app/components/ArchitectureFlow.tsx` - 添加导出按钮
+
+**预期功能：**
+| 功能 | 状态 |
+|------|------|
+| 转换为 Mermaid flowchart | 待实现 |
+| 复制 Mermaid 代码 | 待实现 |
+| 下载 .mmd 文件 | 待实现 |
+| 按架构层分组显示 | 待实现 |
+| 不同节点类型样式 | 待实现 |
+
+---
+
+#### 阶段 3.2: 架构模板库 - 待实现
+
+**目标：** 提供预设架构模板，用户可以快速选择常见架构模式作为起点。
+
+**技术方案：**
+
+1. **模板数据结构** (`lib/architecture/templates.ts`)
+
+```typescript
+/**
+ * 架构模板定义
+ */
+export interface ArchitectureTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'web' | 'microservice' | 'serverless' | 'data' | 'mobile';
+  tags: string[];
+  preview: string; // 预览图片 URL 或 base64
+  architecture: Omit<ArchitectureJson, 'updates'>;
+}
+
+/**
+ * 预设模板列表
+ */
+export const ARCHITECTURE_TEMPLATES: ArchitectureTemplate[] = [
+  {
+    id: 'admin-dashboard',
+    name: '后台管理系统',
+    description: '经典的前后端分离架构，适用于管理后台、CMS 等场景',
+    category: 'web',
+    tags: ['admin', 'cms', 'monolith'],
+    preview: '/templates/admin-dashboard.png',
+    architecture: {
+      version: 'arch.v1',
+      title: '后台管理系统架构',
+      style: 'monolith',
+      layers: [
+        { name: 'presentation' },
+        { name: 'application' },
+        { name: 'data' },
+      ],
+      components: [
+        { id: 'web-frontend', name: 'Web 前端', type: 'frontend', layer: 'presentation', technology: 'React' },
+        { id: 'api-server', name: 'API 服务', type: 'backend', layer: 'application', technology: 'Node.js' },
+        { id: 'auth-service', name: '认证服务', type: 'auth-service', layer: 'application', technology: 'JWT' },
+        { id: 'mysql', name: 'MySQL 数据库', type: 'database', layer: 'data', technology: 'MySQL' },
+        { id: 'redis', name: 'Redis 缓存', type: 'cache', layer: 'data', technology: 'Redis' },
+      ],
+      connections: [
+        { id: 'conn-1', from: 'web-frontend', to: 'api-server', type: 'http', label: 'REST API' },
+        { id: 'conn-2', from: 'api-server', to: 'auth-service', type: 'http', label: '验证 Token' },
+        { id: 'conn-3', from: 'api-server', to: 'mysql', type: 'database' },
+        { id: 'conn-4', from: 'api-server', to: 'redis', type: 'cache' },
+      ],
+      techStack: [
+        { category: 'frontend', name: 'React', version: '18.x' },
+        { category: 'backend', name: 'Node.js', version: '20.x' },
+        { category: 'database', name: 'MySQL', version: '8.x' },
+        { category: 'cache', name: 'Redis', version: '7.x' },
+      ],
+    },
+  },
+  {
+    id: 'e-commerce',
+    name: '电商平台',
+    description: '微服务架构的电商平台，支持用户、商品、订单、支付等核心模块',
+    category: 'microservice',
+    tags: ['e-commerce', 'microservice', 'high-traffic'],
+    preview: '/templates/e-commerce.png',
+    architecture: {
+      version: 'arch.v1',
+      title: '电商平台架构',
+      style: 'microservice',
+      layers: [
+        { name: 'presentation' },
+        { name: 'application' },
+        { name: 'domain' },
+        { name: 'infrastructure' },
+        { name: 'data' },
+      ],
+      components: [
+        { id: 'web-app', name: 'Web 应用', type: 'frontend', layer: 'presentation', technology: 'Next.js' },
+        { id: 'mobile-app', name: '移动应用', type: 'frontend', layer: 'presentation', technology: 'React Native' },
+        { id: 'api-gateway', name: 'API 网关', type: 'api-gateway', layer: 'application', technology: 'Kong' },
+        { id: 'user-service', name: '用户服务', type: 'backend', layer: 'domain' },
+        { id: 'product-service', name: '商品服务', type: 'backend', layer: 'domain' },
+        { id: 'order-service', name: '订单服务', type: 'backend', layer: 'domain' },
+        { id: 'payment-service', name: '支付服务', type: 'backend', layer: 'domain' },
+        { id: 'message-queue', name: '消息队列', type: 'queue', layer: 'infrastructure', technology: 'RabbitMQ' },
+        { id: 'user-db', name: '用户数据库', type: 'database', layer: 'data', technology: 'PostgreSQL' },
+        { id: 'product-db', name: '商品数据库', type: 'database', layer: 'data', technology: 'MongoDB' },
+        { id: 'order-db', name: '订单数据库', type: 'database', layer: 'data', technology: 'MySQL' },
+        { id: 'redis-cluster', name: 'Redis 集群', type: 'cache', layer: 'data', technology: 'Redis Cluster' },
+      ],
+      connections: [
+        { id: 'conn-1', from: 'web-app', to: 'api-gateway', type: 'http' },
+        { id: 'conn-2', from: 'mobile-app', to: 'api-gateway', type: 'http' },
+        { id: 'conn-3', from: 'api-gateway', to: 'user-service', type: 'grpc' },
+        { id: 'conn-4', from: 'api-gateway', to: 'product-service', type: 'grpc' },
+        { id: 'conn-5', from: 'api-gateway', to: 'order-service', type: 'grpc' },
+        { id: 'conn-6', from: 'order-service', to: 'payment-service', type: 'http' },
+        { id: 'conn-7', from: 'order-service', to: 'message-queue', type: 'queue' },
+        { id: 'conn-8', from: 'user-service', to: 'user-db', type: 'database' },
+        { id: 'conn-9', from: 'product-service', to: 'product-db', type: 'database' },
+        { id: 'conn-10', from: 'order-service', to: 'order-db', type: 'database' },
+      ],
+      techStack: [
+        { category: 'frontend', name: 'Next.js' },
+        { category: 'gateway', name: 'Kong' },
+        { category: 'backend', name: 'Go / Node.js' },
+        { category: 'queue', name: 'RabbitMQ' },
+        { category: 'database', name: 'PostgreSQL / MySQL / MongoDB' },
+        { category: 'cache', name: 'Redis' },
+      ],
+    },
+  },
+  {
+    id: 'serverless-api',
+    name: 'Serverless API',
+    description: '无服务器架构，适用于 API 服务、事件驱动场景',
+    category: 'serverless',
+    tags: ['serverless', 'api', 'event-driven'],
+    preview: '/templates/serverless.png',
+    architecture: {
+      version: 'arch.v1',
+      title: 'Serverless API 架构',
+      style: 'serverless',
+      layers: [
+        { name: 'presentation' },
+        { name: 'application' },
+        { name: 'infrastructure' },
+        { name: 'data' },
+      ],
+      components: [
+        { id: 'cdn', name: 'CDN', type: 'cdn', layer: 'presentation', technology: 'CloudFront' },
+        { id: 'api-gateway', name: 'API Gateway', type: 'api-gateway', layer: 'application', technology: 'AWS API Gateway' },
+        { id: 'lambda-auth', name: '认证函数', type: 'auth-service', layer: 'application', technology: 'Lambda' },
+        { id: 'lambda-api', name: 'API 函数', type: 'backend', layer: 'application', technology: 'Lambda' },
+        { id: 'lambda-worker', name: 'Worker 函数', type: 'backend', layer: 'application', technology: 'Lambda' },
+        { id: 'sqs', name: 'SQS 队列', type: 'queue', layer: 'infrastructure', technology: 'SQS' },
+        { id: 's3', name: '对象存储', type: 'storage', layer: 'data', technology: 'S3' },
+        { id: 'dynamodb', name: 'DynamoDB', type: 'database', layer: 'data', technology: 'DynamoDB' },
+      ],
+      connections: [
+        { id: 'conn-1', from: 'cdn', to: 'api-gateway', type: 'http' },
+        { id: 'conn-2', from: 'api-gateway', to: 'lambda-auth', type: 'http' },
+        { id: 'conn-3', from: 'api-gateway', to: 'lambda-api', type: 'http' },
+        { id: 'conn-4', from: 'lambda-api', to: 'sqs', type: 'queue' },
+        { id: 'conn-5', from: 'sqs', to: 'lambda-worker', type: 'queue' },
+        { id: 'conn-6', from: 'lambda-api', to: 'dynamodb', type: 'database' },
+        { id: 'conn-7', from: 'lambda-worker', to: 's3', type: 'file' },
+      ],
+      techStack: [
+        { category: 'cdn', name: 'CloudFront' },
+        { category: 'gateway', name: 'API Gateway' },
+        { category: 'compute', name: 'Lambda' },
+        { category: 'queue', name: 'SQS' },
+        { category: 'storage', name: 'S3' },
+        { category: 'database', name: 'DynamoDB' },
+      ],
+    },
+  },
+];
+
+/**
+ * 根据 ID 获取模板
+ */
+export function getTemplateById(id: string): ArchitectureTemplate | undefined {
+  return ARCHITECTURE_TEMPLATES.find(t => t.id === id);
+}
+
+/**
+ * 按分类获取模板
+ */
+export function getTemplatesByCategory(category: ArchitectureTemplate['category']): ArchitectureTemplate[] {
+  return ARCHITECTURE_TEMPLATES.filter(t => t.category === category);
+}
+
+/**
+ * 从模板创建 ArchitectureJson
+ */
+export function createFromTemplate(templateId: string): ArchitectureJson | null {
+  const template = getTemplateById(templateId);
+  if (!template) return null;
+
+  return {
+    ...template.architecture,
+    updates: {
+      addedComponentIds: template.architecture.components.map(c => c.id),
+      updatedComponentIds: [],
+      removedComponentIds: [],
+      addedConnectionIds: template.architecture.connections.map(c => c.id),
+      removedConnectionIds: [],
+    },
+  };
+}
+```
+
+2. **模板选择器组件** (`app/components/TemplateSelector.tsx`)
+
+```typescript
+interface TemplateSelectorProps {
+  onSelect: (template: ArchitectureTemplate) => void;
+  onClose: () => void;
+}
+
+export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const filteredTemplates = selectedCategory === 'all'
+    ? ARCHITECTURE_TEMPLATES
+    : getTemplatesByCategory(selectedCategory as any);
+
+  return (
+    <div className={styles.templateSelector}>
+      <div className={styles.templateHeader}>
+        <h2>选择架构模板</h2>
+        <button onClick={onClose}>×</button>
+      </div>
+
+      <div className={styles.categoryTabs}>
+        <button
+          className={selectedCategory === 'all' ? styles.active : ''}
+          onClick={() => setSelectedCategory('all')}
+        >
+          全部
+        </button>
+        {['web', 'microservice', 'serverless'].map(cat => (
+          <button
+            key={cat}
+            className={selectedCategory === cat ? styles.active : ''}
+            onClick={() => setSelectedCategory(cat)}
+          >
+            {getCategoryLabel(cat)}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.templateGrid}>
+        {filteredTemplates.map(template => (
+          <div
+            key={template.id}
+            className={styles.templateCard}
+            onClick={() => onSelect(template)}
+          >
+            <div className={styles.templatePreview}>
+              <img src={template.preview} alt={template.name} />
+            </div>
+            <div className={styles.templateInfo}>
+              <h3>{template.name}</h3>
+              <p>{template.description}</p>
+              <div className={styles.templateTags}>
+                {template.tags.map(tag => (
+                  <span key={tag} className={styles.tag}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**修改文件：**
+- `lib/architecture/templates.ts` - 新建模板数据定义
+- `app/components/TemplateSelector.tsx` - 新建模板选择器组件
+- `app/components/ArchitectureFlow.module.css` - 添加模板选择器样式
+- `app/plugin/architect/page.tsx` - 集成模板选择功能
+
+**预期功能：**
+| 功能 | 状态 |
+|------|------|
+| 预设模板数据 | 待实现 |
+| 模板分类筛选 | 待实现 |
+| 模板预览展示 | 待实现 |
+| 从模板初始化架构 | 待实现 |
+
+---
+
+#### 阶段 3.3: 性能优化 - 待实现
+
+**目标：** 提升大型架构图的渲染性能和用户体验。
+
+**优化方案：**
+
+1. **虚拟化渲染** (`app/components/ArchitectureFlow.tsx`)
+
+```typescript
+// 当节点数量超过阈值时，启用虚拟化渲染
+const VIRTUALIZATION_THRESHOLD = 50;
+
+// 使用 React Flow 的虚拟化特性
+<ReactFlow
+  nodes={nodes}
+  edges={edges}
+  // 大型图表时启用虚拟化
+  onlyRenderVisibleElements={nodes.length > VIRTUALIZATION_THRESHOLD}
+  // 减少不必要的重渲染
+  nodesDraggable={isEditing}
+  nodesConnectable={isEditing}
+  // 优化缩放性能
+  minZoom={0.1}
+  maxZoom={2}
+  defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+/>
+```
+
+2. **布局算法优化** (`lib/architecture/layout.ts`)
+
+```typescript
+/**
+ * 大型架构图布局优化
+ * - 使用 Web Worker 进行布局计算
+ * - 增量布局（只对新/变更节点重新布局）
+ */
+export function getOptimizedLayout(
+  components: ArchitectureComponent[],
+  connections: ArchitectureConnection[],
+  existingPositions?: Map<string, XYPosition>
+): LayoutedComponent[] {
+  // 如果已有位置且组件数量变化不大，使用增量布局
+  if (existingPositions && existingPositions.size > 0) {
+    const existingIds = new Set(existingPositions.keys());
+    const newComponents = components.filter(c => !existingIds.has(c.id));
+
+    // 只对新组件进行布局
+    if (newComponents.length < components.length * 0.3) {
+      return incrementalLayout(components, connections, existingPositions);
+    }
+  }
+
+  // 全量布局
+  return getLayoutedArchitecture(components, connections);
+}
+```
+
+3. **节点渲染优化**
+
+```typescript
+// 使用 React.memo 优化节点组件
+const ArchitectureNodeComponent = React.memo(function ArchitectureNodeComponent(
+  { data }: { data: ArchitectureNodeData }
+) {
+  // ... 组件实现
+}, arePropsEqual);
+
+function arePropsEqual(prev: { data: ArchitectureNodeData }, next: { data: ArchitectureNodeData }) {
+  return (
+    prev.data.name === next.data.name &&
+    prev.data.type === next.data.type &&
+    prev.data.technology === next.data.technology
+  );
+}
+```
+
+4. **性能监控**
+
+```typescript
+// 添加性能监控埋点
+useEffect(() => {
+  if (process.env.NODE_ENV === 'development') {
+    const startTime = performance.now();
+    return () => {
+      const renderTime = performance.now() - startTime;
+      if (renderTime > 100) {
+        console.warn(`[ArchitectureFlow] Slow render: ${renderTime.toFixed(2)}ms for ${nodes.length} nodes`);
+      }
+    };
+  }
+}, [nodes.length]);
+```
+
+**修改文件：**
+- `app/components/ArchitectureFlow.tsx` - 添加虚拟化和性能优化
+- `lib/architecture/layout.ts` - 优化布局算法
+
+**预期功能：**
+| 优化项 | 状态 |
+|------|------|
+| 虚拟化渲染（>50 节点） | 待实现 |
+| 增量布局计算 | 待实现 |
+| 节点组件 memo 优化 | 待实现 |
+| 性能监控埋点 | 待实现 |
 
 ---
 

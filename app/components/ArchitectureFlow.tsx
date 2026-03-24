@@ -1002,6 +1002,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         fitViewOptions={{ padding: 0.2 }}
         attributionPosition="bottom-left"
         defaultEdgeOptions={{ type: 'smoothstep' }}
+        nodesDraggable={isEditing}
         nodesConnectable={isEditing}
         elementsSelectable={isEditing}
       >

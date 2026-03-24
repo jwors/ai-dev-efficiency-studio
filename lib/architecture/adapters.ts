@@ -68,40 +68,13 @@ function architectureComponentHasRisk(component: ArchitectureJson['components'][
 }
 
 /**
- * 查找组件的父节点 ID。
- * 根据架构层顺序，返回上层组件的 ID。
- * @param component - 当前组件
- * @param ordered - 已排序的组件数组
- * @returns 父节点 ID，没有时返回 null
- */
-function findParentId(
-  component: ArchitectureJson['components'][number],
-  ordered: ArchitectureJson['components'],
-): string | null {
-  const sameLayerIndex = ordered.findIndex((item) => item.id === component.id);
-  if (sameLayerIndex <= 0) return null;
-
-  const currentLayerRank = ordered[sameLayerIndex]?.layer;
-  const layerRank: Record<ArchitectureJson['components'][number]['layer'], number> = {
-    presentation: 0,
-    application: 1,
-    domain: 2,
-    infrastructure: 3,
-    data: 4,
-  };
-
-  for (let index = sameLayerIndex - 1; index >= 0; index -= 1) {
-    const candidate = ordered[index];
-    if (layerRank[candidate.layer] < layerRank[currentLayerRank]) {
-      return candidate.id;
-    }
-  }
-
-  return ordered[0]?.id ?? null;
-}
-
-/**
  * 将架构数据转换为 WBS 视图格式。
+ *
+ * 注意：架构组件之间的关系是"依赖"关系，而非"包含"关系。
+ * 因此在 WBS 视图中，所有组件的 parentId 都设为 null，
+ * 组件之间的依赖关系通过 dependsOn 字段和 dependency 类型的边来表示。
+ * WBS 的层级结构通过节点类型（goal/milestone/task/subtask）来区分。
+ *
  * @param architecture - 架构数据对象
  * @returns WBS 图数据
  */
@@ -115,7 +88,8 @@ export function architectureToWbsView(architecture: ArchitectureJson): WbsGraph 
     title: component.name,
     type: WBS_TYPE_BY_LAYER[component.layer],
     status: 'todo',
-    parentId: findParentId(component, ordered),
+    // 架构组件之间是依赖关系，不是包含关系，所以不设置父节点
+    parentId: null,
     dependsOn: architecture.connections
       .filter((connection) => connection.to === component.id)
       .map((connection) => connection.from),
@@ -259,6 +233,31 @@ export function flowToArchitecture(
   const newComponentIds = new Set(components.map((c) => c.id));
   const originalConnectionIds = new Set(originalArchitecture.connections.map((c) => c.id));
 
+  /**
+   * 比较两个 metadata 对象是否相等
+   */
+  function isMetadataEqual(
+    a: ArchitectureComponent['metadata'],
+    b: ArchitectureComponent['metadata']
+  ): boolean {
+    // 两者都为 undefined 或 null
+    if (a == null && b == null) return true;
+    // 一个为空，一个不为空
+    if (a == null || b == null) return false;
+
+    // 比较 port
+    if (a.port !== b.port) return false;
+    // 比较 replicas
+    if (a.replicas !== b.replicas) return false;
+    // 比较 features 数组
+    const aFeatures = a.features ?? [];
+    const bFeatures = b.features ?? [];
+    if (aFeatures.length !== bFeatures.length) return false;
+    if (!aFeatures.every((f, i) => f === bFeatures[i])) return false;
+
+    return true;
+  }
+
   const addedComponentIds = components.filter((c) => !originalComponentIds.has(c.id)).map((c) => c.id);
   const removedComponentIds = originalArchitecture.components.filter((c) => !newComponentIds.has(c.id)).map((c) => c.id);
   const updatedComponentIds = components.filter((c) => {
@@ -269,7 +268,8 @@ export function flowToArchitecture(
       original.type !== c.type ||
       original.layer !== c.layer ||
       original.description !== c.description ||
-      original.technology !== c.technology
+      original.technology !== c.technology ||
+      !isMetadataEqual(original.metadata, c.metadata)
     );
   }).map((c) => c.id);
 
