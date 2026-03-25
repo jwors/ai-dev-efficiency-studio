@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './architect.module.css'
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import { ArchitectureFlow } from '@/app/components/ArchitectureFlow';
@@ -53,6 +53,85 @@ export default function ArchitectPluginPage() {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const { userId } = useAuthUserId();
   const sessionId = userId ? `${userId}:architect` : '';
+
+  // ========== 数据持久化 ==========
+
+  // 页面加载时恢复上次的架构数据
+  useEffect(() => {
+    if (!userId) return;
+
+    void loadSessionData().catch((err) => {
+      console.error('[Architect] 加载会话失败:', err);
+    });
+  }, [userId]);
+
+  // 页面隐藏/关闭时保存架构数据
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const flushSession = () => {
+      const payload = JSON.stringify({ sessionId });
+      const ok = navigator.sendBeacon?.('/api/session/save', payload);
+      if (!ok) {
+        void fetch('/api/session/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        });
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSession();
+      }
+    };
+
+    window.addEventListener('pagehide', flushSession);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pagehide', flushSession);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [sessionId]);
+
+  // 从服务器加载上次保存的架构数据
+  async function loadSessionData() {
+    if (!userId) return;
+
+    const params = new URLSearchParams({
+      userId,
+      scope: 'architect'
+    });
+
+    const res = await fetch(`/api/session?${params.toString()}`, {
+      method: 'GET',
+    });
+
+    const text = await res.text();
+    let data: any = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = null;
+      }
+    }
+
+    if (!res.ok || !data) return;
+
+    const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+    const lastSession = sessions[0];
+
+    if (lastSession?.architecture) {
+      setResult({
+        architecture: lastSession.architecture,
+        sessionId,
+      });
+    }
+  }
 
   const architecture = result?.architecture ?? null;
 
@@ -164,7 +243,23 @@ export default function ArchitectPluginPage() {
       ...result,
       architecture: updatedArchitecture,
     });
-    // TODO: 可选 - 持久化到后端
+    // 异步保存到后端
+    void saveArchitecture(updatedArchitecture);
+  }
+
+  // 保存架构数据到后端
+  async function saveArchitecture(architecture: ArchitectureJson) {
+    if (!sessionId) return;
+
+    try {
+      await fetch('/api/architect/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, architecture }),
+      });
+    } catch (err) {
+      console.error('[Architect] 保存架构失败:', err);
+    }
   }
 
   // 处理模板选择
@@ -176,6 +271,8 @@ export default function ArchitectPluginPage() {
         sessionId,
       });
       setShowTemplateSelector(false);
+      // 保存到后端
+      void saveArchitecture(architecture);
     }
   }
 
