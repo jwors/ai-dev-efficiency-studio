@@ -11,6 +11,26 @@
   box-shadow: 0px 4px 64px 0px rgba(0, 0, 0, 0.05);
 }
 
+.container:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+  background: #f5f5f5;
+}
+
+.container :global(.react-flow__nodes) {
+  z-index: 10;
+}
+
+.container :global(.react-flow__edges) {
+  z-index: 1;
+}
+
+.container :global(.react-flow__edge-label) {
+  z-index: 2;
+}
+
 .toolbar {
   position: absolute;
   bottom: 12px;

@@ -12,8 +12,6 @@ import {
   BackgroundVariant,
   Node,
   Edge,
-  getNodesBounds,
-  getViewportForBounds,
   applyNodeChanges,
   NodeChange,
   Handle,
@@ -22,7 +20,6 @@ import {
   Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { toPng } from 'html-to-image';
 
 import type { ArchitectureJson, ArchitectureComponentType, ArchitectureLayer } from '@/core/types';
 import { getLayoutedArchitecture, type LayoutedComponent } from '@/lib/architecture/layout';
@@ -59,7 +56,7 @@ interface ArchitectureFlowProps {
 
 interface TransformedData {
   initialNodes: Node[];
-  initialEdges: Edge[];
+  initialEdges: ArchitectureFlowEdge[];
 }
 
 /** 节点数据类型 */
@@ -70,6 +67,13 @@ interface ArchitectureNodeData {
   description?: string;
   technology?: string;
   label?: React.ReactNode;
+}
+
+interface ArchitectureFlowEdge extends Edge {
+  pathOptions?: {
+    offset?: number;
+    borderRadius?: number;
+  };
 }
 
 /**
@@ -126,6 +130,7 @@ function transformComponentToNode(
     id: comp.id,
     type: 'architectureNode',
     position: comp.position,
+    zIndex: 10,
     data: {
       name: comp.name,
       type: comp.type,
@@ -150,7 +155,7 @@ function transformComponentToNode(
  */
 function transformConnectionToEdge(
   conn: ArchitectureJson['connections'][number],
-): Edge {
+): ArchitectureFlowEdge {
   const connStyle = CONNECTION_STYLES[conn.type] || { stroke: '#94a3b8' };
 
   return {
@@ -159,7 +164,12 @@ function transformConnectionToEdge(
     target: conn.to,
     label: conn.label || conn.type,
     type: 'smoothstep',
+    zIndex: 1,
     animated: ANIMATED_CONNECTION_TYPES.includes(conn.type),
+    pathOptions: {
+      offset: 36,
+      borderRadius: 18,
+    },
     style: {
       stroke: connStyle.stroke,
       strokeWidth: 2,
@@ -199,7 +209,7 @@ function transformArchitectureToFlow(
     );
 
     const initialNodes: Node[] = layoutedComponents.map(transformComponentToNode);
-    const initialEdges: Edge[] = connections.map(transformConnectionToEdge);
+    const initialEdges: ArchitectureFlowEdge[] = connections.map(transformConnectionToEdge);
 
     return { initialNodes, initialEdges };
   } catch (error) {
@@ -213,7 +223,6 @@ function transformArchitectureToFlow(
  *
  * 基于 React Flow 实现系统架构图的可视化展示，支持：
  * - 自动布局
- * - 导出 PNG 图片
  * - 复制 JSON 数据
  * - 编辑模式（可选）
  *
@@ -228,7 +237,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   const toast = useToast();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<ArchitectureFlowEdge>([]);
 
   // 编辑模式状态
   const [isEditing, setIsEditing] = useState(false);
@@ -258,6 +267,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
   // 选中的边（用于删除和修改类型）
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // 边右键菜单状态
   const [edgeContextMenu, setEdgeContextMenu] = useState<{
@@ -284,11 +294,31 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
       if (rfInstance) {
         setTimeout(() => {
-          rfInstance.fitView({ padding: 0.2 });
+          rfInstance.fitView({ padding: 0.35, minZoom: 0.45 });
         }, 50);
       }
     }
   }, [initialNodes, initialEdges, setNodes, setEdges, rfInstance]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const nextIsFullscreen = document.fullscreenElement === reactFlowWrapper.current;
+      setIsFullscreen(nextIsFullscreen);
+
+      if (!rfInstance) return;
+
+      setTimeout(() => {
+        rfInstance.fitView({
+          padding: nextIsFullscreen ? 0.08 : 0.35,
+          minZoom: 0.45,
+          duration: 200,
+        });
+      }, 80);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [rfInstance]);
 
   // ========== 编辑模式 ==========
 
@@ -478,13 +508,18 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
     // 创建新边，默认类型为 http
     const connStyle = CONNECTION_STYLES.http;
-    const newEdge: Edge = {
+    const newEdge: ArchitectureFlowEdge = {
       id: newEdgeId,
       source: connection.source!,
       target: connection.target!,
       label: 'http',
       type: 'smoothstep',
+      zIndex: 1,
       animated: true,
+      pathOptions: {
+        offset: 36,
+        borderRadius: 18,
+      },
       style: {
         stroke: connStyle.stroke,
         strokeWidth: 2,
@@ -612,6 +647,18 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   // ========== 导出功能 ==========
 
   async function handleExportImage() {
+    const container = reactFlowWrapper.current;
+    const controls = container?.querySelector('.react-flow__controls') as HTMLElement | null;
+    const minimap = container?.querySelector('.react-flow__minimap') as HTMLElement | null;
+    const toolbar = container?.querySelector('.export-toolbar') as HTMLElement | null;
+    const titlePanel = container?.querySelector(`.${styles.titlePanel}`) as HTMLElement | null;
+    const viewportEl = container?.querySelector('.react-flow__viewport') as HTMLElement | null;
+    const originalDisplay = {
+      controls: controls?.style.display,
+      minimap: minimap?.style.display,
+      toolbar: toolbar?.style.display,
+      titlePanel: titlePanel?.style.display,
+    };
     if (!rfInstance || !reactFlowWrapper.current) {
       toast.warning('图表尚未加载完成');
       return;
@@ -624,20 +671,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         return;
       }
 
-      const container = reactFlowWrapper.current;
 
       // 隐藏不需要的元素
-      const controls = container.querySelector('.react-flow__controls') as HTMLElement;
-      const minimap = container.querySelector('.react-flow__minimap') as HTMLElement;
-      const toolbar = container.querySelector('.export-toolbar') as HTMLElement;
-      const titlePanel = container.querySelector(`.${styles.titlePanel}`) as HTMLElement;
-
-      const originalDisplay = {
-        controls: controls?.style.display,
-        minimap: minimap?.style.display,
-        toolbar: toolbar?.style.display,
-        titlePanel: titlePanel?.style.display,
-      };
+      if (!viewportEl) {
+        throw new Error('Viewport element not found');
+      }
 
       if (controls) controls.style.display = 'none';
       if (minimap) minimap.style.display = 'none';
@@ -645,17 +683,42 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       if (titlePanel) titlePanel.style.display = 'none';
 
       // 使用更大的 padding 确保所有节点完整显示
-      rfInstance.fitView({ padding: 0.3, duration: 0 });
+      const nodesBounds = getNodesBounds(nodesForBounds);
+      if (!viewportEl) {
+        throw new Error('Viewport element not found');
+      }
+
+      const exportPadding = 120;
+      const imageWidth = Math.max(Math.ceil(nodesBounds.width + exportPadding * 2), 1600);
+      const imageHeight = Math.max(Math.ceil(nodesBounds.height + exportPadding * 2), 900);
+      const viewport = getViewportForBounds(
+        nodesBounds,
+        imageWidth,
+        imageHeight,
+        0.1,
+        2,
+        0.12,
+      );
 
       // 等待视图更新
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      
 
       // 截图（不指定宽高，使用容器实际大小）
-      const dataUrl = await toPng(container, {
+      const dataUrl = await toPng(viewportEl, {
         backgroundColor: '#ffffff',
         quality: 1.0,
         pixelRatio: 2,
         cacheBust: true,
+        width: imageWidth,
+        height: imageHeight,
+        canvasWidth: imageWidth * 2,
+        canvasHeight: imageHeight * 2,
+        style: {
+          width: `${imageWidth}px`,
+          height: `${imageHeight}px`,
+          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+          transformOrigin: 'top left',
+        },
         filter: (node: HTMLElement) => {
           // 过滤掉不需要的元素
           const className = node.className;
@@ -669,20 +732,19 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       });
 
       // 恢复隐藏的元素
-      if (controls) controls.style.display = originalDisplay.controls || '';
-      if (minimap) minimap.style.display = originalDisplay.minimap || '';
-      if (toolbar) toolbar.style.display = originalDisplay.toolbar || '';
-      if (titlePanel) titlePanel.style.display = originalDisplay.titlePanel || '';
+      
+      
+      
+      
 
       if (!dataUrl) {
         throw new Error('生成的图片数据为空');
       }
 
       // 生成文件名: [projectName]-[architectureName]-[datetimes].png
-      const projectName = 'ai-dev-efficiency-studio';
       const architectureName = architecture?.title?.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-') || 'architecture';
       const datetime = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const fileName = `${projectName}-${architectureName}-${datetime}.png`;
+      const fileName = `${architectureName}-${datetime}.png`;
 
       // 下载图片
       const link = document.createElement('a');
@@ -694,6 +756,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
     } catch (err) {
       console.error('[ArchitectureFlow] Export image error:', err);
       toast.error('导出图片失败，请重试');
+    } finally {
+      if (controls) controls.style.display = originalDisplay.controls || '';
+      if (minimap) minimap.style.display = originalDisplay.minimap || '';
+      if (toolbar) toolbar.style.display = originalDisplay.toolbar || '';
+      if (titlePanel) titlePanel.style.display = originalDisplay.titlePanel || '';
     }
   }
 
@@ -732,6 +799,23 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
   }
 
   // ========== 性能监控 ==========
+
+  async function handleToggleFullscreen() {
+    const container = reactFlowWrapper.current;
+    if (!container) return;
+
+    try {
+      if (document.fullscreenElement === container) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await container.requestFullscreen();
+    } catch (error) {
+      console.error('[ArchitectureFlow] Fullscreen error:', error);
+      toast.error('全屏切换失败，请检查浏览器权限');
+    }
+  }
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && nodes.length > 0) {
@@ -816,10 +900,10 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
               </button>
             )}
             <button
-              onClick={handleExportImage}
-              className={`${styles.toolbarButton} ${styles.toolbarButtonPrimary}`}
+              onClick={handleToggleFullscreen}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
             >
-              下载 PNG
+              {isFullscreen ? '退出全屏' : '全屏'}
             </button>
             <button
               onClick={handleExportJson}
@@ -1078,17 +1162,20 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         onEdgeContextMenu={handleEdgeContextMenu}
         onInit={setRfInstance}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.35, minZoom: 0.45 }}
         attributionPosition="bottom-left"
-        defaultEdgeOptions={{ type: 'smoothstep' }}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+          zIndex: 1,
+        }}
         nodesDraggable={isEditing}
         nodesConnectable={isEditing}
         elementsSelectable={isEditing}
         // 性能优化：大型图表时启用虚拟化
         onlyRenderVisibleElements={nodes.length > VIRTUALIZATION_THRESHOLD}
-        minZoom={0.1}
+        minZoom={0.35}
         maxZoom={2}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
       >
         <Background
           variant={BackgroundVariant.Dots}
