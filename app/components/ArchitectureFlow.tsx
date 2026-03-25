@@ -624,55 +624,57 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         return;
       }
 
-      const nodesBounds = getNodesBounds(nodesForBounds);
-      const padding = 50; // 固定像素边距，更可靠
-      const imageWidth = nodesBounds.width + padding * 2;
-      const imageHeight = nodesBounds.height + padding * 2;
+      const container = reactFlowWrapper.current;
 
-      const viewportEl = reactFlowWrapper.current.querySelector(
-        '.react-flow__viewport',
-      ) as HTMLElement | null;
-      if (!viewportEl) {
-        throw new Error('找不到流程图视图节点');
-      }
+      // 隐藏不需要的元素
+      const controls = container.querySelector('.react-flow__controls') as HTMLElement;
+      const minimap = container.querySelector('.react-flow__minimap') as HTMLElement;
+      const toolbar = container.querySelector('.export-toolbar') as HTMLElement;
 
-      // 保存原始样式
-      const originalTransform = viewportEl.style.transform;
-      const originalWidth = viewportEl.style.width;
-      const originalHeight = viewportEl.style.height;
+      const originalDisplay = {
+        controls: controls?.style.display,
+        minimap: minimap?.style.display,
+        toolbar: toolbar?.style.display,
+      };
 
-      // 临时设置样式以确保完整截图
-      viewportEl.style.width = `${imageWidth}px`;
-      viewportEl.style.height = `${imageHeight}px`;
-      viewportEl.style.transform = `translate(${-nodesBounds.x + padding}px, ${-nodesBounds.y + padding}px) scale(1)`;
+      if (controls) controls.style.display = 'none';
+      if (minimap) minimap.style.display = 'none';
+      if (toolbar) toolbar.style.display = 'none';
 
-      // 等待样式应用
+      // 使用 fitView 将所有节点调整到可视区域
+      rfInstance.fitView({ padding: 0.2, duration: 0 });
+
+      // 等待视图更新
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const dataUrl = await toPng(viewportEl, {
+      // 截图（不指定宽高，使用容器实际大小）
+      const dataUrl = await toPng(container, {
         backgroundColor: '#ffffff',
         quality: 1.0,
         pixelRatio: 2,
         cacheBust: true,
-        width: imageWidth,
-        height: imageHeight,
         filter: (node: HTMLElement) => {
-          if (node.classList?.contains('react-flow__controls')) return false;
-          if (node.classList?.contains('react-flow__minimap')) return false;
-          if (node.classList?.contains('export-toolbar')) return false;
+          // 过滤掉不需要的元素
+          const className = node.className;
+          if (typeof className === 'string') {
+            if (className.includes('react-flow__controls')) return false;
+            if (className.includes('react-flow__minimap')) return false;
+            if (className.includes('export-toolbar')) return false;
+          }
           return true;
         },
       });
 
-      // 恢复原始样式
-      viewportEl.style.transform = originalTransform;
-      viewportEl.style.width = originalWidth;
-      viewportEl.style.height = originalHeight;
+      // 恢复隐藏的元素
+      if (controls) controls.style.display = originalDisplay.controls || '';
+      if (minimap) minimap.style.display = originalDisplay.minimap || '';
+      if (toolbar) toolbar.style.display = originalDisplay.toolbar || '';
 
       if (!dataUrl) {
         throw new Error('生成的图片数据为空');
       }
 
+      // 下载图片
       const link = document.createElement('a');
       link.download = `architecture-${Date.now()}.png`;
       link.href = dataUrl;
