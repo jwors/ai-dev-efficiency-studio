@@ -630,22 +630,25 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       const controls = container.querySelector('.react-flow__controls') as HTMLElement;
       const minimap = container.querySelector('.react-flow__minimap') as HTMLElement;
       const toolbar = container.querySelector('.export-toolbar') as HTMLElement;
+      const titlePanel = container.querySelector(`.${styles.titlePanel}`) as HTMLElement;
 
       const originalDisplay = {
         controls: controls?.style.display,
         minimap: minimap?.style.display,
         toolbar: toolbar?.style.display,
+        titlePanel: titlePanel?.style.display,
       };
 
       if (controls) controls.style.display = 'none';
       if (minimap) minimap.style.display = 'none';
       if (toolbar) toolbar.style.display = 'none';
+      if (titlePanel) titlePanel.style.display = 'none';
 
-      // 使用 fitView 将所有节点调整到可视区域
-      rfInstance.fitView({ padding: 0.2, duration: 0 });
+      // 使用更大的 padding 确保所有节点完整显示
+      rfInstance.fitView({ padding: 0.3, duration: 0 });
 
       // 等待视图更新
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // 截图（不指定宽高，使用容器实际大小）
       const dataUrl = await toPng(container, {
@@ -669,14 +672,21 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       if (controls) controls.style.display = originalDisplay.controls || '';
       if (minimap) minimap.style.display = originalDisplay.minimap || '';
       if (toolbar) toolbar.style.display = originalDisplay.toolbar || '';
+      if (titlePanel) titlePanel.style.display = originalDisplay.titlePanel || '';
 
       if (!dataUrl) {
         throw new Error('生成的图片数据为空');
       }
 
+      // 生成文件名: [projectName]-[architectureName]-[datetimes].png
+      const projectName = 'ai-dev-efficiency-studio';
+      const architectureName = architecture?.title?.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-') || 'architecture';
+      const datetime = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `${projectName}-${architectureName}-${datetime}.png`;
+
       // 下载图片
       const link = document.createElement('a');
-      link.download = `architecture-${Date.now()}.png`;
+      link.download = fileName;
       link.href = dataUrl;
       link.click();
 
