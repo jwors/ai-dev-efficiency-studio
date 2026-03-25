@@ -29,9 +29,9 @@ export function getLayoutedArchitecture(
 
   dagreGraph.setGraph({
     rankdir: direction,
-    ranksep: 120,
-    nodesep: 60,
-    edgesep: 40,
+    ranksep: 180,  // 层与层之间的距离（垂直方向）
+    nodesep: 100,  // 同一层节点之间的距离（水平方向）
+    edgesep: 50,   // 边与边之间的距离
   });
 
   // 添加组件节点
