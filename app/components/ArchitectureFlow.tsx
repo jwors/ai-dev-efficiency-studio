@@ -646,7 +646,7 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
 
   // ========== 导出功能 ==========
 
-  async function handleExportImage() {
+  /* async function handleExportImage() {
     const container = reactFlowWrapper.current;
     const controls = container?.querySelector('.react-flow__controls') as HTMLElement | null;
     const minimap = container?.querySelector('.react-flow__minimap') as HTMLElement | null;
@@ -763,6 +763,8 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       if (titlePanel) titlePanel.style.display = originalDisplay.titlePanel || '';
     }
   }
+
+  } */
 
   function handleExportJson() {
     if (!architecture) return;
