@@ -100,6 +100,17 @@ function sanitizeId(id: string): string {
 }
 
 /**
+ * 转义 Mermaid 文本标签，避免括号、引号、换行和尖括号导致解析失败。
+ */
+function escapeMermaidLabel(label: string): string {
+  return label
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\r?\n/g, '<br/>');
+}
+
+/**
  * 格式化 Mermaid 节点定义
  * 根据组件类型选择不同的形状：
  * - database: [(名称)]
@@ -110,23 +121,24 @@ function sanitizeId(id: string): string {
  */
 function formatMermaidNode(comp: ArchitectureComponent): string {
   const safeId = sanitizeId(comp.id);
-  const label = comp.technology
-    ? `${comp.name}<br/>${comp.technology}`
+  const rawLabel = comp.technology
+    ? `${comp.name}\n${comp.technology}`
     : comp.name;
+  const label = escapeMermaidLabel(rawLabel);
 
   switch (comp.type) {
     case 'database':
-      return `${safeId}[(${label})]`;
+      return `${safeId}[("${label}")]`;
     case 'queue':
-      return `${safeId}{{${label}}}`;
+      return `${safeId}{{"${label}"}}`;
     case 'external-api':
-      return `${safeId}[[${label}]]`;
+      return `${safeId}[["${label}"]]`;
     case 'cache':
-      return `${safeId}[(${label})]`;
+      return `${safeId}[("${label}")]`;
     case 'storage':
-      return `${safeId}[(${label})]`;
+      return `${safeId}[("${label}")]`;
     default:
-      return `${safeId}[${label}]`;
+      return `${safeId}["${label}"]`;
   }
 }
 
@@ -137,18 +149,18 @@ function formatMermaidNode(comp: ArchitectureComponent): string {
 function formatMermaidEdge(conn: ArchitectureConnection): string {
   const sourceId = sanitizeId(conn.from);
   const targetId = sanitizeId(conn.to);
-  const label = conn.label || conn.type;
+  const label = escapeMermaidLabel(conn.label || conn.type);
 
   switch (conn.type) {
     case 'websocket':
-      return `${sourceId} -.->|${label}| ${targetId}`;
+      return `${sourceId} -.->|"${label}"| ${targetId}`;
     case 'cache':
     case 'queue':
-      return `${sourceId} -.->|${label}| ${targetId}`;
+      return `${sourceId} -.->|"${label}"| ${targetId}`;
     case 'grpc':
-      return `${sourceId} ==>|${label}| ${targetId}`;
+      return `${sourceId} ==>|"${label}"| ${targetId}`;
     default:
-      return `${sourceId} -->|${label}| ${targetId}`;
+      return `${sourceId} -->|"${label}"| ${targetId}`;
   }
 }
 
