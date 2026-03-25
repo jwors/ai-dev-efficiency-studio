@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef, memo, useCallback } from 'react';
 import {
   ReactFlow,
   Background,
@@ -41,8 +41,12 @@ import {
   getDefaultPosition,
   validateComponentName,
 } from '@/lib/architecture/utils';
+import { architectureToMermaid, copyMermaidToClipboard, downloadMermaidFile } from '@/lib/architecture/mermaid';
 import { useToast } from './Toast';
 import styles from './ArchitectureFlow.module.css';
+
+// 性能优化：虚拟化渲染阈值
+const VIRTUALIZATION_THRESHOLD = 50;
 
 interface ArchitectureFlowProps {
   /** 架构数据对象 */
@@ -71,8 +75,9 @@ interface ArchitectureNodeData {
 /**
  * 自定义架构节点组件
  * 动态渲染节点内容，支持编辑时实时更新
+ * 性能优化：使用 React.memo 避免不必要的重渲染
  */
-function ArchitectureNodeComponent({ data }: { data: ArchitectureNodeData }) {
+const ArchitectureNodeComponent = memo(function ArchitectureNodeComponent({ data }: { data: ArchitectureNodeData }) {
   return (
     <>
       <Handle type="target" position={Position.Top} className={styles.nodeHandle} />
@@ -93,7 +98,16 @@ function ArchitectureNodeComponent({ data }: { data: ArchitectureNodeData }) {
       <Handle type="source" position={Position.Bottom} className={styles.nodeHandle} />
     </>
   );
-}
+}, function arePropsEqual(prev: { data: ArchitectureNodeData }, next: { data: ArchitectureNodeData }) {
+  // 性能优化：自定义比较函数，只在关键字段变化时重新渲染
+  return (
+    prev.data.name === next.data.name &&
+    prev.data.type === next.data.type &&
+    prev.data.technology === next.data.technology &&
+    prev.data.description === next.data.description &&
+    prev.data.layer === next.data.layer
+  );
+});
 
 /** 自定义节点类型映射 */
 const nodeTypes = {
@@ -611,17 +625,9 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
       }
 
       const nodesBounds = getNodesBounds(nodesForBounds);
-      const padding = 0.2;
-      const imageWidth = Math.max(nodesBounds.width * (1 + padding * 2), 800);
-      const imageHeight = Math.max(nodesBounds.height * (1 + padding * 2), 600);
-      const viewport = getViewportForBounds(
-        nodesBounds,
-        imageWidth,
-        imageHeight,
-        0.1,
-        2,
-        padding,
-      );
+      const padding = 50; // 固定像素边距，更可靠
+      const imageWidth = nodesBounds.width + padding * 2;
+      const imageHeight = nodesBounds.height + padding * 2;
 
       const viewportEl = reactFlowWrapper.current.querySelector(
         '.react-flow__viewport',
@@ -630,6 +636,19 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         throw new Error('找不到流程图视图节点');
       }
 
+      // 保存原始样式
+      const originalTransform = viewportEl.style.transform;
+      const originalWidth = viewportEl.style.width;
+      const originalHeight = viewportEl.style.height;
+
+      // 临时设置样式以确保完整截图
+      viewportEl.style.width = `${imageWidth}px`;
+      viewportEl.style.height = `${imageHeight}px`;
+      viewportEl.style.transform = `translate(${-nodesBounds.x + padding}px, ${-nodesBounds.y + padding}px) scale(1)`;
+
+      // 等待样式应用
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const dataUrl = await toPng(viewportEl, {
         backgroundColor: '#ffffff',
         quality: 1.0,
@@ -637,11 +656,6 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         cacheBust: true,
         width: imageWidth,
         height: imageHeight,
-        style: {
-          width: `${imageWidth}px`,
-          height: `${imageHeight}px`,
-          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-        },
         filter: (node: HTMLElement) => {
           if (node.classList?.contains('react-flow__controls')) return false;
           if (node.classList?.contains('react-flow__minimap')) return false;
@@ -649,6 +663,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
           return true;
         },
       });
+
+      // 恢复原始样式
+      viewportEl.style.transform = originalTransform;
+      viewportEl.style.width = originalWidth;
+      viewportEl.style.height = originalHeight;
 
       if (!dataUrl) {
         throw new Error('生成的图片数据为空');
@@ -679,6 +698,40 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         toast.error('复制失败，请检查浏览器权限');
       });
   }
+
+  // ========== Mermaid 导出功能 ==========
+
+  async function handleExportMermaid() {
+    if (!architecture) return;
+
+    const success = await copyMermaidToClipboard(architecture);
+    if (success) {
+      toast.success('Mermaid 代码已复制到剪贴板');
+    } else {
+      toast.error('复制失败，请检查浏览器权限');
+    }
+  }
+
+  function handleDownloadMermaid() {
+    if (!architecture) return;
+
+    downloadMermaidFile(architecture);
+    toast.success('Mermaid 文件已下载');
+  }
+
+  // ========== 性能监控 ==========
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && nodes.length > 0) {
+      const startTime = performance.now();
+      return () => {
+        const renderTime = performance.now() - startTime;
+        if (renderTime > 100) {
+          console.warn(`[ArchitectureFlow] Slow render: ${renderTime.toFixed(2)}ms for ${nodes.length} nodes`);
+        }
+      };
+    }
+  }, [nodes.length]);
 
   // 空状态
   if (!architecture || !architecture.components || architecture.components.length === 0) {
@@ -761,6 +814,20 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
               className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
             >
               复制 JSON
+            </button>
+            <button
+              onClick={handleExportMermaid}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
+              title="复制 Mermaid 代码到剪贴板"
+            >
+              Mermaid
+            </button>
+            <button
+              onClick={handleDownloadMermaid}
+              className={`${styles.toolbarButton} ${styles.toolbarButtonSecondary}`}
+              title="下载 .mmd 文件"
+            >
+              .mmd
             </button>
           </>
         )}
@@ -1005,6 +1072,11 @@ export function ArchitectureFlow({ architecture, editable = false, onChange }: A
         nodesDraggable={isEditing}
         nodesConnectable={isEditing}
         elementsSelectable={isEditing}
+        // 性能优化：大型图表时启用虚拟化
+        onlyRenderVisibleElements={nodes.length > VIRTUALIZATION_THRESHOLD}
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
       >
         <Background
           variant={BackgroundVariant.Dots}

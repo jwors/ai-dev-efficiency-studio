@@ -4,10 +4,12 @@ import { useMemo, useRef, useState } from 'react'
 import styles from './architect.module.css'
 import { useAuthUserId } from '@/lib/hooks/useAuthUserId';
 import { ArchitectureFlow } from '@/app/components/ArchitectureFlow';
+import { TemplateSelector } from '@/app/components/TemplateSelector';
 import WbsFlow from '@/app/components/Wbs';
 import { TaskFlow } from '@/app/components/taskFlow';
 import type { ArchitectureJson } from '@/core/types';
 import { architectureToTaskFlowView, architectureToWbsView } from '@/lib/architecture/adapters';
+import { createFromTemplate, type ArchitectureTemplate } from '@/lib/architecture/templates';
 
 type PluginResult = {
   name: string;
@@ -48,6 +50,7 @@ export default function ArchitectPluginPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ArchitectApiResponse | null>(null);
   const [activeView, setActiveView] = useState<ArchitectView>('architecture');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const { userId } = useAuthUserId();
   const sessionId = userId ? `${userId}:architect` : '';
 
@@ -150,7 +153,7 @@ export default function ArchitectPluginPage() {
     if (activeView === 'taskflow') {
       return `${taskFlowView?.nodes.length || 0} 个流程节点 · ${taskFlowView?.edges.length || 0} 条连线`;
     }
-    return `${architecture.components.length} 个组件 · ${architecture.techStack.length} 项技术栈`;
+    return `${architecture.components.length} 个组件 · ${architecture.techStack?.length ?? 0} 项技术栈`;
   }, [activeView, architecture, taskFlowView, wbsView]);
 
   // 处理架构编辑更新
@@ -162,6 +165,18 @@ export default function ArchitectPluginPage() {
       architecture: updatedArchitecture,
     });
     // TODO: 可选 - 持久化到后端
+  }
+
+  // 处理模板选择
+  function handleTemplateSelect(template: ArchitectureTemplate) {
+    const architecture = createFromTemplate(template.id);
+    if (architecture) {
+      setResult({
+        architecture,
+        sessionId,
+      });
+      setShowTemplateSelector(false);
+    }
   }
 
   function renderActiveView() {
@@ -246,6 +261,13 @@ export default function ArchitectPluginPage() {
             </div>
           </div>
           <div className="actions">
+            <button
+              className="button button-secondary"
+              onClick={() => setShowTemplateSelector(true)}
+              disabled={loading}
+            >
+              模板库
+            </button>
             <button
               className="button button-primary"
               onClick={handleRun}
@@ -334,6 +356,14 @@ export default function ArchitectPluginPage() {
           </section>
         )}
       </div>
+
+      {/* 模板选择器 */}
+      {showTemplateSelector && (
+        <TemplateSelector
+          onSelect={handleTemplateSelect}
+          onClose={() => setShowTemplateSelector(false)}
+        />
+      )}
     </main>
   );
 }
